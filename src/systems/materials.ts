@@ -67,11 +67,11 @@ function build() {
     map: velvetSet.map,
     roughnessMap: velvetSet.roughnessMap,
     normalMap: velvetSet.normalMap,
-    color: '#2b4234',
+    color: '#26372b',
     roughness: 1,
     sheen: 1,
     sheenRoughness: 0.45,
-    sheenColor: new THREE.Color('#6f8f74'),
+    sheenColor: new THREE.Color('#5f7a62'),
     side: THREE.DoubleSide,
   });
   const velvetOx = new THREE.MeshPhysicalMaterial({

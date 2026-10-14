@@ -287,7 +287,7 @@ export function herringbone(key: string, pal: WoodPalette, opts: { size?: number
         const wear = fbm((x / S) * 2, (y / S) * 2, 3, 2, 2, seed + 21);
         t += (wear - 0.5) * 0.15;
         let c = t < 0.5 ? mix(pal.dark, pal.mid, clamp01(t * 2)) : mix(pal.mid, pal.light, clamp01((t - 0.5) * 2));
-        let r = 0.3 + (1 - smoothstep(0, 0.05, edge)) * 0.25 + (0.5 - g.t) * 0.06;
+        let r = 0.46 + (1 - smoothstep(0, 0.05, edge)) * 0.25 + (0.5 - g.t) * 0.06;
         let ht = g.height * 0.5 + smoothstep(0, 0.06, edge) * 0.6;
         if (edge < gap) {
           c = [0.03, 0.018, 0.01];

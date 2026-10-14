@@ -66,7 +66,7 @@ export function Annotated({ parts, showLegend = true }: { parts: AnnotatedPart[]
 function ScrollHere() {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    const id = window.setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+    const id = window.setTimeout(() => ref.current?.scrollIntoView({ block: 'nearest' }), 80);
     return () => clearTimeout(id);
   }, []);
   return <span ref={ref} style={{ display: 'block', height: 1 }} />;

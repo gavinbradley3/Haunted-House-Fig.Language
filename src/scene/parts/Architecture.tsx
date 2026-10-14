@@ -75,8 +75,9 @@ export function Wall({ axis, from, to, at, thickness = 0.3, height, y0 = 0, open
   return (
     <group ref={ref}>
       {pieces.map((p, i) => {
-        const len = p.b - p.a;
-        const h = p.y1 - p.y0;
+        // Overlap neighbouring pieces by a millimetre so no hairline seams show.
+        const len = p.b - p.a + 0.002;
+        const h = p.y1 - p.y0 + 0.002;
         const mid = (p.a + p.b) / 2;
         const geo = axis === 'x' ? boxGeo(len, h, thickness) : boxGeo(thickness, h, len);
         const position: [number, number, number] = axis === 'x' ? [mid, (p.y0 + p.y1) / 2, at] : [at, (p.y0 + p.y1) / 2, mid];

@@ -14,7 +14,7 @@ export function TeacherPanel() {
   const challenge = stage === 'playA' || stage === 'playB' ? stage : null;
   const inLesson = s.lessonActive;
   return (
-    <div className="teacher" onKeyDown={(e) => e.stopPropagation()}>
+    <div className="teacher">
       <h2>Teacher Controls</h2>
       <div className="sub">Press T to hide. The class sees this panel too, so keep it brief.</div>
 
