@@ -54,5 +54,7 @@ describe('zones', () => {
     expect(zoneAt(-3)).toBe('hall');
     expect(zoneAt(-14)).toBe('corridor');
     expect(zoneAt(MIRRORS.zStart - 1)).toBe('mirrors');
+    expect(zoneAt(-14, -6)).toBe('gallery');
+    expect(zoneAt(-14, 0)).toBe('corridor');
   });
 });

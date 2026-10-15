@@ -22,6 +22,7 @@ import {
   WOOD,
   woodPlanks,
   type PBRSet,
+  hex,
 } from './textures';
 
 function tile(set: PBRSet, metresU: number, metresV = metresU) {
@@ -44,6 +45,7 @@ function std(set: PBRSet, extra: THREE.MeshStandardMaterialParameters = {}, norm
 let built: ReturnType<typeof build> | null = null;
 
 function build() {
+  const floorDark = std(tile(woodPlanks('gallery', { dark: hex('#1a100a'), mid: hex('#3a2416'), light: hex('#5c3c24') }, { planks: 8, seed: 9, gloss: 0.36 }), 1.4, 2.8), {}, 0.8);
   const floorHall = std(tile(woodPlanks('hall', WOOD.floor, { planks: 7, seed: 3 }), 1.25, 2.6), {}, 0.8);
   const parquet = std(tile(herringbone('mirror', WOOD.parquet), 0.62), {}, 0.7);
   const walnut = std(tile(veneer('walnut', WOOD.walnut), 0.7), {}, 0.6);
@@ -51,6 +53,7 @@ function build() {
   const mahogany = std(tile(veneer('mahogany', WOOD.mahogany, { seed: 4, gloss: 0.42 }), 0.6), {}, 0.5);
   const wallHall = std(tile(damask('hall', '#3d3f2b', '#4e5036'), 0.56, 1.12), {}, 0.6);
   const wallMirror = std(tile(damask('mirror', '#1f2b25', '#2c3b32', { seed: 5 }), 0.5, 1.0), {}, 0.6);
+  const wallGallery = std(tile(damask('gallery', '#3a2422', '#4a2e2a', { seed: 14 }), 0.6, 1.2), {}, 0.6);
   const wallCorridor = std(tile(damask('corridor', '#40372a', '#4f4532', { seed: 9 }), 0.56, 1.12), {}, 0.6);
   const ceiling = std(tile(plaster('ceiling', '#cbbf9f'), 2.5), {}, 0.4);
   const plasterWarm = std(tile(plaster('wall', '#b8aa88', { seed: 22 }), 2.0), {}, 0.4);
@@ -131,6 +134,8 @@ function build() {
   const ceramic = new THREE.MeshStandardMaterial({ color: '#2e3c3a', roughness: 0.25 });
   return {
     floorHall,
+    floorDark,
+    wallGallery,
     parquet,
     walnut,
     walnutPanel,

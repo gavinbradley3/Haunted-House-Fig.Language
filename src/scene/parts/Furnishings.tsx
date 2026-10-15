@@ -6,7 +6,7 @@ import { boxGeo, latheGeo, LATHES, profileGeo, PROFILES, runTransform } from '..
 import { mats } from '../../systems/materials';
 import { painting, type PaintingKind } from '../../systems/textures';
 import { world } from '../../systems/time';
-import { CandleLight, Flame } from './Lights';
+import { CandleLight, Flame, houseState } from './Lights';
 import { RoundedBox } from '@react-three/drei';
 
 // ------------------------------------------------------------------ helpers
@@ -147,7 +147,9 @@ export function GrandfatherClock({ position, rotationY = 0 }: { position: [numbe
   const finial = latheGeo('finial', LATHES.finial);
   useFrame(() => {
     // Seconds pendulum: one swing per second, ticking in step with the audio.
-    pendulum.current.rotation.z = Math.sin(world.t * Math.PI) * 0.07;
+    // When the clock stops, the pendulum eases to rest; when it restarts it picks up its swing.
+    const target = houseState.clockStopped ? 0 : Math.sin(world.t * Math.PI) * 0.07;
+    pendulum.current.rotation.z += (target - pendulum.current.rotation.z) * (houseState.clockStopped ? world.dt * 3 : 1);
     const d = new Date();
     const mins = d.getMinutes() + d.getSeconds() / 60;
     const hrs = (d.getHours() % 12) + mins / 60;

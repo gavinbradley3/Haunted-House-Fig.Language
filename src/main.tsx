@@ -14,9 +14,12 @@ import * as nav from './lesson/navigation';
 import * as director from './lesson/director';
 import { skipCinematic } from './scene/Player';
 import { liveCamera } from './systems/time';
+import { getInteractable } from './systems/interaction';
+import { triggerStrangeEvent } from './scene/HouseEvents';
+import { hungPaintings } from './scene/parts/Artwork';
 
 // Test hook used by the automated browser checks (scripts/shots.mjs).
-(window as unknown as Record<string, unknown>).__hosl = { useGame, nav, director, skipCinematic, liveCamera };
+(window as unknown as Record<string, unknown>).__hosl = { useGame, nav, director, skipCinematic, liveCamera, getInteractable, triggerStrangeEvent, hungPaintings };
 
 // Canvas textures (clock face, plaques, mirror text) use the display font, so wait for it.
 const fontsReady = Promise.all([

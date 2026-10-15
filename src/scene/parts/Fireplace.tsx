@@ -5,7 +5,7 @@ import { boxGeo, latheGeo, LATHES } from '../../systems/geometry';
 import { mats } from '../../systems/materials';
 import { world } from '../../systems/time';
 import { flicker } from './Lights';
-import { Painting } from './Furnishings';
+import { ArtPainting } from './Artwork';
 
 /**
  * Marble fireplace on a chimney breast, local wall frame (centred at x).
@@ -79,7 +79,7 @@ export function Fireplace({ x, ceiling }: { x: number; ceiling: number }) {
           <mesh geometry={latheGeo('candlestick', LATHES.candlestick)} material={m.brass} position={[0.38, 0, 0]} castShadow />
         </group>
         {/* Overmantel portrait */}
-        <Painting x={0} y={2.55} w={1.0} h={1.3} kind="portrait" seed={9} />
+        <ArtPainting id="ladyOfHouse" x={0} y={2.6} width={0.95} frame="ornateFrame" />
       </group>
     </group>
   );

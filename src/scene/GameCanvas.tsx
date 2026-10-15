@@ -16,7 +16,11 @@ import { HallOfMirrors } from './HallOfMirrors';
 import { Lighting } from './Lighting';
 import { Player } from './Player';
 import { Sky } from './Sky';
-import { LessonDirector } from '../lesson/director';
+import { LessonCamera, LessonDirector } from '../lesson/director';
+import { GalleryDirector } from '../lesson/galleryDirector';
+import { PortraitGallery } from './PortraitGallery';
+import { HouseEvents } from './HouseEvents';
+import { preloadArt } from './parts/Artwork';
 
 /** Builds materials/textures once the GL context exists, then reports ready. */
 function Setup() {
@@ -34,6 +38,8 @@ function Setup() {
     scene.fog = new THREE.FogExp2('#0b0d10', 0.028);
     scene.background = new THREE.Color('#05070a');
     gl.shadowMap.autoUpdate = false;
+    // Paint the artwork in the background while the title screen is showing.
+    preloadArt(['houseBreath', 'ladyOfHouse', 'whisperingWalls', 'coldFeet', 'caretaker', 'deafeningSilence', 'oldManShadow', 'nervousSitter', 'emptyCanvas', 'ladyOfHouseTurned']);
     gl.shadowMap.needsUpdate = true;
     // Two frames later the scene has compiled: show the title.
     const id = requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -69,11 +75,13 @@ function ShadowScheduler() {
 }
 
 /** Hide whole areas the camera cannot see to save draw calls. */
-function Culling({ children, area }: { children: React.ReactNode; area: 'exterior' | 'mirrors' }) {
+function Culling({ children, area }: { children: React.ReactNode; area: 'exterior' | 'mirrors' | 'gallery' }) {
   const zone = useGame((s) => s.zone);
   const mirrorOpen = useGame((s) => s.doors.mirror);
   const frontOpen = useGame((s) => s.doors.front);
+  const galleryOpen = useGame((s) => s.doors.gallery);
   let visible = true;
+  if (area === 'gallery') visible = zone === 'gallery' || (zone === 'corridor' && galleryOpen);
   if (area === 'exterior') visible = zone === 'exterior' || zone === 'hall' || (zone === 'corridor' && frontOpen);
   if (area === 'mirrors') visible = zone === 'mirrors' || zone === 'corridor' || (zone === 'hall' && mirrorOpen);
   return <group visible={visible}>{children}</group>;
@@ -138,9 +146,15 @@ export function GameCanvas() {
         <Culling area="mirrors">
           <HallOfMirrors />
         </Culling>
+        <Culling area="gallery">
+          <PortraitGallery />
+        </Culling>
         <DustMotes />
         <Player />
         <LessonDirector />
+        <GalleryDirector />
+        <LessonCamera />
+        <HouseEvents />
         <FpsGuard />
         <EffectComposer multisampling={q.msaa} enableNormalPass={false} key={quality}>
           {q.ao ? <N8AO aoRadius={0.7} intensity={2.2} distanceFalloff={0.6} halfRes quality={q.ao} color="#050302" /> : <></>}

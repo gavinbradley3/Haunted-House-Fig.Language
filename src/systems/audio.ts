@@ -6,6 +6,7 @@
  * Browsers block audio until the user interacts; call `audio.unlock()` from a click.
  */
 import type { Zone } from '../world/layout';
+import { renderFootstep, type Surface } from './footstepSynth';
 
 type V3 = [number, number, number];
 export type ClockVoice = 'tick' | 'loud' | 'footsteps' | 'silent';
@@ -40,6 +41,10 @@ class AudioEngine {
   private tickIndex = 0;
   private mantelIndex = 0;
   mantelVoice: ClockVoice = 'tick';
+  /** Set by the house's strange events: the hall clock holds its breath. */
+  hallClockStopped = false;
+  footstepsOn = true;
+  private stepIndex = 0;
   private volume = 0.7;
   private muted = false;
   private zone: Zone = 'exterior';
@@ -203,16 +208,16 @@ class AudioEngine {
     this.buffers.tock = tick(1850, 2);
     this.buffers.mantelTick = tick(3100, 3);
     this.buffers.mantelTock = tick(2700, 4);
-    for (let k = 0; k < 4; k++) {
-      const rr = rand(20 + k);
-      const f0 = 70 + k * 9;
-      this.buffers[`step${k}`] = this.buf(0.22, (t) => {
-        const thud = Math.sin(2 * Math.PI * f0 * t * (1 - t)) * Math.exp(-t * 32);
-        const knock = Math.sin(2 * Math.PI * (380 + k * 40) * t) * Math.exp(-t * 90) * 0.35;
-        const scuff = (rr() * 2 - 1) * Math.exp(-t * 60) * 0.18;
-        return (thud + knock + scuff) * 0.8;
-      });
+    // Footsteps: eight recorded-style variants per surface, rendered by footstepSynth.ts
+    for (const surface of ['wood', 'carpet', 'gravel'] as Surface[]) {
+      for (let k = 0; k < 8; k++) {
+        const data = renderFootstep(this.ctx!.sampleRate, surface, k);
+        const b = this.ctx!.createBuffer(1, data.length, this.ctx!.sampleRate);
+        b.getChannelData(0).set(data);
+        this.buffers[`step-${surface}-${k}`] = b;
+      }
     }
+    for (let k = 0; k < 4; k++) this.buffers[`step${k}`] = this.buffers[`step-wood-${k}`];
     this.buffers.creakShort = this.makeCreak(0.7, 5, 90, 820);
     this.buffers.creakFloor = this.makeCreak(0.45, 9, 120, 640);
     this.buffers.creakDoor = this.makeCreak(1.9, 13, 55, 520);
@@ -254,6 +259,13 @@ class AudioEngine {
       return (r() * 2 - 1) * env * 0.4;
     });
     this.buffers.pop = this.buf(0.05, (t) => (r() * 2 - 1) * Math.exp(-t * 160));
+    // Thunder: brown-ish noise with a slow swell and a long rolling decay
+    let tl = 0;
+    this.buffers.thunder = this.buf(4.5, (t) => {
+      tl = (tl + 0.03 * (r() * 2 - 1)) / 1.03;
+      const env = Math.min(1, t / 0.25) * Math.exp(-t * 0.9) * (0.7 + 0.3 * Math.sin(t * 7 + Math.sin(t * 3) * 2));
+      return tl * 6 * env;
+    });
   }
 
   // ------------------------------------------------------------ ambience
@@ -341,7 +353,7 @@ class AudioEngine {
     if (!ctx || ctx.state !== 'running') return;
     const horizon = ctx.currentTime + 0.25;
     while (this.nextHallTick < horizon) {
-      this.playAt(this.tickIndex % 2 ? this.buffers.tock : this.buffers.tick, this.hallClock, this.nextHallTick, 0.5);
+      if (!this.hallClockStopped) this.playAt(this.tickIndex % 2 ? this.buffers.tock : this.buffers.tick, this.hallClock, this.nextHallTick, 0.5);
       this.tickIndex++;
       this.nextHallTick += 1.0;
     }
@@ -399,9 +411,22 @@ class AudioEngine {
     s.start(ctx.currentTime + (opts.delay ?? 0));
   }
 
-  footstep(speed = 1) {
-    const k = Math.floor(Math.random() * 4);
-    this.play(`step${k}`, { gain: 0.32 * speed, rate: 0.9 + Math.random() * 0.2, reverb: 0.5 });
+  /**
+   * One footfall. Never repeats the same variant twice in a row; alternate feet are
+   * very slightly different in pitch, and level varies a little with walking speed.
+   */
+  footstep(speed = 1, surface: Surface = 'wood') {
+    if (!this.footstepsOn) return;
+    let k = Math.floor(Math.random() * 8);
+    if (k === this.stepIndex) k = (k + 3) % 8;
+    this.stepIndex = k;
+    const foot = this.stepIndex % 2 ? 0.985 : 1.015;
+    const base = surface === 'gravel' ? 0.13 : surface === 'carpet' ? 0.1 : 0.15;
+    this.play(`step-${surface}-${k}`, {
+      gain: base * (0.85 + Math.random() * 0.25) * Math.min(1.2, 0.75 + speed * 0.25),
+      rate: foot * (0.97 + Math.random() * 0.06),
+      reverb: surface === 'gravel' ? 0.08 : 0.4,
+    });
     if (Math.random() < 0.08) this.play('creakFloor', { gain: 0.12, rate: 0.8 + Math.random() * 0.4, delay: 0.05 });
   }
   doorOpen(at: V3, heavy = true) {
@@ -427,6 +452,34 @@ class AudioEngine {
   }
   creak(at?: V3) {
     this.play('creakShort', { at, gain: 0.3, rate: 0.8 + Math.random() * 0.3 });
+  }
+  keyPickup() {
+    this.play('latch', { gain: 0.35, rate: 1.6 });
+    this.play('rattle', { gain: 0.25, rate: 1.8, delay: 0.08 });
+  }
+  /** A key turning in an old lock: scrape, then the bolt thrown. */
+  unlockDoor(at: V3) {
+    this.play('creakShort', { at, gain: 0.18, rate: 2.2 });
+    this.play('latch', { at, gain: 0.6, rate: 0.8, delay: 0.35 });
+    this.play('thud', { at, gain: 0.35, rate: 1.6, delay: 0.42 });
+  }
+  /** Distant thunder, heard through the walls. */
+  thunder(at: V3, strength = 1) {
+    this.play('thunder', { at, gain: 0.55 * strength, rate: 0.9 + Math.random() * 0.2 });
+  }
+  /** The whole house settling: a long low groan of timbers. */
+  houseGroan() {
+    this.play('creakDoor', { gain: 0.3, rate: 0.45, reverb: 1.0 });
+  }
+  /** A door closing quietly somewhere else in the house. */
+  distantDoor(at: V3) {
+    this.play('creakShort', { at, gain: 0.12, rate: 0.75 });
+    this.play('thud', { at, gain: 0.22, delay: 0.5 });
+    this.play('latch', { at, gain: 0.18, delay: 0.53 });
+  }
+  /** A board creaking under weight that is not yours. */
+  distantCreak(at: V3) {
+    this.play('creakFloor', { at, gain: 0.3, rate: 0.7 + Math.random() * 0.2 });
   }
   /** Footsteps somewhere in an empty hall: used after the model simile is revealed. */
   distantSteps() {

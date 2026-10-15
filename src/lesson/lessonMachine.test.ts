@@ -10,7 +10,7 @@ import {
   type LessonState,
 } from './lessonMachine';
 
-const run = (s: LessonState, ...actions: LessonAction[]) => actions.reduce(r, s);
+const run = (s: LessonState, ...actions: LessonAction[]) => actions.reduce((st, a) => r(st, a), s);
 
 const toPlayA = () =>
   run(

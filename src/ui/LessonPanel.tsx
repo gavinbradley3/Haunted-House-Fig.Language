@@ -1,9 +1,10 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { ROLE_LABELS, SIMILE, type AnnotatedPart, type ChoiceChallenge } from '../content/simile';
-import { canAdvance, LEARN_STEP_COUNT, STAGES, type Stage } from '../lesson/lessonMachine';
-import { closeLesson, panelSide } from '../lesson/director';
+import { ROLE_LABELS, type AnnotatedPart, type ChoiceChallenge, type Role } from '../content/types';
+import { canAdvance, STAGES, type Stage } from '../lesson/lessonMachine';
+import { closeLesson, goToKey, panelSide } from '../lesson/director';
+import { canCollect, KEY_FOR_ROOM } from '../lesson/progression';
 import { walkToHall } from '../lesson/navigation';
-import { useGame } from '../state/store';
+import { activeContent, activeLesson, useGame } from '../state/store';
 
 const PROGRESS: { stage: Stage[]; label: string }[] = [
   { stage: ['discover'], label: 'Discover' },
@@ -35,12 +36,13 @@ function Progress({ stage }: { stage: Stage }) {
 }
 
 export function Annotated({ parts, showLegend = true }: { parts: AnnotatedPart[]; showLegend?: boolean }) {
+  const labels: Record<Role, string> = useGame((s) => activeContent(s).roleLabels) ?? ROLE_LABELS;
   let n = 0;
   return (
     <>
       <div className="annot">
         {parts.map((p, i) => {
-          const delay = p.role ? 0.4 + n++ * 0.7 : 0;
+          const delay = p.role ? 0.2 + n++ * 0.35 : 0;
           return (
             <span key={i} className={`part ${p.role ? `role ${p.role}` : ''}`} style={p.role ? { animationDelay: `${delay}s` } : undefined}>
               {p.text}
@@ -51,9 +53,9 @@ export function Annotated({ parts, showLegend = true }: { parts: AnnotatedPart[]
       {showLegend && (
         <div className="legend">
           {(['subject', 'word', 'compared'] as const).map((r, i) => (
-            <span key={r} style={{ animationDelay: `${0.4 + i * 0.7}s` }}>
+            <span key={r} style={{ animationDelay: `${0.2 + i * 0.35}s` }}>
               <b style={{ background: `var(--${r})` }} />
-              {ROLE_LABELS[r]}
+              {labels[r]}
             </span>
           ))}
         </div>
@@ -72,24 +74,39 @@ function ScrollHere() {
   return <span ref={ref} style={{ display: 'block', height: 1 }} />;
 }
 
+/** Render content text: *word* is emphasised, [word] is highlighted. */
+function Marked({ text }: { text: string }) {
+  const bits = text.split(/(\*[^*]+\*|\[[^\]]+\])/);
+  return (
+    <>
+      {bits.map((b, i) =>
+        b.startsWith('*') ? <em key={i}>{b.slice(1, -1)}</em> : b.startsWith('[') ? <span key={i} className="hl-word">{b.slice(1, -1)}</span> : <Fragment key={i}>{b}</Fragment>,
+      )}
+    </>
+  );
+}
+
 // ------------------------------------------------------------------ stages
 
 function Discover() {
-  const d = useGame((s) => s.lesson.discover);
+  const d = useGame((s) => activeLesson(s).discover);
   const dispatch = useGame((s) => s.dispatch);
-  const c = SIMILE.discover;
+  const c = useGame(activeContent).discover;
   const card = (which: 'A' | 'B', text: string) => {
     const revealed = which === 'A' ? d.revealedA : d.revealedB;
+    const label = which === 'A' ? c.labelA : c.labelB;
+    const ask = which === 'A' ? c.askA : c.askB;
     if (!revealed)
       return (
         <button className="btn reveal-btn" onClick={() => dispatch({ type: 'REVEAL_DESCRIPTION', which })}>
-          Reveal description {which}
+          Reveal {label.toLowerCase()}
         </button>
       );
     return (
-      <div className={`card clickable ${d.active === which ? 'active' : ''}`} onClick={() => dispatch({ type: 'REVEAL_DESCRIPTION', which })} title="Show this description again">
-        <div className="tag">Description {which}</div>
+      <div className={`card clickable ${d.active === which ? 'active' : ''}`} onClick={() => dispatch({ type: 'REVEAL_DESCRIPTION', which })} title="Show this again">
+        <div className="tag">{label}</div>
         <div className="quote">“{text}”</div>
+        {ask && <div className="discuss" style={{ margin: '10px 0 0', fontSize: 21 }}>{ask}</div>}
       </div>
     );
   };
@@ -122,36 +139,53 @@ function Discover() {
 }
 
 function Learn() {
-  const step = useGame((s) => s.lesson.learnStep);
-  const st = SIMILE.learn.steps[step];
+  const step = useGame((s) => activeLesson(s).learnStep);
+  const st = useGame(activeContent).learn.steps[step];
   switch (st.id) {
     case 'term':
       return (
         <>
-          <div className="term">SIMILE</div>
+          <div className="term">{st.term}</div>
           <p className="definition">
-            A simile compares two <em>different</em> things using the words <span className="hl-word">like</span> or <span className="hl-word">as</span>.
+            <Marked text={st.body ?? ''} />
           </p>
         </>
       );
     case 'why':
       return (
         <>
-          <p className="lead">{'body' in st ? st.body : ''}</p>
-          <div className="effect">
-            <strong>Try it</strong>
-            Picture “a cold room.” Now picture a room “as cold as a cellar in winter.” Which one can you feel?
-          </div>
+          <p className="lead">{st.body}</p>
+          {st.tryIt && (
+            <div className="effect">
+              <strong>Try it</strong>
+              {st.tryIt}
+            </div>
+          )}
+        </>
+      );
+    case 'compare':
+      return (
+        <>
+          {st.rows?.map((row) => (
+            <div key={row.label} className="compare-row">
+              <div className="tag kicker">{row.label}</div>
+              <Annotated parts={row.parts} showLegend={false} />
+            </div>
+          ))}
+          <p className="lead">
+            <Marked text={st.body ?? ''} />
+          </p>
         </>
       );
     case 'annotate':
     case 'example2': {
-      const s2 = st as { parts: AnnotatedPart[]; effect: string };
+      const s2 = st as { parts: AnnotatedPart[]; effect: string; question?: string };
       return (
         <>
           <Annotated parts={s2.parts} key={st.id} />
+          {s2.question && <div className="discuss">{s2.question}</div>}
           <div className="effect">
-            <strong>The effect</strong>
+            <strong>{s2.question ? 'One reading' : 'The effect'}</strong>
             {s2.effect}
           </div>
         </>
@@ -179,7 +213,7 @@ function Learn() {
 }
 
 function Choice({ ch }: { ch: ChoiceChallenge }) {
-  const c = useGame((s) => s.lesson[ch.id]);
+  const c = useGame((s) => activeLesson(s)[ch.id]);
   const dispatch = useGame((s) => s.dispatch);
   const [showAll, setShowAll] = useState(true);
   const selected = ch.options.find((o) => o.id === c.selected);
@@ -262,9 +296,11 @@ function Choice({ ch }: { ch: ChoiceChallenge }) {
 }
 
 function Prove() {
-  const p = useGame((s) => s.lesson.prove);
+  const p = useGame((s) => activeLesson(s).prove);
   const dispatch = useGame((s) => s.dispatch);
-  const c = SIMILE.prove;
+  const c = useGame(activeContent).prove;
+  const room = useGame((s) => s.room);
+  const noun = room === 'gallery' ? 'metaphor' : 'simile';
   const latest = p.responses[p.responses.length - 1];
   return (
     <>
@@ -288,13 +324,13 @@ function Prove() {
       >
         <input
           value={p.draft}
-          placeholder="Type a student’s simile…"
+          placeholder={`Type a student’s ${noun}…`}
           onChange={(e) => dispatch({ type: 'SET_DRAFT', text: e.target.value })}
           onKeyDown={(e) => e.stopPropagation()}
-          aria-label="Student simile"
+          aria-label={`Student ${noun}`}
         />
         <button className="btn" type="submit" disabled={!p.draft.trim()}>
-          Show in the mirror
+          {room === 'gallery' ? 'Give the frame its title' : 'Show in the mirror'}
         </button>
       </form>
       {latest && (
@@ -358,7 +394,7 @@ function Prove() {
 }
 
 function Complete() {
-  const c = SIMILE.complete;
+  const c = useGame(activeContent).complete;
   return (
     <>
       <div className="inscription">“{c.inscription}”</div>
@@ -375,22 +411,25 @@ function Complete() {
   );
 }
 
-const HEAD: Record<Stage, { kicker: string; title: string }> = {
-  discover: { kicker: SIMILE.discover.kicker, title: SIMILE.discover.title },
-  learn: { kicker: SIMILE.learn.kicker, title: '' },
-  playA: { kicker: SIMILE.playA.kicker, title: SIMILE.playA.title },
-  playB: { kicker: SIMILE.playB.kicker, title: SIMILE.playB.title },
-  prove: { kicker: SIMILE.prove.kicker, title: SIMILE.prove.title },
-  complete: { kicker: SIMILE.complete.kicker, title: SIMILE.complete.title },
-};
-
 export function LessonPanel() {
-  const lesson = useGame((s) => s.lesson);
+  const lesson = useGame(activeLesson);
+  const C = useGame(activeContent);
+  const room = useGame((s) => s.room);
+  const keyWaiting = useGame((s) => canCollect(s.progress, KEY_FOR_ROOM[s.room]));
   const shot = useGame((s) => s.shot);
   const dispatch = useGame((s) => s.dispatch);
   const { stage, learnStep } = lesson;
+  const LEARN_STEP_COUNT = C.learn.steps.length;
+  const HEAD: Record<Stage, { kicker: string; title: string }> = {
+    discover: { kicker: C.discover.kicker, title: C.discover.title },
+    learn: { kicker: C.learn.kicker, title: '' },
+    playA: { kicker: C.playA.kicker, title: C.playA.title },
+    playB: { kicker: C.playB.kicker, title: C.playB.title },
+    prove: { kicker: C.prove.kicker, title: C.prove.title },
+    complete: { kicker: C.complete.kicker, title: C.complete.title },
+  };
   const head = HEAD[stage];
-  const learnTitle = stage === 'learn' ? (SIMILE.learn.steps[learnStep].title ?? '') : '';
+  const learnTitle = stage === 'learn' ? (C.learn.steps[learnStep].title ?? '') : '';
   const side = panelSide(shot);
   const nextLabel =
     stage === 'learn' && learnStep < LEARN_STEP_COUNT - 1
@@ -411,13 +450,13 @@ export function LessonPanel() {
           {head.kicker}
           {stage === 'learn' ? `  ·  ${learnStep + 1} of ${LEARN_STEP_COUNT}` : ''}
         </div>
-        {(head.title || learnTitle) && stage !== 'learn' ? <h1 className="ptitle">{head.title}</h1> : learnTitle && learnTitle !== 'Simile' ? <h1 className="ptitle">{learnTitle}</h1> : null}
+        {(head.title || learnTitle) && stage !== 'learn' ? <h1 className="ptitle">{head.title}</h1> : learnTitle && learnTitle !== C.device ? <h1 className="ptitle">{learnTitle}</h1> : null}
       </div>
       <div className="panel-body" key={`${stage}-${learnStep}`}>
         {stage === 'discover' && <Discover />}
         {stage === 'learn' && <Learn />}
-        {stage === 'playA' && <Choice ch={SIMILE.playA} />}
-        {stage === 'playB' && <Choice ch={SIMILE.playB} />}
+        {stage === 'playA' && <Choice ch={C.playA} />}
+        {stage === 'playB' && <Choice ch={C.playB} />}
         {stage === 'prove' && <Prove />}
         {stage === 'complete' && <Complete />}
       </div>
@@ -428,7 +467,7 @@ export function LessonPanel() {
               Back
             </button>
           )}
-          <button className="btn quiet" onClick={closeLesson} title="Close the lesson and walk freely. Use the mirror to come back.">
+          <button className="btn quiet" onClick={closeLesson} title={`Close the lesson and walk freely. ${room === 'gallery' ? 'Look at the caretaker' : 'Use the mirror'} to come back.`}>
             Explore
           </button>
         </div>
@@ -441,9 +480,15 @@ export function LessonPanel() {
             <button className="btn quiet" onClick={() => dispatch({ type: 'RESET_LESSON' })}>
               Replay lesson
             </button>
-            <button className="btn primary" onClick={walkToHall}>
-              Return to the hall
-            </button>
+            {keyWaiting ? (
+              <button className="btn primary" onClick={() => goToKey(room)}>
+                Go and take the key
+              </button>
+            ) : (
+              <button className="btn primary" onClick={walkToHall}>
+                Return to the hall
+              </button>
+            )}
           </div>
         ) : (
           <button className="btn primary" disabled={!canAdvance(lesson) && !(stage === 'learn')} onClick={() => dispatch({ type: 'NEXT' })}>

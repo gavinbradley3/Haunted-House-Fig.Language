@@ -21,7 +21,7 @@ export function startIntro(skip: boolean) {
     return;
   }
   s.setPhase('intro');
-  const steps = [0.08, 0.16, 0.24, 0.32, 0.4, 0.48, 0.74, 0.82, 0.9].map((t) => ({ t, run: () => audio.footstep(0.6) }));
+  const steps = [0.08, 0.16, 0.24, 0.32, 0.4, 0.48, 0.74, 0.82, 0.9].map((t) => ({ t, run: () => audio.footstep(0.7, t < 0.5 ? 'gravel' : 'wood') }));
   s.playCinematic({
     id: `intro-${Date.now()}`,
     points: [
@@ -166,4 +166,10 @@ export function walkToHall() {
     duration: Math.max(4, dist / 1.6),
     events: Array.from({ length: Math.floor(dist / 1.4) }, (_, i) => ({ t: (i + 0.5) / Math.max(1, Math.floor(dist / 1.4)), run: () => audio.footstep(0.8) })),
   });
+}
+
+/** Fade straight into the Portrait Gallery (teacher shortcut; opens the door so nobody is shut in). */
+export function jumpToGallery() {
+  closeLessonView();
+  jumpTo(POSES.galleryEntry, () => useGame.getState().setDoor('gallery', true));
 }

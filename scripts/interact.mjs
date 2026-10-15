@@ -21,6 +21,8 @@ const state = (fn) => page.evaluate(`(${fn})(window.__hosl.useGame.getState())`)
 const waitFor = (fn, timeout = 240000) => page.waitForFunction(`(${fn})(window.__hosl.useGame.getState())`, null, { timeout, polling: 500 });
 
 await page.goto(base);
+await page.evaluate(() => { try { localStorage.removeItem('hosl.progress'); } catch {} });
+await page.reload();
 await waitFor((s) => s.phase === 'title');
 check('title screen shows', await page.isVisible('text=Enter the House'));
 
@@ -81,7 +83,7 @@ await page.waitForSelector('.teacher', { timeout: 20000 }).catch(async () => {
   await page.screenshot({ path: 'scripts/out/debug-teacher.png' });
   console.log('teacherOpen =', await state((s) => s.teacherOpen), 'active element =', await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 80)));
 });
-await page.click('.teacher >> text=Find the Simile');
+await page.click('.teacher >> text=Challenge A');
 await page.keyboard.press('KeyT');
 await page.click('text=I like old houses.');
 await page.click('text=Check the class’s answer');
@@ -89,7 +91,7 @@ check('wrong answer shows explanation', await page.isVisible('.feedback.bad'));
 await page.keyboard.press('KeyT');
 await page.click('text=Reveal the answer');
 await page.keyboard.press('KeyT');
-check('reveal answer solves challenge A', await state((s) => s.lesson.playA.solved && s.lesson.playA.revealedByTeacher));
+check('reveal answer solves challenge A', await state((s) => s.lessons.mirrors.playA.solved && s.lessons.mirrors.playA.revealedByTeacher));
 
 // Prove: type a student simile with the keyboard
 await page.keyboard.press('KeyT');
@@ -101,7 +103,7 @@ await page.keyboard.press('Enter');
 check('typed simile is shown', await page.isVisible('text=tapping finger on glass'));
 check('typing T in the input did not toggle the teacher panel', !(await page.isVisible('text=Teacher Controls')));
 await page.click('text=Complete the challenge');
-check('completing reaches the complete stage', (await state((s) => s.lesson.stage)) === 'complete');
+check('completing reaches the complete stage', (await state((s) => s.lessons.mirrors.stage)) === 'complete');
 
 // Pause/mute keys
 await page.keyboard.press('KeyP');
@@ -112,10 +114,18 @@ const muted = await state((s) => s.muted);
 await page.keyboard.press('KeyM');
 check('M toggles mute', muted !== (await state((s) => s.muted)));
 
-// Return to hall via the guided walk
-await page.click('text=Return to the hall');
+// Completion now leads to a real key: go to it, take it with E, then walk back
+await page.click('text=Go and take the key');
+await waitFor((s) => !s.lessonActive, 30000).catch(() => {});
+await page.waitForTimeout(8000);
+await page.evaluate(() => window.__hosl.getInteractable('key-mirrorKey')?.onUse());
+await waitFor((s) => s.progress.keys.mirrorKey, 30000).catch(() => {});
+check('the Mirror Key can be taken after completing the room', await state((s) => s.progress.keys.mirrorKey));
+await page.keyboard.press('KeyT');
+await page.click('.teacher >> text=Walk to the Hall');
+await page.keyboard.press('KeyT');
 await waitFor((s) => !s.cinematic && s.zone === 'hall', 240000).catch(() => {});
-check('Return to the hall walks back to the entrance hall', (await state((s) => s.zone)) === 'hall');
+check('Walk to the Hall returns to the entrance hall', (await state((s) => s.zone)) === 'hall');
 
 check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await browser.close();

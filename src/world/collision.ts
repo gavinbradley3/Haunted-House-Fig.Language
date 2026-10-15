@@ -2,7 +2,7 @@
  * Lightweight 2D (x/z) collision: the player is a circle, the world is a set of
  * axis-aligned boxes. Doors register dynamic boxes that switch off when open.
  */
-import { CORRIDOR, EXTERIOR, HALL, MIRRORS, PLAYER_RADIUS, WALL_T } from './layout';
+import { CORRIDOR, EXTERIOR, GALLERY, HALL, MIRRORS, PLAYER_RADIUS, WALL_T } from './layout';
 
 export interface Box {
   minX: number;
@@ -71,7 +71,7 @@ export const STATIC_BOXES: Box[] = [
   boxAt(-1.75, -0.45, 0.5, 0.5),
 
   // --- Corridor ---
-  ...wallZ(CORRIDOR.zStart, CORRIDOR.zEnd, CORRIDOR.x0 - h),
+  ...wallZ(CORRIDOR.zStart, CORRIDOR.zEnd, CORRIDOR.x0 - h, [[GALLERY.doorZ, 0.96]]),
   ...wallZ(CORRIDOR.zStart, CORRIDOR.zEnd, CORRIDOR.x1 + h),
   ...wallX(CORRIDOR.x0 - WALL_T, CORRIDOR.x1 + WALL_T, CORRIDOR.zEnd - h, [[0, CORRIDOR.mirrorDoor.width]]),
   // Pier table on the corridor's right wall
@@ -88,6 +88,18 @@ export const STATIC_BOXES: Box[] = [
   boxAt(-0.2, -26.6, 0.85, 2.0),
   // The space behind the hidden door is only a shallow alcove
   boxAt(MIRRORS.x0 - 1.0, MIRRORS.jibDoor.z, 1.4, 1.6),
+
+  // --- Portrait Gallery (its east wall is the corridor's west wall) ---
+  ...wallX(GALLERY.x0 - WALL_T, GALLERY.x1, GALLERY.zN + h),
+  ...wallX(GALLERY.x0 - WALL_T, GALLERY.x1, GALLERY.zS - h),
+  ...wallZ(GALLERY.zN, GALLERY.zS, GALLERY.x0 - h),
+  // Long upholstered bench in the middle of the room
+  boxAt(GALLERY.bench.x, GALLERY.bench.z, 2.5, 0.75),
+  // Rope in front of the caretaker's portrait
+  box(GALLERY.x0 + 1.0, GALLERY.x0 + 1.1, GALLERY.caretaker.z - 0.95, GALLERY.caretaker.z + 0.95),
+  // Pedestals in the far corners
+  boxAt(GALLERY.x0 + 0.45, GALLERY.zN - 0.45, 0.6, 0.6),
+  boxAt(GALLERY.x0 + 0.45, GALLERY.zS + 0.45, 0.6, 0.6),
 
   // --- Exterior: keep the player near the porch ---
   box(EXTERIOR.houseX0, EXTERIOR.houseX1, EXTERIOR.facadeZ + 0.0, EXTERIOR.facadeZ + 0.1),

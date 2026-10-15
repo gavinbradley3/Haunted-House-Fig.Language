@@ -5,6 +5,7 @@
  * The teacher drives every transition. Nothing advances on a timer.
  */
 import { getChallenge, SIMILE, type ChallengeId, type CurtainMood } from '../content/simile';
+import type { LessonContent } from '../content/types';
 
 export const STAGES = ['discover', 'learn', 'playA', 'playB', 'prove', 'complete'] as const;
 export type Stage = (typeof STAGES)[number];
@@ -74,27 +75,28 @@ const emptyChoice = (): ChoiceState => ({
   revealedByTeacher: false,
 });
 
-const emptyProve = () => ({
+const emptyProve = (content: LessonContent = SIMILE) => ({
   draft: '',
   responses: [] as string[],
-  criteria: SIMILE.prove.criteria.map(() => false),
+  criteria: content.prove.criteria.map(() => false),
   questionsShown: false,
   modelRevealed: false,
 });
 
-export function initialLessonState(): LessonState {
+export function initialLessonState(content: LessonContent = SIMILE): LessonState {
   return {
     stage: 'discover',
     discover: { revealedA: false, revealedB: false, active: null, questionsShown: false },
     learnStep: 0,
     playA: emptyChoice(),
     playB: emptyChoice(),
-    prove: emptyProve(),
+    prove: emptyProve(content),
     completed: false,
   };
 }
 
 export const LEARN_STEP_COUNT = SIMILE.learn.steps.length;
+export const learnCount = (content: LessonContent = SIMILE) => content.learn.steps.length;
 
 /** Whether the "Continue" button should be enabled for the current stage. */
 export function canAdvance(s: LessonState): boolean {
@@ -115,13 +117,13 @@ export function canAdvance(s: LessonState): boolean {
   }
 }
 
-function isCorrect(challenge: ChallengeId, optionId: string | null): boolean {
+function isCorrect(challenge: ChallengeId, optionId: string | null, content: LessonContent): boolean {
   if (!optionId) return false;
-  return getChallenge(challenge).options.some((o) => o.id === optionId && o.correct);
+  return getChallenge(challenge, content).options.some((o) => o.id === optionId && o.correct);
 }
 
-function correctId(challenge: ChallengeId): string {
-  const opt = getChallenge(challenge).options.find((o) => o.correct);
+function correctId(challenge: ChallengeId, content: LessonContent): string {
+  const opt = getChallenge(challenge, content).options.find((o) => o.correct);
   if (!opt) throw new Error(`Challenge ${challenge} has no correct option`);
   return opt.id;
 }
@@ -136,7 +138,8 @@ function prevStage(stage: Stage): Stage {
   return STAGES[Math.max(i - 1, 0)];
 }
 
-export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
+export function lessonReducer(s: LessonState, a: LessonAction, content: LessonContent = SIMILE): LessonState {
+  const LEARN_STEP_COUNT = content.learn.steps.length;
   switch (a.type) {
     case 'REVEAL_DESCRIPTION': {
       if (s.stage !== 'discover') return s;
@@ -172,14 +175,14 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       if (s.stage !== a.challenge) return s;
       const c = s[a.challenge];
       if (c.solved) return s; // answer locked in; reset to try again
-      if (!getChallenge(a.challenge).options.some((o) => o.id === a.optionId)) return s;
+      if (!getChallenge(a.challenge, content).options.some((o) => o.id === a.optionId)) return s;
       return { ...s, [a.challenge]: { ...c, selected: a.optionId, checked: false } };
     }
     case 'CHECK_ANSWER': {
       if (s.stage !== a.challenge) return s;
       const c = s[a.challenge];
       if (!c.selected || c.solved) return s;
-      const ok = isCorrect(a.challenge, c.selected);
+      const ok = isCorrect(a.challenge, c.selected, content);
       return {
         ...s,
         [a.challenge]: {
@@ -195,13 +198,13 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       const c = s[a.challenge];
       return {
         ...s,
-        [a.challenge]: { ...c, selected: correctId(a.challenge), checked: true, solved: true, revealedByTeacher: true },
+        [a.challenge]: { ...c, selected: correctId(a.challenge, content), checked: true, solved: true, revealedByTeacher: true },
       };
     }
     case 'RESET_QUESTION': {
       switch (s.stage) {
         case 'discover':
-          return { ...s, discover: initialLessonState().discover };
+          return { ...s, discover: initialLessonState(content).discover };
         case 'learn':
           return { ...s, learnStep: 0 };
         case 'playA':
@@ -209,7 +212,7 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
         case 'playB':
           return { ...s, playB: emptyChoice() };
         case 'prove':
-          return { ...s, prove: emptyProve() };
+          return { ...s, prove: emptyProve(content) };
         case 'complete':
           return s;
       }
@@ -241,7 +244,7 @@ export function lessonReducer(s: LessonState, a: LessonAction): LessonState {
       if (s.stage !== 'prove') return s;
       return { ...s, stage: 'complete', completed: true };
     case 'RESET_LESSON':
-      return initialLessonState();
+      return initialLessonState(content);
   }
 }
 

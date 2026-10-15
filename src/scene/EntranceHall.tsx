@@ -23,6 +23,7 @@ import {
 } from './parts/Furnishings';
 import { Fireplace } from './parts/Fireplace';
 import { Interactive } from './Interactive';
+import { ArtPainting } from './parts/Artwork';
 
 const { x0, x1, zFront, zBack, height } = HALL;
 const L = HALL.landing;
@@ -251,7 +252,7 @@ export function EntranceHall() {
         <Architrave c={0} w={HALL.corridorOpening.width} h={HALL.corridorOpening.height} />
         <Sconce x={-1.6} y={2.0} seed={3} intensity={4.5} />
         <Sconce x={1.6} y={2.0} seed={4} light={false} />
-        <Painting x={-4.0} y={2.1} w={0.7} h={0.9} kind="moonhouse" seed={2} />
+        <ArtPainting id="houseBreath" x={-4.0} y={2.15} width={1.0} />
         {/* Upper floor: landing doors and wainscot */}
         <group position={[0, L.y, 0]}>
           <Wainscot x0={x0} x1={x1} gaps={[[-2.6, 1.3], [2.6, 1.3]]} />

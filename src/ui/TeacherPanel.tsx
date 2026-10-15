@@ -1,18 +1,49 @@
+import { useEffect, useState } from 'react';
+import type { RoomId } from '../content/types';
 import { STAGE_LABELS, STAGES } from '../lesson/lessonMachine';
-import { openLesson, closeLesson } from '../lesson/director';
-import { jumpToHall, jumpToMirrors, walkToHall, walkToMirrors } from '../lesson/navigation';
+import { closeLesson, goToKey, openLesson } from '../lesson/director';
+import { jumpToGallery, jumpToHall, jumpToMirrors, walkToHall, walkToMirrors } from '../lesson/navigation';
+import { canCollect, KEY_FOR_ROOM } from '../lesson/progression';
+import { triggerStrangeEvent } from '../scene/HouseEvents';
 import { skipCinematic } from '../scene/Player';
-import { useGame } from '../state/store';
+import { activeLesson, useGame } from '../state/store';
 import { audio } from '../systems/audio';
 import { toggleFullscreen } from './fullscreen';
+
+const ROOM_NAMES: Record<RoomId, string> = { mirrors: 'Hall of Mirrors · Simile', gallery: 'Portrait Gallery · Metaphor' };
+
+/** A button that asks for a second press instead of a browser dialog (dialogs are blocked in some views). */
+function ConfirmButton({ label, confirmLabel, onConfirm }: { label: string; confirmLabel: string; onConfirm: () => void }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const id = window.setTimeout(() => setArmed(false), 3500);
+    return () => clearTimeout(id);
+  }, [armed]);
+  return (
+    <button
+      className={`btn ${armed ? 'now' : ''}`}
+      onClick={() => {
+        if (armed) {
+          setArmed(false);
+          onConfirm();
+        } else setArmed(true);
+      }}
+    >
+      {armed ? confirmLabel : label}
+    </button>
+  );
+}
 
 /** Discreet teacher drawer. Everything here is safe to press at any time. */
 export function TeacherPanel() {
   const s = useGame();
   if (!s.teacherOpen) return null;
-  const stage = s.lesson.stage;
+  const lesson = activeLesson(s);
+  const stage = lesson.stage;
   const challenge = stage === 'playA' || stage === 'playB' ? stage : null;
   const inLesson = s.lessonActive;
+  const p = s.progress;
   return (
     <div className="teacher">
       <h2>Teacher Controls</h2>
@@ -35,28 +66,28 @@ export function TeacherPanel() {
         <button className="btn" onClick={() => s.dispatch({ type: 'RESET_QUESTION' })}>
           Reset this question
         </button>
-        <button
-          className="btn"
-          onClick={() => {
-            if (confirm('Start the whole simile lesson again?')) s.dispatch({ type: 'RESET_LESSON' });
-          }}
-        >
-          Reset the lesson
-        </button>
+        <ConfirmButton label="Reset this lesson" confirmLabel="Press again to reset" onConfirm={() => s.dispatch({ type: 'RESET_LESSON' })} />
       </div>
 
-      <h5>Jump to lesson stage</h5>
-      <div className="stages">
+      <h5>Lesson</h5>
+      <div className="grid">
+        {(['mirrors', 'gallery'] as RoomId[]).map((r) => (
+          <button key={r} className={`btn ${s.room === r ? 'now' : ''}`} onClick={() => openLesson(r)}>
+            {ROOM_NAMES[r]}
+          </button>
+        ))}
+      </div>
+      <div className="stages" style={{ marginTop: 8 }}>
         {STAGES.map((st) => (
           <button
             key={st}
             className={`btn ${stage === st ? 'now' : ''}`}
             onClick={() => {
               s.gotoStage(st);
-              if (!s.lessonActive) openLesson();
+              if (!s.lessonActive) openLesson(s.room);
             }}
           >
-            {STAGE_LABELS[st].replace('Play: ', '')}
+            {STAGE_LABELS[st].replace('Play: ', '').replace('Find the Simile', 'Challenge A').replace('Change the Mood', 'Challenge B')}
           </button>
         ))}
       </div>
@@ -69,14 +100,56 @@ export function TeacherPanel() {
         <button className="btn" onClick={jumpToMirrors}>
           Jump to the Mirrors
         </button>
-        <button className="btn" onClick={walkToHall}>
-          Walk to the Hall
+        <button className="btn" onClick={jumpToGallery}>
+          Jump to the Gallery
         </button>
         <button className="btn" onClick={jumpToHall}>
           Jump to the Hall
         </button>
-        <button className="btn" onClick={inLesson ? closeLesson : openLesson}>
+        <button className="btn" onClick={walkToHall}>
+          Walk to the Hall
+        </button>
+        <button className="btn" onClick={inLesson ? closeLesson : () => openLesson(s.room)}>
           {inLesson ? 'Leave lesson view' : 'Open the lesson'}
+        </button>
+      </div>
+
+      <h5>Keys and doors</h5>
+      <div className="sub" style={{ marginBottom: 8 }}>
+        Mirror Key: {p.keys.mirrorKey ? 'taken' : p.completed.mirrors ? 'waiting in the drawer' : 'not yet earned'} · Gallery door: {p.galleryUnlocked ? 'unlocked' : 'locked'} · Gallery Key:{' '}
+        {p.keys.galleryKey ? 'taken' : p.completed.gallery ? 'waiting in the safe' : 'not yet earned'}
+      </div>
+      <div className="grid">
+        <button className="btn" disabled={!canCollect(p, KEY_FOR_ROOM[s.room])} onClick={() => goToKey(s.room)}>
+          Stand at the key
+        </button>
+        <button className="btn" disabled={p.galleryUnlocked} onClick={() => s.progressDispatch({ type: 'GRANT', upTo: 'galleryOpen' })}>
+          Unlock the Gallery
+        </button>
+        <button className="btn" disabled={p.keys.galleryKey} onClick={() => s.progressDispatch({ type: 'GRANT', upTo: 'galleryKey' })}>
+          Give both keys
+        </button>
+        <ConfirmButton
+          label="Reset all progress"
+          confirmLabel="Press again: lock everything"
+          onConfirm={() => {
+            s.progressDispatch({ type: 'RESET_PROGRESS' });
+            closeLesson();
+            jumpToHall();
+          }}
+        />
+      </div>
+
+      <h5>Atmosphere</h5>
+      <div className="grid">
+        <button className={`btn ${s.eventsOn ? 'now' : ''}`} onClick={() => s.setEventsOn(!s.eventsOn)}>
+          Strange events: {s.eventsOn ? 'on' : 'off'}
+        </button>
+        <button className="btn" onClick={triggerStrangeEvent}>
+          Make something happen
+        </button>
+        <button className={`btn ${s.footstepsOn ? 'now' : ''}`} onClick={() => s.setFootstepsOn(!s.footstepsOn)}>
+          Footsteps: {s.footstepsOn ? 'on' : 'off'}
         </button>
         <button className="btn" onClick={toggleFullscreen}>
           Fullscreen
@@ -115,9 +188,7 @@ export function TeacherPanel() {
         {s.autoQuality ? 'Automatic: lowers itself if the house runs slowly.' : 'Fixed by you. Choose High to let it adjust again.'}
       </div>
 
-      <div className="keys">
-        T teacher · Space skip · P pause · M mute · F fullscreen · Esc free mouse
-      </div>
+      <div className="keys">T teacher · Space skip · P pause · M mute · F fullscreen · Esc free mouse / close</div>
     </div>
   );
 }

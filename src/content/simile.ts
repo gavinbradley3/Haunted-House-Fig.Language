@@ -3,48 +3,12 @@
  * Teachers can edit wording here without touching any game code.
  */
 
-/** How the velvet curtains in the Hall of Mirrors should move. */
-export type CurtainMood = 'still' | 'ordinary' | 'tremble' | 'flutter' | 'slow' | 'breathe';
-
-export interface AnnotatedPart {
-  text: string;
-  /** Annotation role drives the highlight colour and the label. */
-  role?: 'subject' | 'word' | 'compared';
-  label?: string;
-}
-
-export interface ChoiceOption {
-  id: string;
-  letter: string;
-  text: string;
-  correct: boolean;
-  /** One-line verdict shown in bold. */
-  verdict: string;
-  /** Teaching explanation: why it is or is not the answer. */
-  explanation: string;
-  /** Optional curtain behaviour previewed when this option is selected. */
-  curtain?: CurtainMood;
-}
-
-export interface ChoiceChallenge {
-  id: 'playA' | 'playB';
-  title: string;
-  kicker: string;
-  prompt: string;
-  baseSentence?: string;
-  discussion: string;
-  options: ChoiceOption[];
-  /** Shown after the correct answer is found or revealed. */
-  takeaway: string;
-}
-
-export const ROLE_LABELS: Record<NonNullable<AnnotatedPart['role']>, string> = {
-  subject: 'What is being described',
-  word: 'Comparison word',
-  compared: 'What it is compared to',
-};
+export type { AnnotatedPart, ChoiceChallenge, ChoiceOption, CurtainMood, LessonContent } from './types';
+export { ROLE_LABELS } from './types';
+import type { AnnotatedPart, ChoiceChallenge, LessonContent } from './types';
 
 export const SIMILE = {
+  id: 'mirrors' as const,
   device: 'Simile',
   room: 'The Hall of Mirrors',
 
@@ -55,6 +19,8 @@ export const SIMILE = {
       'The mirror is showing you the same curtains, described two different ways. Reveal each description and watch the room.',
     descriptionA: 'The curtains moved in the wind.',
     descriptionB: 'The curtains trembled like frightened hands.',
+    labelA: 'Description A',
+    labelB: 'Description B',
     questions: [
       'Which description creates a stronger picture in your mind?',
       'In description B, what two things are being compared?',
@@ -68,11 +34,13 @@ export const SIMILE = {
       {
         id: 'term',
         title: 'Simile',
-        body: 'A simile compares two different things using the words "like" or "as."',
+        term: 'SIMILE',
+        body: 'A simile compares two *different* things using the words [like] or [as].',
       },
       {
         id: 'why',
         title: 'Why writers use similes',
+        tryIt: 'Picture “a cold room.” Now picture a room “as cold as a cellar in winter.” Which one can you feel?',
         body: 'A simile helps the reader picture something more clearly, or understand how something feels. The writer borrows a picture you already know and attaches it to the thing they are describing.',
       },
       {
@@ -248,12 +216,14 @@ export const SIMILE = {
       'A good simile helps the reader picture something and feel a mood.',
       'Writers choose comparisons on purpose: flags feel cheerful, breathing feels alive and close.',
     ],
-    nextHint: 'Something clicked behind the panelling. A hidden door now stands ajar.',
+    nextHint: 'A drawer has slid open beneath the mirror. Something small and brass is waiting inside. Take it with you.',
   },
 };
 
+SIMILE satisfies LessonContent;
+
 export type ChallengeId = 'playA' | 'playB';
 
-export function getChallenge(id: ChallengeId): ChoiceChallenge {
-  return id === 'playA' ? SIMILE.playA : SIMILE.playB;
+export function getChallenge(id: ChallengeId, content: LessonContent = SIMILE): ChoiceChallenge {
+  return id === 'playA' ? content.playA : content.playB;
 }

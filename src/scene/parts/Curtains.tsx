@@ -9,6 +9,7 @@ import type { CurtainMood } from '../../content/simile';
 import { mats } from '../../systems/materials';
 import { vnoise } from '../../systems/noise';
 import { world } from '../../systems/time';
+import { houseState } from './Lights';
 
 const MOODS: CurtainMood[] = ['still', 'ordinary', 'tremble', 'flutter', 'slow', 'breathe'];
 
@@ -34,7 +35,8 @@ export function Curtains({ mood, width = 1.55, height = 4.4, gap = 0.55 }: { moo
   useFrame(() => {
     const dt = world.dt;
     if (dt === 0) return;
-    const target = mood();
+    // A sudden draught overrides stillness for a few seconds (never during a lesson cue).
+    const target = mood() === 'still' && world.t < houseState.draftUntil ? 'ordinary' : mood();
     const k = 1 - Math.exp(-dt * 1.6);
     for (const md of MOODS) weights.current[md] += ((md === target ? 1 : 0) - weights.current[md]) * k;
     const W = weights.current;

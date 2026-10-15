@@ -50,6 +50,7 @@ const ZONE_NAMES: Record<string, string> = {
   hall: 'The Entrance Hall',
   corridor: 'The Long Corridor',
   mirrors: 'The Hall of Mirrors',
+  gallery: 'The Portrait Gallery',
 };
 
 export function HUD() {
@@ -73,7 +74,8 @@ export function HUD() {
     return () => clearTimeout(id);
   }, [notice, clearNotice]);
 
-  const exploring = phase === 'play' && !cinematic && !lessonActive;
+  const inspecting = useGame((s) => s.inspecting);
+  const exploring = phase === 'play' && !cinematic && !lessonActive && !inspecting;
   return (
     <>
       {exploring && locked && <div className={`crosshair ${hover ? 'on' : ''}`} />}
@@ -113,7 +115,7 @@ export function HUD() {
           Skip <span className="key" style={{ marginLeft: 8 }}>Space</span>
         </button>
       )}
-      {phase === 'play' && !lessonActive && <div className="location">{ZONE_NAMES[zone]}</div>}
+      {phase === 'play' && !lessonActive && !inspecting && <div className="location">{ZONE_NAMES[zone]}</div>}
       {phase !== 'title' && phase !== 'loading' && (
         <button className="teacher-key" title="Teacher controls (T)" onClick={() => setTeacherOpen(!teacherOpen)}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cfa95f" strokeWidth="1.5">

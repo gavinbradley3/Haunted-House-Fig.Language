@@ -10,7 +10,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { game, useGame } from '../state/store';
 import { resolveCircle } from '../world/collision';
-import { EYE_HEIGHT, groundAt, POSES, SHOTS, zoneAt } from '../world/layout';
+import { EYE_HEIGHT, groundAt, POSES, SHOTS, surfaceAt, zoneAt } from '../world/layout';
 import { audio } from '../systems/audio';
 import { getInteractable, pickInteractable } from '../systems/interaction';
 import { liveCamera, world } from '../systems/time';
@@ -86,7 +86,7 @@ export function Player() {
         return;
       }
       // A simple click (no drag) on empty space captures the mouse for free look.
-      if (d.moved < 6 && s.phase === 'play' && !s.shot && !s.cinematic && !s.hover && !s.teacherOpen) {
+      if (d.moved < 6 && s.phase === 'play' && !s.shot && !s.shotPose && !s.cinematic && !s.hover && !s.teacherOpen) {
         void el.requestPointerLock?.();
       }
     };
@@ -114,6 +114,10 @@ export function Player() {
   }, [gl]);
 
   function tryInteract() {
+    if (game().inspecting) {
+      useGame.getState().setInspecting(null);
+      return;
+    }
     if (!canInteract() || game().shot) return;
     const h = game().hover;
     if (!h) return;
@@ -124,6 +128,8 @@ export function Player() {
   const teleport = useGame((s) => s.teleport);
   useEffect(() => {
     if (!teleport) return;
+    // A teleport always wins over handing the lesson camera back to first-person.
+    wasShot.current = false;
     pos.current.set(...teleport.pose.position);
     yaw.current = teleport.pose.yaw;
     pitch.current = teleport.pose.pitch;
@@ -183,8 +189,8 @@ export function Player() {
     }
     cineId.current = null;
 
-    if (s.shot) {
-      const shot = SHOTS[s.shot];
+    if (s.shot || s.shotPose) {
+      const shot = s.shotPose ?? SHOTS[s.shot!];
       const k = 1 - Math.exp(-dt * 2.4);
       const target = new THREE.Vector3(...shot.position);
       // Slow breathing drift so the frame feels alive
@@ -242,7 +248,8 @@ export function Player() {
     const stepPhase = Math.floor(bob.current / Math.PI);
     if (stepPhase !== lastStepPhase.current) {
       lastStepPhase.current = stepPhase;
-      if (moving > 0.6 && s.zone !== 'exterior') audio.footstep(Math.min(1.3, moving / WALK));
+      // Footfalls are tied to distance walked, so they stop the moment you stop.
+      if (moving > 0.6) audio.footstep(Math.min(1.3, moving / WALK), surfaceAt(pos.current.x, pos.current.z));
     }
 
     // Centre-ray interaction (pointer locked). When the pointer is free, hover comes from mouse events.
@@ -256,7 +263,7 @@ export function Player() {
   });
 
   function afterCamera(prevZone: string) {
-    const z = zoneAt(camera.position.z);
+    const z = zoneAt(camera.position.z, camera.position.x);
     if (z !== prevZone) {
       useGame.getState().setZone(z);
       audio.setZone(z);

@@ -21,6 +21,16 @@ export function flicker(t: number, seed: number) {
 /** Global multiplier so lesson moments can dim or brighten all candles in a room. */
 export const lightMood = { hall: 1, mirrors: 1, mirrorsTarget: 1 };
 
+/** Strange-event hooks shared by fixtures and furniture. */
+export const houseState = {
+  /** A wall light near this point stutters until world.t passes `until`. */
+  flicker: { x: 0, z: 0, until: -1 },
+  /** The hall clock's pendulum hangs still. */
+  clockStopped: false,
+  /** A draught moves the curtains until this time. */
+  draftUntil: -1,
+};
+
 const flameGeo = new THREE.SphereGeometry(0.012, 10, 8);
 flameGeo.scale(1, 2.6, 1);
 flameGeo.translate(0, 0.026, 0);
@@ -84,8 +94,19 @@ export function CandleLight({
   castShadow?: boolean;
 }) {
   const ref = useRef<THREE.PointLight>(null!);
+  const wp = useRef(new THREE.Vector3());
   useFrame(() => {
-    ref.current.intensity = intensity * flicker(world.t, seed) * lightMood[room];
+    let k = flicker(world.t, seed) * lightMood[room];
+    const f = houseState.flicker;
+    if (world.t < f.until) {
+      ref.current.getWorldPosition(wp.current);
+      if (Math.hypot(wp.current.x - f.x, wp.current.z - f.z) < 6) {
+        // A stuttering, nearly-out flame: deep dips, then a recovery
+        const u = (f.until - world.t) * 9;
+        k *= Math.sin(u * 1.7) > 0.2 ? 0.12 + 0.2 * Math.abs(Math.sin(u * 5.3)) : 1;
+      }
+    }
+    ref.current.intensity = intensity * k;
   });
   return (
     <pointLight

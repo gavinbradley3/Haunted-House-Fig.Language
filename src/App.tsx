@@ -6,6 +6,7 @@ import { audio } from './systems/audio';
 import { LessonPanel } from './ui/LessonPanel';
 import { HelpOverlay, HUD, TitleScreen } from './ui/Overlays';
 import { TeacherPanel } from './ui/TeacherPanel';
+import { KeyRing, PaintingCard } from './ui/PaintingCard';
 import { toggleFullscreen } from './ui/fullscreen';
 
 function isTyping() {
@@ -43,6 +44,7 @@ function useShortcuts() {
           break;
         case 'Escape':
           if (s.teacherOpen) s.setTeacherOpen(false);
+          else if (s.inspecting) s.setInspecting(null);
           else if (s.helpOpen) s.setHelpOpen(false);
           else if (s.phase === 'play' && !s.lessonActive && !document.pointerLockElement) s.setHelpOpen(true);
           break;
@@ -61,6 +63,7 @@ function useShortcuts() {
     return useGame.subscribe((s, p) => {
       if (s.volume !== p.volume || s.muted !== p.muted) apply();
       if (s.paused !== p.paused) audio.suspend(s.paused);
+      audio.footstepsOn = s.footstepsOn;
     });
   }, []);
 }
@@ -74,6 +77,8 @@ export default function App() {
       <TitleScreen />
       <HUD />
       {lessonActive && <LessonPanel />}
+      <PaintingCard />
+      <KeyRing />
       <TeacherPanel />
       <HelpOverlay />
     </>

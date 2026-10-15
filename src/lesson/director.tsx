@@ -1,11 +1,12 @@
 /**
- * The LessonDirector turns lesson state into what happens in the room:
- * camera shots, mirror effects, curtain moods (via curtainMoodFor), light,
- * sound and the completion sequence. It renders nothing.
+ * Directors turn lesson state into what happens in the room: camera shots,
+ * room effects, light, sound and completion sequences. They render nothing.
+ * This file holds the shared pieces and the Hall of Mirrors director.
  */
 import { useEffect, useRef } from 'react';
 import { SIMILE } from '../content/simile';
-import { game, useGame } from '../state/store';
+import type { RoomId } from '../content/types';
+import { activeLesson, game, useGame } from '../state/store';
 import { audio } from '../systems/audio';
 import { POSES, type ShotName } from '../world/layout';
 import { lightMood } from '../scene/parts/Lights';
@@ -13,7 +14,21 @@ import { fx, pulseRipple, resetFx } from './fx';
 import type { LessonState } from './lessonMachine';
 import { jumpTo } from './navigation';
 
-export function shotFor(l: LessonState): ShotName {
+export function shotFor(room: RoomId, l: LessonState): ShotName {
+  if (room === 'gallery') {
+    switch (l.stage) {
+      case 'discover':
+        return 'caretaker';
+      case 'learn':
+        return l.learnStep === 2 ? 'sitter' : 'caretaker';
+      case 'playA':
+        return 'oldMan';
+      case 'playB':
+        return 'sitter';
+      default:
+        return 'emptyFrame';
+    }
+  }
   switch (l.stage) {
     case 'discover':
       return 'curtains';
@@ -28,29 +43,32 @@ export function shotFor(l: LessonState): ShotName {
     case 'prove':
       return 'speaking';
     case 'complete':
-      return 'speaking';
+      return 'drawer';
   }
 }
 
 /** Shots whose subject is on the left of frame put the lesson panel on the right. */
 export const panelSide = (shot: ShotName | null) => (shot === 'tunnel' || shot === 'jib' ? 'right' : 'left');
 
-/** Begin (or resume) the lesson from the speaking mirror. */
-export function openLesson() {
-  const s = game();
+const ROOM_ENTRY = { mirrors: POSES.mirrorEntry, gallery: POSES.galleryEntry };
+
+/** Begin (or resume) a room's lesson. If the camera is elsewhere, fade to that room first. */
+export function openLesson(room: RoomId = game().room) {
   const enter = () => {
     const g = useGame.getState();
     if (document.pointerLockElement) document.exitPointerLock();
-    g.markMirrorsVisited();
+    g.setInspecting(null);
+    g.setRoom(room);
+    if (room === 'mirrors') g.markMirrorsVisited();
     g.setLessonActive(true);
     g.setHover(null);
-    g.setShot(g.completionShot ?? shotFor(g.lesson));
+    g.setShot(shotFor(room, g.lessons[room]));
     audio.shimmer(0.25);
-    pulseRipple(fx.speaking, 0.8);
+    if (room === 'mirrors') pulseRipple(fx.speaking, 0.8);
   };
-  if (s.zone !== 'mirrors') {
-    jumpTo(POSES.mirrorEntry, () => {
-      useGame.getState().setDoor('mirror', true);
+  if (game().zone !== room) {
+    jumpTo(ROOM_ENTRY[room], () => {
+      useGame.getState().setDoor(room === 'mirrors' ? 'mirror' : 'gallery', true);
       enter();
     });
   } else enter();
@@ -60,6 +78,24 @@ export function closeLesson() {
   const g = useGame.getState();
   g.setLessonActive(false);
   g.setShot(null);
+}
+
+/** Leave the lesson view and stand in front of this room's key, ready to take it. */
+export function goToKey(room: RoomId) {
+  closeLesson();
+  jumpTo(room === 'mirrors' ? POSES.mirrorKey : POSES.galleryKey);
+}
+
+/** Camera follows the active lesson while the lesson view is open. */
+export function LessonCamera() {
+  const lessons = useGame((s) => s.lessons);
+  const room = useGame((s) => s.room);
+  const lessonActive = useGame((s) => s.lessonActive);
+  useEffect(() => {
+    if (!lessonActive) return;
+    useGame.getState().setShot(shotFor(room, lessons[room]));
+  }, [lessons, room, lessonActive]);
+  return null;
 }
 
 const timers: number[] = [];
@@ -79,10 +115,7 @@ function applyEffects(l: LessonState, prev: LessonState | null) {
   fx.clockLightTarget = 0;
   sp.mistTarget = 0;
   if (l.stage !== 'playA') tn.tunnelTarget = 0;
-  if (l.stage !== 'complete') {
-    fx.drawerTarget = 0;
-    fx.jibTarget = 0;
-  }
+  if (l.stage !== 'complete') fx.drawerTarget = 0;
 
   switch (l.stage) {
     case 'discover': {
@@ -190,21 +223,11 @@ function runCompletion() {
     audio.mechanism([4.2, 0.7, -24.9]);
     fx.drawerTarget = 1;
   });
-  later(4200, () => {
-    audio.mechanism([-4.6, 1.2, -23.15]);
-    audio.creak([-4.6, 1.2, -23.15]);
-    fx.jibTarget = 1;
-    fx.jibGlow = 1;
-    const g = useGame.getState();
-    g.setCompletionShot('jib');
-    if (g.lessonActive) g.setShot('jib');
-  });
 }
 
+/** Hall of Mirrors director. */
 export function LessonDirector() {
-  const lesson = useGame((s) => s.lesson);
-  const lessonActive = useGame((s) => s.lessonActive);
-  const completionShot = useGame((s) => s.completionShot);
+  const lesson = useGame((s) => s.lessons.mirrors);
   const replayTick = useGame((s) => s.replayTick);
   const prev = useRef<LessonState | null>(null);
 
@@ -214,30 +237,19 @@ export function LessonDirector() {
       // Lesson was reset or jumped back to the start.
       clearTimers();
       resetFx();
-      useGame.getState().setCompletionShot(null);
     }
     if (p && p.stage === 'complete' && lesson.stage !== 'complete') {
       clearTimers();
-      fx.jibTarget = 0;
       fx.drawerTarget = 0;
-      fx.jibGlow = 0;
-      useGame.getState().setCompletionShot(null);
     }
     applyEffects(lesson, p);
     prev.current = lesson;
   }, [lesson]);
 
-  // Camera follows the lesson while the lesson view is open.
+  // "Replay this moment": re-run the current stage's environmental moment.
   useEffect(() => {
-    const g = useGame.getState();
-    if (!lessonActive) return;
-    g.setShot(lesson.stage === 'complete' && completionShot ? completionShot : shotFor(lesson));
-  }, [lesson, lessonActive, completionShot]);
-
-  // "Replay instructions": re-run the current stage's environmental moment.
-  useEffect(() => {
-    if (replayTick === 0) return;
-    const l = game().lesson;
+    if (replayTick === 0 || game().room !== 'mirrors') return;
+    const l = activeLesson(game());
     pulseRipple(fx.speaking, 1);
     if (l.stage === 'complete') runCompletion();
     else applyEffects(l, null);

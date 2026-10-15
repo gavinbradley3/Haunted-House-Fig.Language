@@ -221,3 +221,16 @@ button { font: inherit; color: inherit; }
 .help td { padding: 9px 0; border-top: 1px solid var(--edge-soft); }
 .help td:first-child { width: 190px; }
 .paused-banner { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); font-family: var(--display); font-size: 22px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--brass-hi); padding: 8px 22px; border: 1px solid var(--edge); background: rgba(0,0,0,0.6); }
+.compare-row { border-top: 1px solid var(--edge-soft); padding-top: 6px; }
+.compare-row .annot { margin: 4px 0 2px; font-size: 38px; line-height: 1.7; }
+
+/* ---------------------------------------------------------------- painting inspection */
+.painting-card { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); width: min(760px, calc(100vw - 48px)); padding: 22px 30px 18px;
+  background: linear-gradient(180deg, rgba(24,20,15,0.94), rgba(12,10,8,0.94)); border: 1px solid var(--edge); box-shadow: 0 24px 70px rgba(0,0,0,0.6); animation: panelIn 0.5s; z-index: 12; }
+.pc-title { font-family: var(--display); font-weight: 600; font-size: 38px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.1; }
+.pc-medium { font-family: var(--display); font-style: italic; font-size: 20px; color: var(--brass); margin: 6px 0 10px; }
+.pc-note { font-size: 22px; line-height: 1.5; margin: 0; }
+.pc-teacher { margin-top: 10px; font-size: 15px; color: var(--ink-faint); }
+.pc-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+.keyring { position: fixed; right: 34px; bottom: 26px; display: flex; gap: 18px; pointer-events: none; }
+.keyglyph { display: flex; align-items: center; gap: 8px; font-family: var(--display); letter-spacing: 0.22em; text-transform: uppercase; font-size: 14px; color: var(--ink-faint); }

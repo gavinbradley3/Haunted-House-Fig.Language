@@ -15,6 +15,7 @@ import { Chandelier, Sconce, lightMood } from './parts/Lights';
 import { Candelabrum, Chaise, ConsoleTable, ProfileFrame, Rug, SashWindow } from './parts/Furnishings';
 import { MirrorGlass, ReflectionPlane } from './parts/Reflection';
 import { Interactive } from './Interactive';
+import { CollectibleKey } from './parts/Key';
 import { openLesson } from '../lesson/director';
 import { clockFace } from '../systems/textures';
 
@@ -87,8 +88,8 @@ function SpeakingMirror() {
   return (
     <Interactive
       id="speaking-mirror"
-      label={() => (game().lessonActive ? null : game().lesson.completed ? 'Look into the mirror again' : 'Look into the mirror')}
-      onUse={openLesson}
+      label={() => (game().lessonActive ? null : game().progress.completed.mirrors ? 'Look into the mirror again' : 'Look into the mirror')}
+      onUse={() => openLesson('mirrors')}
       maxDist={3.6}
     >
       <group position={[x, cy, 0]}>
@@ -108,7 +109,7 @@ function SpeakingMirror() {
 /** Until the lesson starts, the mirror quietly invites a closer look. */
 function SpeakingHint() {
   useEffect(() => {
-    if (game().lesson.stage === 'discover' && !game().lesson.discover.revealedA) {
+    if (game().lessons.mirrors.stage === 'discover' && !game().lessons.mirrors.discover.revealedA) {
       fx.speaking.text = 'Look closer.';
       fx.speaking.brightTarget = 0.18;
     }
@@ -160,17 +161,16 @@ function MantelClock() {
   );
 }
 
+/** The console drawer. It slides open once the room is complete; the Mirror Key lies inside. */
 function KeyDrawer() {
   const m = mats();
   const drawer = useRef<THREE.Group>(null!);
-  const key = useRef<THREE.Group>(null!);
-  const keyMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#c9a35a', metalness: 1, roughness: 0.25, emissive: '#5a3c10', emissiveIntensity: 0 }), []);
   useFrame(() => {
-    fx.drawer += (fx.drawerTarget - fx.drawer) * (1 - Math.exp(-world.dt * 2.2));
+    const done = game().progress.completed.mirrors;
+    // During the completion sequence the director times the opening; afterwards it simply stays open.
+    const target = Math.max(fx.drawerTarget, done && game().lessons.mirrors.stage !== 'complete' ? 1 : 0);
+    fx.drawer += (target - fx.drawer) * (1 - Math.exp(-world.dt * 2.2));
     drawer.current.position.z = 0.42 + fx.drawer * 0.26;
-    key.current.position.y = 0.05 + fx.drawer * 0.03 + Math.sin(world.t * 1.5) * 0.004 * fx.drawer;
-    key.current.rotation.y = world.t * 0.4 * fx.drawer;
-    keyMat.emissiveIntensity = fx.drawer * (0.6 + Math.sin(world.t * 2) * 0.25);
   });
   return (
     <group ref={drawer} position={[0, 0.66, 0.42]}>
@@ -179,26 +179,16 @@ function KeyDrawer() {
         <cylinderGeometry args={[0.018, 0.018, 0.02, 12]} />
       </mesh>
       <mesh geometry={boxGeo(0.5, 0.09, 0.32)} material={m.velvetOx} position={[0, -0.005, -0.16]} />
-      <group ref={key} position={[0, 0.05, -0.14]} rotation={[0, 0, 0]}>
-        <group rotation={[Math.PI / 2, 0, 0]}>
-          <mesh material={keyMat} position={[-0.07, 0, 0]}>
-            <torusGeometry args={[0.028, 0.008, 8, 20]} />
-          </mesh>
-          <mesh material={keyMat} position={[0.02, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.006, 0.006, 0.13, 8]} />
-          </mesh>
-          <mesh geometry={boxGeo(0.018, 0.03, 0.006)} material={keyMat} position={[0.07, -0.018, 0]} />
-          <mesh geometry={boxGeo(0.012, 0.022, 0.006)} material={keyMat} position={[0.05, -0.014, 0]} />
-        </group>
+      <group position={[0, 0.044, -0.13]} rotation={[-Math.PI / 2, 0, 0.35]}>
+        <CollectibleKey keyId="mirrorKey" variant="mirror" />
       </group>
     </group>
   );
 }
 
+/** A jib door papered to match the wall: only the seams give it away. It stays shut. */
 function JibDoor() {
   const m = mats();
-  const leaf = useRef<THREE.Group>(null!);
-  const glow = useRef<THREE.PointLight>(null!);
   const localC = wallLocal('z', 1, jib.z);
   const hingeX = localC - jib.width / 2;
   useEffect(() => {
@@ -206,46 +196,14 @@ function JibDoor() {
     setDynamicCollider(id, boxAt(x0 - 0.15, jib.z, 0.3, jib.width + 0.1), true);
     return () => removeDynamicCollider(id);
   }, []);
-  useFrame(() => {
-    fx.jib += (fx.jibTarget - fx.jib) * (1 - Math.exp(-world.dt * 1.4));
-    leaf.current.rotation.y = fx.jib * 0.75;
-    glow.current.intensity = fx.jib * 3.2 * (0.95 + Math.sin(world.t * 6) * 0.05);
-    setDynamicCollider('door:jib', boxAt(x0 - 0.15, jib.z, 0.3, jib.width + 0.1), fx.jib < 0.5);
-  });
   const W = jib.width - 0.006;
   return (
-    <group>
-      <group position={[hingeX, 0, -0.02]} ref={leaf}>
-        <Interactive
-          id="jib-door"
-          label={() => (fx.jib > 0.5 ? 'Look through the hidden door' : null)}
-          onUse={() => useGame.getState().showNotice('A narrow passage leads toward the Portrait Gallery.', 'That room opens in the next chapter.')}
-        >
-          {/* The leaf carries its own wallpaper and panelling, so it disappears into the wall */}
-          <mesh geometry={boxGeo(W, jib.height, 0.04)} material={m.wallMirror} position={[W / 2, jib.height / 2, 0]} castShadow />
-          <group position={[0, 0, 0.02]}>
-            <PanelField x0={0.003} x1={W - 0.003} y0={0.2} y1={1.1} cols={1} material={m.walnutPanel} />
-            <Run profile="dado" x0={0} x1={W} y={1.12} material={m.walnutPanel} />
-            <Run profile="skirting" x0={0} x1={W} y={0} material={m.walnutPanel} />
-          </group>
-        </Interactive>
-      </group>
-      {/* The space behind */}
-      <group position={[localC, 0, -WALL_T]}>
-        <mesh geometry={boxGeo(1.5, 2.6, 0.04)} material={m.plasterWarm} position={[0, 1.3, -1.5]} />
-        <mesh geometry={boxGeo(0.04, 2.6, 1.5)} material={m.plasterWarm} position={[-0.75, 1.3, -0.75]} />
-        <mesh geometry={boxGeo(0.04, 2.6, 1.5)} material={m.plasterWarm} position={[0.75, 1.3, -0.75]} />
-        <mesh geometry={boxGeo(1.5, 0.04, 1.5)} material={m.floorHall} position={[0, 0, -0.75]} />
-        <mesh geometry={boxGeo(1.5, 0.04, 1.5)} material={m.darkInterior} position={[0, 2.6, -0.75]} />
-        {/* A frame glimpsed at the end of the passage: the next room */}
-        <group position={[0, 1.55, -1.47]}>
-          <ProfileFrame w={0.5} h={0.66} profile="frame" material={m.gilt} />
-          <mesh position={[0, 0, 0.005]}>
-            <planeGeometry args={[0.5, 0.66]} />
-            <meshStandardMaterial color="#1a1510" roughness={0.6} />
-          </mesh>
-        </group>
-        <pointLight ref={glow} position={[0.3, 1.9, -0.9]} intensity={0} distance={4} decay={2} color="#ffae5c" />
+    <group position={[hingeX, 0, -0.02]}>
+      <mesh geometry={boxGeo(W, jib.height, 0.04)} material={m.wallMirror} position={[W / 2, jib.height / 2, 0]} castShadow />
+      <group position={[0, 0, 0.02]}>
+        <PanelField x0={0.003} x1={W - 0.003} y0={0.2} y1={1.1} cols={1} material={m.walnutPanel} />
+        <Run profile="dado" x0={0} x1={W} y={1.12} material={m.walnutPanel} />
+        <Run profile="skirting" x0={0} x1={W} y={0} material={m.walnutPanel} />
       </group>
     </group>
   );
@@ -273,7 +231,7 @@ export function HallOfMirrors() {
   const m = mats();
   const md = CORRIDOR.mirrorDoor;
   const win = MIRRORS.window;
-  const mood = () => curtainMoodFor(game().lesson);
+  const mood = () => curtainMoodFor(game().lessons.mirrors);
 
   return (
     <group>

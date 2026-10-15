@@ -151,7 +151,7 @@ export const WOOD = {
  * Wood grain at along-grain coord `a` (period pa) and across-grain coord `c` (period pc, 0 = none).
  * Returns tone t in ~[0,1] and a height contribution.
  */
-function grain(a: number, c: number, pa: number, pc: number, seed: number, ringFreq: number, warp = 2.6) {
+function grain(a: number, c: number, pa: number, pc: number, seed: number, ringFreq: number, warp = 2.6, contrast = 0.42) {
   const w = fbm(a, c * 1.5, 3, pa, pc ? pc * 1.5 : 0, seed);
   const w2 = fbm(a * 2, c * 0.5, 2, pa * 2, pc ? pc * 0.5 : 0, seed + 5);
   const rc = c * ringFreq + (w - 0.5) * warp * 2 + w2 * warp * 0.8;
@@ -159,7 +159,7 @@ function grain(a: number, c: number, pa: number, pc: number, seed: number, ringF
   const late = smoothstep(0.5, 0.82, ring) * (1 - smoothstep(0.86, 1, ring));
   const pore = vnoise(a * 48, c * 70, pa * 48, pc ? pc * 70 : 0, seed + 9);
   const fleck = vnoise(a * 12, c * 9, pa * 12, pc ? pc * 9 : 0, seed + 13);
-  let t = 0.58 + (w - 0.5) * 0.7 - late * 0.42 + (fleck - 0.5) * 0.12;
+  let t = 0.58 + (w - 0.5) * 0.7 - late * contrast + (fleck - 0.5) * 0.12;
   if (pore < 0.22) t -= 0.1;
   return { t, height: -late * 0.25 - (pore < 0.22 ? 0.12 : 0) + w * 0.1 };
 }
@@ -232,7 +232,7 @@ export function veneer(key: string, pal: WoodPalette, opts: { size?: number; see
       const v = y / S;
       for (let x = 0; x < S; x++) {
         const u = x / S;
-        const g = grain(v * 2, u * 4, 2, 4, seed, 6.0, 0.9);
+        const g = grain(v * 2, u * 4, 2, 4, seed, 7.0, 0.7, 0.22);
         const t = g.t;
         const c = t < 0.5 ? mix(pal.dark, pal.mid, clamp01(t * 2)) : mix(pal.mid, pal.light, clamp01((t - 0.5) * 2));
         b.set(y * S + x, c, (opts.gloss ?? 0.38) + (0.5 - t) * 0.12, g.height);
@@ -281,7 +281,7 @@ export function herringbone(key: string, pal: WoodPalette, opts: { size?: number
         }
         const id = hash2(((ox % cells) + cells) % cells, ((oy % cells) + cells) % cells, seed + (horizontal ? 1 : 2));
         // Grain within a plank: not tiled across planks, so use plank-local coords
-        const g = grain(along * 0.6 + id * 50, across * 0.35 + id * 13, 0, 0, seed + Math.floor(id * 1000), 3.5);
+        const g = grain(along * 0.6 + id * 50, across * 0.35 + id * 13, 0, 0, seed + Math.floor(id * 1000), 3.5, 1.1, 0.3);
         let t = g.t + (id - 0.5) * 0.4;
         const edge = Math.min(across, 1 - across, along / n, 1 - along / n);
         const wear = fbm((x / S) * 2, (y / S) * 2, 3, 2, 2, seed + 21);

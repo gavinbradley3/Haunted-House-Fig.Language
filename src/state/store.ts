@@ -7,9 +7,16 @@ import {
   type Stage,
 } from '../lesson/lessonMachine';
 import type { Pose, ShotName, Zone } from '../world/layout';
+import type { LessonContent, RoomId } from '../content/types';
+import { SIMILE } from '../content/simile';
+import { METAPHOR } from '../content/metaphor';
+import { initialProgress, parseProgress, progressReducer, KEY_FOR_ROOM, type Progress, type ProgressAction } from '../lesson/progression';
+
+export const CONTENT: Record<RoomId, LessonContent> = { mirrors: SIMILE, gallery: METAPHOR };
+export type { RoomId };
 
 export type Phase = 'loading' | 'title' | 'intro' | 'play';
-export type DoorId = 'front' | 'mirror' | 'jib';
+export type DoorId = 'front' | 'mirror' | 'jib' | 'gallery';
 export type Quality = 'high' | 'balanced' | 'low';
 
 export type Vec3 = [number, number, number];
@@ -59,6 +66,10 @@ export interface GameState {
   teleport: { pose: Pose; n: number } | null;
   /** Fixed camera shot used during the lesson; null means free first-person. */
   shot: ShotName | null;
+  /** Painting being inspected (camera framed on it, caption shown). */
+  inspecting: string | null;
+  /** Custom camera framing that overrides `shot` (used for painting inspection). */
+  shotPose: { position: Vec3; target: Vec3 } | null;
   lessonActive: boolean;
   /** Incremented to replay the current stage's intro animation. */
   replayTick: number;
@@ -68,7 +79,13 @@ export interface GameState {
   /** Camera shot override during the completion sequence. */
   completionShot: ShotName | null;
 
-  lesson: LessonState;
+  /** One lesson per room; `room` is the one the lesson panel shows. */
+  lessons: Record<RoomId, LessonState>;
+  room: RoomId;
+  progress: Progress;
+  /** Occasional strange happenings in the house. */
+  eventsOn: boolean;
+  footstepsOn: boolean;
 
   // Actions
   setPhase: (p: Phase) => void;
@@ -95,6 +112,11 @@ export interface GameState {
   setCompletionShot: (s: ShotName | null) => void;
   dispatch: (a: LessonAction) => void;
   gotoStage: (s: Stage) => void;
+  setRoom: (r: RoomId) => void;
+  progressDispatch: (a: ProgressAction) => void;
+  setInspecting: (id: string | null, pose?: GameState['shotPose']) => void;
+  setEventsOn: (v: boolean) => void;
+  setFootstepsOn: (v: boolean) => void;
 }
 
 const loadNumber = (k: string, d: number) => {
@@ -126,16 +148,22 @@ export const useGame = create<GameState>()((set, get) => ({
   pointerLocked: false,
   notice: null,
   hover: null,
-  doors: { front: false, mirror: false, jib: false },
+  doors: { front: false, mirror: false, jib: false, gallery: false },
   cinematic: null,
   teleport: null,
   shot: null,
+  inspecting: null,
+  shotPose: null,
   lessonActive: false,
   replayTick: 0,
   mirrorsVisited: false,
   fading: false,
   completionShot: null,
-  lesson: initialLessonState(),
+  lessons: { mirrors: initialLessonState(SIMILE), gallery: initialLessonState(METAPHOR) },
+  room: 'mirrors',
+  progress: loadProgress(),
+  eventsOn: loadNumber('hosl.events', 1) === 1,
+  footstepsOn: loadNumber('hosl.footsteps', 1) === 1,
 
   setPhase: (phase) => set({ phase }),
   setZone: (zone) => set({ zone }),
@@ -174,9 +202,55 @@ export const useGame = create<GameState>()((set, get) => ({
   markMirrorsVisited: () => set({ mirrorsVisited: true }),
   setFading: (fading) => set({ fading }),
   setCompletionShot: (completionShot) => set({ completionShot }),
-  dispatch: (a) => set({ lesson: lessonReducer(get().lesson, a) }),
-  gotoStage: (stage) => set({ lesson: lessonReducer(get().lesson, { type: 'GOTO_STAGE', stage }) }),
+  dispatch: (a) => {
+    const { lessons, room, progress } = get();
+    const before = lessons[room];
+    const after = lessonReducer(before, a, CONTENT[room]);
+    if (after === before) return;
+    let nextProgress = progress;
+    // Finishing a lesson completes its room (and puts that room's key within reach).
+    if (after.completed && !before.completed) nextProgress = progressReducer(progress, { type: 'COMPLETE_ROOM', room });
+    set({ lessons: { ...lessons, [room]: after } });
+    if (nextProgress !== progress) get().progressDispatch({ type: 'COMPLETE_ROOM', room });
+  },
+  gotoStage: (stage) => get().dispatch({ type: 'GOTO_STAGE', stage }),
+  setRoom: (room) => set({ room }),
+  progressDispatch: (a) => {
+    const before = get().progress;
+    const progress = progressReducer(before, a);
+    if (progress === before) return;
+    save('hosl.progress', JSON.stringify(progress));
+    const patch: Partial<GameState> = { progress };
+    if (a.type === 'RESET_PROGRESS') {
+      patch.lessons = { mirrors: initialLessonState(SIMILE), gallery: initialLessonState(METAPHOR) };
+      patch.doors = { ...get().doors, gallery: false, jib: false };
+      patch.completionShot = null;
+    }
+    set(patch);
+  },
+  setInspecting: (inspecting, pose = null) => set({ inspecting, shotPose: pose }),
+  setEventsOn: (eventsOn) => {
+    save('hosl.events', eventsOn ? '1' : '0');
+    set({ eventsOn });
+  },
+  setFootstepsOn: (footstepsOn) => {
+    save('hosl.footsteps', footstepsOn ? '1' : '0');
+    set({ footstepsOn });
+  },
 }));
+
+function loadProgress(): Progress {
+  try {
+    return parseProgress(localStorage.getItem('hosl.progress'));
+  } catch {
+    return initialProgress();
+  }
+}
+
+/** The lesson currently shown in the lesson panel. */
+export const activeLesson = (s: GameState) => s.lessons[s.room];
+export const activeContent = (s: GameState) => CONTENT[s.room];
+export { KEY_FOR_ROOM };
 
 /** Non-reactive access for use inside animation loops. */
 export const game = () => useGame.getState();
