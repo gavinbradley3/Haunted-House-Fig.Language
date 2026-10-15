@@ -35,7 +35,7 @@ npm run build      # creates the finished game in the dist/ folder
 npm run preview    # serves that finished copy at http://localhost:4173
 ```
 
-The `dist/` folder is a self-contained website. It needs no internet connection, and you can copy it to a USB stick or host it on any static web host.
+The `dist/` folder is a self-contained website. It needs no internet connection and works from any folder, so you can copy it to a USB stick or drag it onto Netlify Drop (app.netlify.com/drop) to get a public link that opens on any device.
 
 ## 3. Playing
 
