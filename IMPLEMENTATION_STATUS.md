@@ -160,9 +160,9 @@ Changes after the first classroom-laptop test, which reported stutters, angelic 
 ## Phase 2.1 verification
 | Check | Result |
 |---|---|
-| `npm test` (adds clip file-name tests) | RESULT_UNIT |
-| `scripts/compile-probe.mjs` | RESULT_COMPILE |
-| `scripts/phase2.mjs` | RESULT_P2 |
-| `scripts/interact.mjs` | RESULT_INT |
+| `npm test` (adds clip file-name tests) | 49 of 49 pass |
+| `scripts/compile-probe.mjs` | 0 shader programs compiled after the title screen (was 23) |
+| `scripts/phase2.mjs` | 24 of 24 pass |
+| `scripts/interact.mjs` | 23 of 23 pass |
 
 Still unverified: how the gust, the lamps sinking and the swarm feel in motion on a real screen, and every sound level.
