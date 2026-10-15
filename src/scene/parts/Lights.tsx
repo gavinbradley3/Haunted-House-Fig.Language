@@ -29,7 +29,36 @@ export const houseState = {
   clockStopped: false,
   /** A draught moves the curtains until this time. */
   draftUntil: -1,
+  /** A gust through the house: every flame bows and dips between these times. */
+  gust: { start: -1, until: -1 },
+  /** Every lamp in the house sinks almost to nothing, then recovers. */
+  dim: { start: -1, until: -1 },
 };
+
+/** 0..1: how hard the current gust is blowing (a smooth swell and fall). */
+export function gustAmount(t: number) {
+  const g = houseState.gust;
+  if (t < g.start || t > g.until) return 0;
+  return Math.sin(Math.PI * ((t - g.start) / (g.until - g.start))) ** 1.4;
+}
+
+/**
+ * How bright the house's lamps are right now (1 = normal): the sinking-lights event
+ * and a gust both pull every flame down together. Applied to the lights and to the
+ * glowing lamp glass, so the whole room visibly sinks.
+ */
+export function lampLevel(t: number, seed = 0) {
+  let k = 1;
+  const d = houseState.dim;
+  if (t >= d.start && t <= d.until) {
+    const fade = 1.6;
+    const u = Math.min(1, (t - d.start) / fade, (d.until - t) / fade);
+    k *= 1 - 0.85 * u * u;
+  }
+  const g = gustAmount(t);
+  if (g > 0) k *= 1 - g * (0.5 + 0.2 * Math.sin(t * 13 + seed));
+  return k;
+}
 
 const flameGeo = new THREE.SphereGeometry(0.012, 10, 8);
 flameGeo.scale(1, 2.6, 1);
@@ -51,8 +80,11 @@ export function Flame({ seed = 0, scale = 1, halo = true }: { seed?: number; sca
   );
   useFrame(() => {
     const f = flicker(world.t, seed);
-    ref.current.scale.set(scale * (0.9 + (f - 0.95) * 1.5), scale * f, scale * (0.9 + (f - 0.95) * 1.5));
-    ref.current.rotation.z = Math.sin(world.t * 3 + seed) * 0.06;
+    const g = gustAmount(world.t);
+    // In a gust the flame bows, shrinks and gutters before standing up again.
+    const shrink = 1 - g * (0.45 + 0.2 * Math.sin(world.t * 17 + seed));
+    ref.current.scale.set(scale * (0.9 + (f - 0.95) * 1.5), scale * f * shrink, scale * (0.9 + (f - 0.95) * 1.5));
+    ref.current.rotation.z = Math.sin(world.t * 3 + seed) * 0.06 + g * (0.9 + 0.25 * Math.sin(world.t * 9 + seed));
   });
   return (
     <group ref={ref}>
@@ -106,7 +138,7 @@ export function CandleLight({
         k *= Math.sin(u * 1.7) > 0.2 ? 0.12 + 0.2 * Math.abs(Math.sin(u * 5.3)) : 1;
       }
     }
-    ref.current.intensity = intensity * k;
+    ref.current.intensity = intensity * k * lampLevel(world.t, seed);
   });
   return (
     <pointLight

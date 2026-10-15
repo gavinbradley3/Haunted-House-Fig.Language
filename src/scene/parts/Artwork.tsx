@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { renderer } from '../../systems/renderer';
 import { PAINTINGS } from '../../content/paintings';
 import { game, useGame } from '../../state/store';
 import { boxGeo } from '../../systems/geometry';
@@ -38,6 +39,7 @@ function pump() {
     tex.dispose();
     tex.image = artCanvas(id);
     tex.needsUpdate = true;
+    renderer.gl?.initTexture(tex);
     window.setTimeout(step, 30);
   };
   window.setTimeout(step, 30);
@@ -83,31 +85,42 @@ export interface LivingFx {
 export const makeLivingFx = (): LivingFx => ({ moths: 0, warm: 0, shiver: 0, flash: 0, fade: 0, text: '', textAmt: 0, targets: {} });
 
 const MOTHS_GLSL = /* glsl */ `
-  float mothShape(vec2 p, float flap) {
+  // One moth: long forewings, small hindwings and a furry body. Returns coverage (x)
+  // and a thin rim along the wing edges (y), so a dark moth still reads on dark paint.
+  vec2 mothShape(vec2 p, float flap, float seed) {
     p.x = abs(p.x);
-    vec2 w1 = (p - vec2(0.011, 0.004)) / vec2(0.013 * flap + 0.002, 0.009);
-    vec2 w2 = (p - vec2(0.008, -0.007)) / vec2(0.009 * flap + 0.002, 0.006);
-    float wings = max(1.0 - smoothstep(0.75, 1.0, length(w1)), 1.0 - smoothstep(0.75, 1.0, length(w2)));
-    float body = 1.0 - smoothstep(0.7, 1.0, length(p / vec2(0.0025, 0.011)));
-    return max(wings, body);
+    vec2 w1 = (p - vec2(0.014 * flap + 0.002, 0.004)) / vec2(0.016 * flap + 0.002, 0.0075);
+    vec2 w2 = (p - vec2(0.007 * flap + 0.001, -0.007)) / vec2(0.008 * flap + 0.002, 0.0062);
+    float a1 = atan(w1.y, w1.x);
+    float rag = 0.04 * sin(a1 * 5.0 + seed * 5.0) + 0.03 * sin(a1 * 17.0 + seed);
+    float d1 = length(w1) + rag;
+    float d2 = length(w2) + 0.03 * sin(atan(w2.y, w2.x) * 7.0 + seed * 3.0);
+    float wings = max(1.0 - smoothstep(0.78, 1.0, d1), 1.0 - smoothstep(0.75, 1.0, d2));
+    float band = smoothstep(0.72, 0.86, min(d1, d2)) * wings;
+    float body = 1.0 - smoothstep(0.6, 1.0, length(p / vec2(0.0032, 0.013)));
+    return vec2(max(wings, body), band * (1.0 - body));
   }
-  // x: pale wing coverage, y: the shadow each moth casts on the canvas
-  vec2 moths(vec2 uv, float t) {
-    float a = 0.0;
-    float sh = 0.0;
-    for (int i = 0; i < 16; i++) {
+  // x: wing coverage, y: pale wing bands, z: the shadows the moths cast on the canvas
+  vec3 moths(vec2 uv, float t) {
+    vec3 acc = vec3(0.0);
+    for (int i = 0; i < 18; i++) {
       float fi = float(i);
-      // Moths circle the sitter's head and shoulders, some drifting wide across the canvas
-      float r = 0.13 + 0.05 * mod(fi, 4.0);
-      vec2 c = vec2(0.5, 0.6) + vec2(sin(t * (0.3 + fi * 0.05) + fi * 2.1) * r * 1.2, cos(t * (0.37 + fi * 0.04) + fi * 1.3) * r);
-      float flap = abs(sin(t * (18.0 + fi * 2.3) + fi));
+      // Trapped and panicking: tight loops round the sitter's head, with sudden darts
+      float r = 0.1 + 0.05 * mod(fi, 4.0);
+      float sp = 0.9 + fi * 0.07;
+      vec2 c = vec2(0.5, 0.62) + vec2(sin(t * sp + fi * 2.1) * r * 1.3, cos(t * sp * 1.23 + fi * 1.3) * r);
+      c += vec2(sin(t * 7.1 + fi * 4.0), cos(t * 6.3 + fi * 2.7)) * 0.018;
+      c += vec2(sin(t * 2.3 + fi), cos(t * 1.9 + fi * 1.7)) * step(0.82, sin(t * 0.7 + fi * 1.9)) * 0.06;
+      float flap = 0.25 + 0.75 * abs(sin(t * (24.0 + fi * 2.3) + fi));
       vec2 p = uv - c;
-      float ang = sin(t * 0.8 + fi) * 0.6;
+      float ang = sin(t * 1.6 + fi) * 0.9;
       p = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * p;
-      a = max(a, mothShape(p * vec2(0.4, 0.34), flap));
-      sh = max(sh, 0.55 * mothShape((p - vec2(0.018, -0.024)) * 0.34, flap));
+      vec2 m = mothShape(p * vec2(0.42, 0.36), flap, fi);
+      acc.x = max(acc.x, m.x);
+      acc.y = max(acc.y, m.y);
+      acc.z = max(acc.z, 0.5 * mothShape((p - vec2(0.016, -0.022)) * 0.36, flap, fi).x);
     }
-    return vec2(a, sh);
+    return acc;
   }
 `;
 
@@ -147,9 +160,10 @@ export function useLivingMaterial(art: ArtId, fx?: LivingFx) {
             float lumi = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
             diffuseColor.rgb = mix(diffuseColor.rgb, vec3(lumi) * vec3(0.32, 0.3, 0.28), uFade * 0.8);
             diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.45, 1.2, 0.68) + vec3(0.06, 0.04, 0.0), uWarm);
-            vec2 mo = moths(puv, uTime) * uMoths;
-            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.012, 0.01, 0.008), mo.y);
-            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.36, 0.32, 0.25), mo.x * 0.9);
+            vec3 mo = moths(puv, uTime) * uMoths;
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.01, 0.008, 0.006), mo.z);
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.05, 0.04, 0.03), mo.x);
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.1, 0.085, 0.064), mo.y * 0.6);
             vec4 tx = texture2D(uText, vMapUv);
             diffuseColor.rgb = mix(diffuseColor.rgb, tx.rgb, tx.a * uTextAmt);`,
           )
@@ -157,8 +171,7 @@ export function useLivingMaterial(art: ArtId, fx?: LivingFx) {
             '#include <emissivemap_fragment>',
             `#include <emissivemap_fragment>
             totalEmissiveRadiance += vec3(0.55, 0.62, 0.8) * uFlash * (0.25 + lumi * 2.5);
-            totalEmissiveRadiance += vec3(0.55, 0.38, 0.1) * uWarm * (0.15 + lumi * 1.2);
-            totalEmissiveRadiance += vec3(0.04, 0.035, 0.025) * mo.x;`,
+            totalEmissiveRadiance += vec3(0.55, 0.38, 0.1) * uWarm * (0.15 + lumi * 1.2);`,
           );
       };
       m.customProgramCacheKey = () => 'living-painting';

@@ -54,4 +54,6 @@ None of these are placeholders in the "grey box" sense, but you could improve th
 - Audio is synthesised. Recorded foley would sound more natural, especially the door creak and footsteps. The footsteps were rebuilt in Phase 2 and measured (see `IMPLEMENTATION_STATUS.md`), but have not been listened to by the developer: listen to `docs/audio/footsteps-new-wood.wav` against `footsteps-old.wav`.
 - Portrait paintings (see above): the strongest candidates for replacement with real artwork.
 
-If you add external assets, list each one here with its source URL, author, licence and any changes you made.
+## Third-party assets
+
+None yet. Recorded sound clips can be added to `src/assets/audio/` (see `docs/SOUNDS.md`). List each one here with its source URL, author, licence and any changes you made.

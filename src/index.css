@@ -234,3 +234,6 @@ button { font: inherit; color: inherit; }
 .pc-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
 .keyring { position: fixed; right: 34px; bottom: 26px; display: flex; gap: 18px; pointer-events: none; }
 .keyglyph { display: flex; align-items: center; gap: 8px; font-family: var(--display); letter-spacing: 0.22em; text-transform: uppercase; font-size: 14px; color: var(--ink-faint); }
+
+/* Moths escaping the portrait: over the 3D view, under the lesson panel (DOM order) */
+.moth-swarm { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }

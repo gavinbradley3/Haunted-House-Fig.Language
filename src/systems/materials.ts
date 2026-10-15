@@ -105,6 +105,7 @@ function build() {
     opacity: 0.92,
   });
   const wax = new THREE.MeshStandardMaterial({ color: '#e8dfc8', roughness: 0.6, emissive: '#3a2a12', emissiveIntensity: 0.4 });
+  // HouseEvents scales this colour when the lights sink; keep the two in step.
   const flame = new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 3, 1.2), toneMapped: true });
   const ember = new THREE.MeshStandardMaterial({ color: '#1a0c06', emissive: '#ff5a1a', emissiveIntensity: 2.2, roughness: 1 });
   const soot = new THREE.MeshStandardMaterial({ color: '#0b0a09', roughness: 0.95 });

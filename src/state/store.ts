@@ -84,7 +84,9 @@ export interface GameState {
   room: RoomId;
   progress: Progress;
   /** Occasional strange happenings in the house. */
-  eventsOn: boolean;
+  /** How often and how plainly the house does strange things while the class explores. */
+  eventLevel: EventLevel;
+  musicOn: boolean;
   footstepsOn: boolean;
 
   // Actions
@@ -115,9 +117,13 @@ export interface GameState {
   setRoom: (r: RoomId) => void;
   progressDispatch: (a: ProgressAction) => void;
   setInspecting: (id: string | null, pose?: GameState['shotPose']) => void;
-  setEventsOn: (v: boolean) => void;
+  setEventLevel: (v: EventLevel) => void;
+  setMusicOn: (v: boolean) => void;
   setFootstepsOn: (v: boolean) => void;
 }
+
+export const EVENT_LEVELS = ['off', 'subtle', 'eerie'] as const;
+export type EventLevel = (typeof EVENT_LEVELS)[number];
 
 const loadNumber = (k: string, d: number) => {
   try {
@@ -162,7 +168,8 @@ export const useGame = create<GameState>()((set, get) => ({
   lessons: { mirrors: initialLessonState(SIMILE), gallery: initialLessonState(METAPHOR) },
   room: 'mirrors',
   progress: loadProgress(),
-  eventsOn: loadNumber('hosl.events', 1) === 1,
+  eventLevel: EVENT_LEVELS[loadNumber('hosl.eventLevel', 2)] ?? 'eerie',
+  musicOn: loadNumber('hosl.music', 1) === 1,
   footstepsOn: loadNumber('hosl.footsteps', 1) === 1,
 
   setPhase: (phase) => set({ phase }),
@@ -229,9 +236,13 @@ export const useGame = create<GameState>()((set, get) => ({
     set(patch);
   },
   setInspecting: (inspecting, pose = null) => set({ inspecting, shotPose: pose }),
-  setEventsOn: (eventsOn) => {
-    save('hosl.events', eventsOn ? '1' : '0');
-    set({ eventsOn });
+  setEventLevel: (eventLevel) => {
+    save('hosl.eventLevel', String(EVENT_LEVELS.indexOf(eventLevel)));
+    set({ eventLevel });
+  },
+  setMusicOn: (musicOn) => {
+    save('hosl.music', musicOn ? '1' : '0');
+    set({ musicOn });
   },
   setFootstepsOn: (footstepsOn) => {
     save('hosl.footsteps', footstepsOn ? '1' : '0');

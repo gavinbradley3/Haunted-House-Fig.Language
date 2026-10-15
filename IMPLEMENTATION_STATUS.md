@@ -133,3 +133,36 @@ These checks drive state through the test hook (`window.__hosl`) for most steps;
 2. Replace the portrait functions with commissioned or licensed images if they distract.
 3. Build Room 3 behind the Dining Room door using the same content and progression pattern (`KEY_FOR_ROOM`, a new `LessonContent`).
 4. Split the bundle per room before adding more.
+
+---
+
+# Phase 2.1: smoother rooms, creepier moths, a livelier house
+
+Changes after the first classroom-laptop test, which reported stutters, angelic moths and events that were too easy to miss.
+
+## Stutters
+- **Cause:** whole rooms were hidden when out of view, lights included. three.js compiles the number of lights into every material's shader, so walking into the gallery recompiled the house. Shaders and textures also compiled the first time each surface came on screen.
+- **Fix:** hidden rooms now move their meshes to a layer the camera does not draw, and keep their lights in the scene at zero brightness (shadows paused). Every material is compiled, and every texture uploaded, while the title screen is showing. Compiling targets the effect composer's buffer, because shader variants differ between the screen and a buffer.
+- **Measured** with `scripts/compile-probe.mjs`, which counts shader programs as the player moves from the title screen through the hall, corridor, Hall of Mirrors and Portrait Gallery: **23 programs compiled mid-game before the fix, 0 after.** The software renderer can't show whether the laptop stutter is gone, but a mid-game shader compile was its likely cause, and none remain.
+
+## Moths
+- **In the painting:** dusty grey-brown moths with swept wings and darting, panicky flight, in place of the pale blobs.
+- **The swarm:** a second after the class picks the moth metaphor, about 34 moths burst out of the portrait and flutter past the viewer for about 2.5 s, with a papery wing sound. The swarm is drawn under the lesson panel, so it never covers the text, and it is skipped when the computer asks for reduced motion.
+
+## Strange events
+- A three-way **level** in the teacher panel: *off*, *subtle* (the old pacing) and *eerie* (new default: first event after ~25 s, then every 22 to 50 s).
+- **New events at eerie:** every lamp in the house sinks to a fraction of its light and recovers (verified: the frame is about 40% darker at full depth); a gust makes every flame bow and dip, with a wind sound; a mirror fogs as if breathed on.
+- **Recorded-clip events**, which only run once sound files are added: whispers behind you, a distant giggle, a music box, footsteps upstairs, a sigh.
+
+## Sound clips
+`src/systems/clips.ts` defines the slots. Drop a file named after a slot into `src/assets/audio/` and rebuild, and the game picks it up with no code change. Slots: `music`, `wind`, `whisper`, `giggle`, `music-box`, `footsteps-above`, `sigh`, `door-creak`, `step-wood`, `step-carpet`. Music plays quietly while exploring and drops lower during lessons, with its own teacher toggle. `docs/SOUNDS.md` is the shopping list. **Checked** in the browser with stand-in files: they load, play, fall back cleanly when a slot is empty, and a wrongly named file is reported in the console. No real clips have been chosen or heard yet.
+
+## Phase 2.1 verification
+| Check | Result |
+|---|---|
+| `npm test` (adds clip file-name tests) | RESULT_UNIT |
+| `scripts/compile-probe.mjs` | RESULT_COMPILE |
+| `scripts/phase2.mjs` | RESULT_P2 |
+| `scripts/interact.mjs` | RESULT_INT |
+
+Still unverified: how the gust, the lamps sinking and the swarm feel in motion on a real screen, and every sound level.

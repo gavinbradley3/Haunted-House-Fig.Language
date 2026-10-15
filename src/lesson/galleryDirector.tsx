@@ -4,7 +4,8 @@
  * lady's portrait acts out each sentence, and the empty frame takes the class's title.
  */
 import { useEffect, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 import { METAPHOR } from '../content/metaphor';
 import { game, useGame } from '../state/store';
 import { audio } from '../systems/audio';
@@ -12,6 +13,18 @@ import { world } from '../systems/time';
 import { GALLERY } from '../world/layout';
 import { gfx, resetGfx } from './galleryFx';
 import type { LessonState } from './lessonMachine';
+import { releaseMoths } from '../ui/MothSwarm';
+
+let cam: THREE.Camera | null = null;
+/** The sitter's portrait, where the moths come from. */
+const SITTER_CENTRE = new THREE.Vector3(GALLERY.sitter.x, GALLERY.sitter.y - 0.5, GALLERY.zN + 0.05);
+
+function mothsFlyOut() {
+  if (!cam) return;
+  const p = SITTER_CENTRE.clone().project(cam);
+  if (p.z > 1 || Math.abs(p.x) > 1.2 || Math.abs(p.y) > 1.2) return;
+  if (releaseMoths((p.x + 1) / 2, (1 - p.y) / 2)) audio.mothSwarm();
+}
 
 const CARETAKER_POS: [number, number, number] = [GALLERY.x0 + 0.3, 2.6, GALLERY.caretaker.z];
 const timers: number[] = [];
@@ -71,6 +84,8 @@ function apply(l: LessonState, prev: LessonState | null) {
       if (opt?.effect === 'moths') {
         s.moths = 1;
         s.shiver = 0.25;
+        // The painting fills with moths first, then they burst out into the room.
+        if (prev && prev.playB.selected !== l.playB.selected) later(900, mothsFlyOut);
       }
       if (opt?.effect === 'sunflowers') s.warm = 1;
       if (opt?.effect === 'shiver') s.shiver = 1;
@@ -111,6 +126,8 @@ export function GalleryDirector() {
   const lesson = useGame((s) => s.lessons.gallery);
   const replayTick = useGame((s) => s.replayTick);
   const prev = useRef<LessonState | null>(null);
+  const { camera } = useThree();
+  cam = camera;
 
   useEffect(() => {
     const p = prev.current;

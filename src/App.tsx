@@ -7,6 +7,7 @@ import { LessonPanel } from './ui/LessonPanel';
 import { HelpOverlay, HUD, TitleScreen } from './ui/Overlays';
 import { TeacherPanel } from './ui/TeacherPanel';
 import { KeyRing, PaintingCard } from './ui/PaintingCard';
+import { MothSwarm } from './ui/MothSwarm';
 import { toggleFullscreen } from './ui/fullscreen';
 
 function isTyping() {
@@ -58,12 +59,15 @@ function useShortcuts() {
     const apply = () => {
       const s = useGame.getState();
       audio.setVolume(s.volume, s.muted);
+      audio.setMusicOn(s.musicOn);
     };
     apply();
     return useGame.subscribe((s, p) => {
       if (s.volume !== p.volume || s.muted !== p.muted) apply();
       if (s.paused !== p.paused) audio.suspend(s.paused);
       audio.footstepsOn = s.footstepsOn;
+      if (s.musicOn !== p.musicOn) audio.setMusicOn(s.musicOn);
+      if (s.lessonActive !== p.lessonActive) audio.setLessonActive(s.lessonActive);
     });
   }, []);
 }
@@ -74,6 +78,7 @@ export default function App() {
   return (
     <>
       <GameCanvas />
+      <MothSwarm />
       <TitleScreen />
       <HUD />
       {lessonActive && <LessonPanel />}

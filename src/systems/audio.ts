@@ -1,12 +1,14 @@
 /**
  * Procedural sound design with the Web Audio API.
- * Every sound (wind, clocks, creaks, footsteps, fire, mechanisms) is synthesised
- * here, so no audio files or licences are involved.
+ * Every built-in sound (wind, clocks, creaks, footsteps, fire, mechanisms) is
+ * synthesised here. Recorded clips are optional extras (see systems/clips.ts):
+ * when a clip is present it adds an event or replaces its synthesised version.
  *
  * Browsers block audio until the user interacts; call `audio.unlock()` from a click.
  */
 import type { Zone } from '../world/layout';
 import { renderFootstep, type Surface } from './footstepSynth';
+import { clipFiles, type ClipSlot } from './clips';
 
 type V3 = [number, number, number];
 export type ClockVoice = 'tick' | 'loud' | 'footsteps' | 'silent';
@@ -48,6 +50,12 @@ class AudioEngine {
   private volume = 0.7;
   private muted = false;
   private zone: Zone = 'exterior';
+  private clips: Partial<Record<ClipSlot, AudioBuffer[]>> = {};
+  private lastClip: Partial<Record<ClipSlot, number>> = {};
+  private windSynth!: AudioNode;
+  private musicGain!: GainNode;
+  private musicOn = true;
+  private lessonDuck = false;
 
   get ready() {
     return !!this.ctx;
@@ -78,7 +86,11 @@ class AudioEngine {
     this.reverbSend.connect(this.reverb).connect(this.master);
     this.buildBuffers();
     this.startAmbience();
+    this.musicGain = ctx.createGain();
+    this.musicGain.gain.value = 0;
+    this.musicGain.connect(this.amb);
     this.applyVolume();
+    void this.loadClips();
     this.schedTimer = window.setInterval(() => this.schedule(), 80);
   }
 
@@ -128,6 +140,70 @@ class AudioEngine {
     this.windFilter.frequency.setTargetAtTime(outside ? 900 : 320, t, 0.8);
     this.roomGain.gain.setTargetAtTime(outside ? 0 : 0.06, t, 1);
     this.reverbSend.gain.setTargetAtTime(outside ? 0.08 : zone === 'mirrors' ? 0.45 : 0.32, t, 0.5);
+  }
+
+  // ------------------------------------------------------------ recorded clips
+
+  private async loadClips() {
+    const ctx = this.ctx!;
+    for (const [slot, urls] of Object.entries(clipFiles()) as [ClipSlot, string[]][]) {
+      const decoded: AudioBuffer[] = [];
+      for (const url of urls) {
+        try {
+          decoded.push(await ctx.decodeAudioData(await (await fetch(url)).arrayBuffer()));
+        } catch (e) {
+          console.warn(`[sound] could not load ${url}`, e);
+        }
+      }
+      if (decoded.length) this.clips[slot] = decoded;
+    }
+    if (this.clips.wind) {
+      // Recorded wind takes over from the synthesised wind, through the same muffling.
+      this.windSynth.disconnect();
+      this.loop(this.clips.wind[0], this.windFilter);
+    }
+    if (this.clips.music) {
+      this.loop(this.clips.music[0], this.musicGain);
+      this.applyMusic();
+    }
+  }
+
+  /** Is there a recorded clip for this slot? */
+  hasClip(slot: ClipSlot) {
+    return !!this.clips[slot]?.length;
+  }
+
+  /** A random variant, never the same one twice running. */
+  private pickClip(slot: ClipSlot) {
+    const list = this.clips[slot];
+    if (!list?.length) return null;
+    let k = Math.floor(Math.random() * list.length);
+    if (list.length > 1 && k === this.lastClip[slot]) k = (k + 1) % list.length;
+    this.lastClip[slot] = k;
+    return list[k];
+  }
+
+  /** Play a recorded clip. Returns false if no file was supplied for the slot. */
+  playClip(slot: ClipSlot, opts: { gain?: number; rate?: number; at?: V3; delay?: number; reverb?: number } = {}) {
+    const b = this.pickClip(slot);
+    if (!b) return false;
+    this.playBuffer(b, opts);
+    return true;
+  }
+
+  setMusicOn(on: boolean) {
+    this.musicOn = on;
+    this.applyMusic();
+  }
+  /** Lessons keep the music, but well under the teacher's voice. */
+  setLessonActive(on: boolean) {
+    this.lessonDuck = on;
+    this.applyMusic();
+  }
+  private applyMusic() {
+    if (!this.ctx || !this.musicGain) return;
+    const level = !this.musicOn || !this.clips.music ? 0 : this.lessonDuck ? 0.05 : 0.14;
+    this.musicGain.gain.setTargetAtTime(level, this.ctx.currentTime, 1.5);
   }
 
   /** Duck or restore the ambience (e.g. "as quiet as an empty theatre"). */
@@ -259,6 +335,26 @@ class AudioEngine {
       return (r() * 2 - 1) * env * 0.4;
     });
     this.buffers.pop = this.buf(0.05, (t) => (r() * 2 - 1) * Math.exp(-t * 160));
+    // Moth wings: papery noise bursts fluttering at 20 to 40 Hz, many wings at once,
+    // swelling as the swarm comes closer, then gone.
+    let hp = 0;
+    let prev = 0;
+    this.buffers.flutter = this.buf(2.8, (t) => {
+      const n = r() * 2 - 1;
+      hp = 0.82 * (hp + n - prev);
+      prev = n;
+      let am = 0;
+      for (let k = 0; k < 6; k++) am += Math.max(0, Math.sin(2 * Math.PI * (19 + k * 3.7) * t + k * 1.9 + Math.sin(t * (3 + k)) * 2)) ** 3;
+      const env = Math.min(1, t / 1.1) ** 2 * Math.max(0, 1 - Math.max(0, t - 1.7) / 1.1);
+      return hp * (am / 3) * env * 0.5;
+    });
+    // A draught: wind swelling through a gap under a door
+    let gl = 0;
+    this.buffers.gust = this.buf(4, (t) => {
+      gl = (gl + 0.06 * (r() * 2 - 1)) / 1.06;
+      const env = Math.sin(Math.PI * Math.min(1, t / 4)) ** 1.5;
+      return gl * 5 * env * (0.8 + 0.2 * Math.sin(t * 9));
+    });
     // Thunder: brown-ish noise with a slow swell and a long rolling decay
     let tl = 0;
     this.buffers.thunder = this.buf(4.5, (t) => {
@@ -318,7 +414,9 @@ class AudioEngine {
     gust.connect(gustGain).connect(this.windGain.gain);
     gust.start();
     this.loop(this.buffers.brown, band);
-    band.connect(this.windFilter).connect(this.windGain).connect(this.amb);
+    this.windSynth = band;
+    band.connect(this.windFilter);
+    this.windFilter.connect(this.windGain).connect(this.amb);
     // Room tone
     this.roomGain = ctx.createGain();
     this.roomGain.gain.value = 0;
@@ -390,10 +488,14 @@ class AudioEngine {
   // ------------------------------------------------------------ one-shots
 
   private play(name: string, opts: { gain?: number; rate?: number; at?: V3; delay?: number; reverb?: number } = {}) {
+    if (this.buffers[name]) this.playBuffer(this.buffers[name], opts);
+  }
+
+  private playBuffer(buffer: AudioBuffer, opts: { gain?: number; rate?: number; at?: V3; delay?: number; reverb?: number } = {}) {
     const ctx = this.ctx;
-    if (!ctx || !this.buffers[name]) return;
+    if (!ctx) return;
     const s = ctx.createBufferSource();
-    s.buffer = this.buffers[name];
+    s.buffer = buffer;
     s.playbackRate.value = opts.rate ?? 1;
     const g = ctx.createGain();
     g.gain.value = opts.gain ?? 1;
@@ -422,6 +524,11 @@ class AudioEngine {
     this.stepIndex = k;
     const foot = this.stepIndex % 2 ? 0.985 : 1.015;
     const base = surface === 'gravel' ? 0.13 : surface === 'carpet' ? 0.1 : 0.15;
+    const recorded = surface === 'wood' ? 'step-wood' : surface === 'carpet' ? 'step-carpet' : null;
+    if (recorded && this.hasClip(recorded)) {
+      this.playClip(recorded, { gain: base * 2 * (0.85 + Math.random() * 0.25), rate: foot * (0.97 + Math.random() * 0.06), reverb: 0.4 });
+      return;
+    }
     this.play(`step-${surface}-${k}`, {
       gain: base * (0.85 + Math.random() * 0.25) * Math.min(1.2, 0.75 + speed * 0.25),
       rate: foot * (0.97 + Math.random() * 0.06),
@@ -431,7 +538,8 @@ class AudioEngine {
   }
   doorOpen(at: V3, heavy = true) {
     this.play('latch', { at, gain: 0.7 });
-    this.play('creakDoor', { at, gain: heavy ? 0.45 : 0.3, rate: heavy ? 0.85 : 1.1, delay: 0.12 });
+    if (!this.playClip('door-creak', { at, gain: heavy ? 0.8 : 0.55, rate: heavy ? 0.95 : 1.08, delay: 0.12 }))
+      this.play('creakDoor', { at, gain: heavy ? 0.45 : 0.3, rate: heavy ? 0.85 : 1.1, delay: 0.12 });
   }
   doorClose(at: V3) {
     this.play('creakShort', { at, gain: 0.25, rate: 0.9 });
@@ -480,6 +588,15 @@ class AudioEngine {
   /** A board creaking under weight that is not yours. */
   distantCreak(at: V3) {
     this.play('creakFloor', { at, gain: 0.3, rate: 0.7 + Math.random() * 0.2 });
+  }
+  /** The swarm of moths bursting out of the painting toward the room. */
+  mothSwarm() {
+    this.play('flutter', { gain: 0.42, reverb: 0.25 });
+    this.play('flutter', { gain: 0.25, rate: 1.18, delay: 0.25, reverb: 0.25 });
+  }
+  /** A draught finds its way through the house: candles bow, the curtains stir. */
+  gust() {
+    this.play('gust', { gain: 0.5, rate: 0.9 + Math.random() * 0.2, reverb: 0.5 });
   }
   /** Footsteps somewhere in an empty hall: used after the model simile is revealed. */
   distantSteps() {

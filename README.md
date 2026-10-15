@@ -72,7 +72,8 @@ The `dist/` folder is a self-contained website. It needs no internet connection 
 - **Reset the lesson** starts the simile lesson from the beginning.
 - **Lesson** chooses which room's lesson the panel shows (Mirrors or Gallery), and **Jump to lesson stage** goes straight to any stage of it.
 - **Keys and doors** shows where the class is. **Stand at the key** moves you in front of a waiting key. **Unlock the Gallery** and **Give both keys** skip ahead. **Reset all progress** locks everything again (press twice to confirm).
-- **Atmosphere**: turn the house's occasional strange events on or off, make one happen on demand, and turn footsteps on or off.
+- **Atmosphere**: set how often the house does strange things while the class explores (*off*, *subtle*, or *eerie*, the default), make one happen on demand, and turn footsteps and music on or off. Nothing strange happens during a lesson.
+- **Sound clips**: whispers, a distant giggle, a music box, footsteps upstairs and background music play once you add the sound files. See [docs/SOUNDS.md](docs/SOUNDS.md) for what to look for and where to put them.
 - **Walk to / Jump to the Mirrors or the Hall**: *Walk* plays a guided camera walk and opens doors automatically. *Jump* fades to black and moves you instantly.
 - **Open the lesson / Leave lesson view** opens or closes the lesson panel. Your place in the lesson is kept.
 - **Sound** has mute and a volume slider.

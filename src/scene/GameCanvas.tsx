@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer, N8AO, Noise, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { BlendFunction, ToneMappingMode } from 'postprocessing';
@@ -21,12 +21,14 @@ import { GalleryDirector } from '../lesson/galleryDirector';
 import { PortraitGallery } from './PortraitGallery';
 import { HouseEvents } from './HouseEvents';
 import { preloadArt } from './parts/Artwork';
+import { renderer } from '../systems/renderer';
 
 /** Builds materials/textures once the GL context exists, then reports ready. */
 function Setup() {
   const { gl, scene } = useThree();
   const setPhase = useGame((s) => s.setPhase);
   useMemo(() => {
+    renderer.gl = gl;
     setMaxAnisotropy(gl.capabilities.getMaxAnisotropy());
     mats();
   }, [gl]);
@@ -74,7 +76,16 @@ function ShadowScheduler() {
   return null;
 }
 
-/** Hide whole areas the camera cannot see to save draw calls. */
+/** Layer for meshes in areas the camera cannot see. The main camera only draws layer 0. */
+const HIDDEN_LAYER = 5;
+
+/**
+ * Hide whole areas the camera cannot see to save draw calls.
+ *
+ * Meshes move to a layer the camera does not draw. Lights stay in the scene at zero
+ * intensity: three.js compiles the number of lights into every material's shader,
+ * so removing a room's lights would recompile the whole house (a visible stutter).
+ */
 function Culling({ children, area }: { children: React.ReactNode; area: 'exterior' | 'mirrors' | 'gallery' }) {
   const zone = useGame((s) => s.zone);
   const mirrorOpen = useGame((s) => s.doors.mirror);
@@ -84,7 +95,79 @@ function Culling({ children, area }: { children: React.ReactNode; area: 'exterio
   if (area === 'gallery') visible = zone === 'gallery' || (zone === 'corridor' && galleryOpen);
   if (area === 'exterior') visible = zone === 'exterior' || zone === 'hall' || (zone === 'corridor' && frontOpen);
   if (area === 'mirrors') visible = zone === 'mirrors' || zone === 'corridor' || (zone === 'hall' && mirrorOpen);
-  return <group visible={visible}>{children}</group>;
+  const group = useRef<THREE.Group>(null!);
+  const st = useMemo(() => ({ shown: true, lights: [] as THREE.Light[], frames: 0, dirty: true }), []);
+  if (st.shown !== visible) {
+    st.shown = visible;
+    st.dirty = true;
+  }
+  // Runs after the fixtures set their own intensities (priority 0) and before the
+  // effect composer renders the frame (priority 1).
+  useFrame(() => {
+    // Re-walk the tree now and then so newly mounted objects follow the area's state.
+    if (st.dirty || ++st.frames % 30 === 0) {
+      st.dirty = false;
+      st.lights = [];
+      group.current.traverse((o) => {
+        if ((o as THREE.Light).isLight) st.lights.push(o as THREE.Light);
+        else if (o !== group.current) o.layers.set(st.shown ? 0 : HIDDEN_LAYER);
+      });
+    }
+    for (const l of st.lights) {
+      const shadow = (l as THREE.PointLight).shadow as THREE.LightShadow | undefined;
+      if (st.shown) {
+        if (l.userData.culledFrom !== undefined) {
+          l.intensity = l.userData.culledFrom;
+          delete l.userData.culledFrom;
+          if (shadow) shadow.needsUpdate = true;
+        }
+      } else {
+        if (l.userData.culledFrom === undefined) l.userData.culledFrom = l.intensity;
+        l.intensity = 0;
+      }
+      if (shadow) shadow.autoUpdate = st.shown;
+    }
+  }, 0.5);
+  return <group ref={group}>{children}</group>;
+}
+
+/**
+ * Compile every material in the house while the title screen is up, so walking into
+ * a room for the first time does not stall while its shaders compile. Also uploads
+ * every texture to the GPU ahead of time.
+ */
+function Precompile() {
+  const { gl, scene, camera } = useThree();
+  const phase = useGame((s) => s.phase);
+  const done = useRef(false);
+  useEffect(() => {
+    if (phase !== 'title' || done.current) return;
+    done.current = true;
+    const id = window.setTimeout(() => {
+      // The scene renders into the effect composer's buffer, never straight to the
+      // screen, and shader variants differ between the two. Compile for a buffer.
+      const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
+      const prev = gl.getRenderTarget();
+      gl.setRenderTarget(target);
+      const ready = gl.compileAsync(scene, camera);
+      gl.setRenderTarget(prev);
+      const seen = new Set<THREE.Texture>();
+      scene.traverse((o) => {
+        const mat = (o as THREE.Mesh).material;
+        for (const m of Array.isArray(mat) ? mat : mat ? [mat] : []) {
+          for (const v of Object.values(m)) {
+            if ((v as THREE.Texture)?.isTexture && !seen.has(v as THREE.Texture)) {
+              seen.add(v as THREE.Texture);
+              gl.initTexture(v as THREE.Texture);
+            }
+          }
+        }
+      });
+      void ready.finally(() => target.dispose());
+    }, 1200);
+    return () => clearTimeout(id);
+  }, [phase, gl, scene, camera]);
+  return null;
 }
 
 /**
@@ -156,6 +239,7 @@ export function GameCanvas() {
         <LessonCamera />
         <HouseEvents />
         <FpsGuard />
+        <Precompile />
         <EffectComposer multisampling={q.msaa} enableNormalPass={false} key={quality}>
           {q.ao ? <N8AO aoRadius={0.7} intensity={2.2} distanceFalloff={0.6} halfRes quality={q.ao} color="#050302" /> : <></>}
           <Bloom mipmapBlur intensity={0.55} luminanceThreshold={0.85} luminanceSmoothing={0.2} radius={0.7} />

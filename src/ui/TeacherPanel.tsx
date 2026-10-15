@@ -6,9 +6,15 @@ import { jumpToGallery, jumpToHall, jumpToMirrors, walkToHall, walkToMirrors } f
 import { canCollect, KEY_FOR_ROOM } from '../lesson/progression';
 import { triggerStrangeEvent } from '../scene/HouseEvents';
 import { skipCinematic } from '../scene/Player';
-import { activeLesson, useGame } from '../state/store';
+import { activeLesson, EVENT_LEVELS, useGame, type EventLevel } from '../state/store';
 import { audio } from '../systems/audio';
 import { toggleFullscreen } from './fullscreen';
+
+const EVENT_HELP: Record<EventLevel, string> = {
+  off: 'The house stays still.',
+  subtle: 'Now and then, something small: a creak, a stopped clock. Easy to miss.',
+  eerie: 'More often, and some you will notice: candles bow in a draught, lights sink, a mirror fogs.',
+};
 
 const ROOM_NAMES: Record<RoomId, string> = { mirrors: 'Hall of Mirrors · Simile', gallery: 'Portrait Gallery · Metaphor' };
 
@@ -142,14 +148,19 @@ export function TeacherPanel() {
 
       <h5>Atmosphere</h5>
       <div className="grid">
-        <button className={`btn ${s.eventsOn ? 'now' : ''}`} onClick={() => s.setEventsOn(!s.eventsOn)}>
-          Strange events: {s.eventsOn ? 'on' : 'off'}
-        </button>
+        {EVENT_LEVELS.map((lvl) => (
+          <button key={lvl} className={`btn ${s.eventLevel === lvl ? 'now' : ''}`} onClick={() => s.setEventLevel(lvl)} title={EVENT_HELP[lvl]}>
+            Strange events: {lvl}
+          </button>
+        ))}
         <button className="btn" onClick={triggerStrangeEvent}>
           Make something happen
         </button>
         <button className={`btn ${s.footstepsOn ? 'now' : ''}`} onClick={() => s.setFootstepsOn(!s.footstepsOn)}>
           Footsteps: {s.footstepsOn ? 'on' : 'off'}
+        </button>
+        <button className={`btn ${s.musicOn ? 'now' : ''}`} onClick={() => s.setMusicOn(!s.musicOn)} title="Plays only if a music file has been added (see docs/SOUNDS.md)">
+          Music: {s.musicOn ? 'on' : 'off'}
         </button>
         <button className="btn" onClick={toggleFullscreen}>
           Fullscreen
