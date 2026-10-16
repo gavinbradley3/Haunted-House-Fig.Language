@@ -8,6 +8,8 @@ import { HelpOverlay, HUD, TitleScreen } from './ui/Overlays';
 import { TeacherPanel } from './ui/TeacherPanel';
 import { KeyRing, PaintingCard } from './ui/PaintingCard';
 import { MothSwarm } from './ui/MothSwarm';
+import { Ending } from './ui/Ending';
+import { SoundCaption } from './ui/SoundCaption';
 import { toggleFullscreen } from './ui/fullscreen';
 
 function isTyping() {
@@ -74,7 +76,7 @@ function useShortcuts() {
 
 export default function App() {
   useShortcuts();
-  const lessonActive = useGame((s) => s.lessonActive);
+  const lessonActive = useGame((s) => s.lessonActive && !s.endingOpen);
   return (
     <>
       <GameCanvas />
@@ -84,6 +86,8 @@ export default function App() {
       {lessonActive && <LessonPanel />}
       <PaintingCard />
       <KeyRing />
+      <SoundCaption />
+      <Ending />
       <TeacherPanel />
       <HelpOverlay />
     </>

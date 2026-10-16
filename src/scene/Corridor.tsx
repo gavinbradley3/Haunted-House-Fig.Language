@@ -1,6 +1,4 @@
-import { useRef } from 'react';
 import { game, useGame } from '../state/store';
-import { galleryDoorState } from '../lesson/progression';
 import { ArtPainting } from './parts/Artwork';
 import { audio } from '../systems/audio';
 import { boxGeo } from '../systems/geometry';
@@ -8,6 +6,7 @@ import { mats } from '../systems/materials';
 import { CORRIDOR, WALL_T } from '../world/layout';
 import { Architrave, Cornice, OnWall, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
 import { Door } from './parts/Door';
+import { KeyedDoor } from './parts/KeyedDoor';
 import { Sconce } from './parts/Lights';
 import { ConsoleTable, Rug } from './parts/Furnishings';
 
@@ -17,7 +16,6 @@ const DOOR_H = 2.3;
 
 export function Corridor() {
   const m = mats();
-  const showNotice = useGame((s) => s.showNotice);
   const left = CORRIDOR.lockedDoors.filter((d) => d.side < 0);
   const right = CORRIDOR.lockedDoors.filter((d) => d.side > 0);
   const md = CORRIDOR.mirrorDoor;
@@ -30,7 +28,7 @@ export function Corridor() {
       <Rug position={[0, 0, (zStart + zEnd) / 2 + 0.2]} w={0.95} d={7.2} material={m.runner} />
 
       <Wall axis="z" from={zStart} to={zEnd} at={x0 - WALL_T / 2} height={Math.max(height, 5.2)} openings={left.map((d) => ({ c: d.z, w: DOOR_W, b: 0, t: DOOR_H }))} matPos={m.wallCorridor} matNeg={m.wallGallery} />
-      <Wall axis="z" from={zStart} to={zEnd} at={x1 + WALL_T / 2} height={height} openings={right.map((d) => ({ c: d.z, w: DOOR_W, b: 0, t: DOOR_H }))} matPos={m.wallCorridor} matNeg={m.wallCorridor} />
+      <Wall axis="z" from={zStart} to={zEnd} at={x1 + WALL_T / 2} height={height} openings={right.map((d) => ({ c: d.z, w: DOOR_W, b: 0, t: DOOR_H }))} matPos={m.wallDining} matNeg={m.wallCorridor} />
 
       <OnWall axis="z" face={x0} normal={1}>
         <Wainscot x0={wallLocal('z', 1, zStart)} x1={wallLocal('z', 1, zEnd)} gaps={left.map((d) => [wallLocal('z', 1, d.z), DOOR_W + 0.36] as [number, number])} />
@@ -52,29 +50,41 @@ export function Corridor() {
       <ConsoleTable position={[x1, 0, -12.3]} rotationY={-Math.PI / 2} w={1.0} d={0.36} h={0.8} />
       <mesh geometry={boxGeo(0.12, 0.3, 0.12)} material={m.brass} position={[x1 - 0.18, 0.95, -12.6]} castShadow />
 
-      {/* The Portrait Gallery (opened with the Mirror Key) and a door to a room not yet built */}
+      {/* The Portrait Gallery (opened with the Mirror Key) and the Giant's Dining Room (the Gallery Key) */}
       {CORRIDOR.lockedDoors.map((d) => {
         const hingeX = d.side < 0 ? x0 - WALL_T / 2 : x1 + WALL_T / 2;
         // Leaf faces into the corridor; hinge at the front edge of the opening.
         const rotationY = d.side < 0 ? Math.PI / 2 : -Math.PI / 2;
         const hingeZ = d.side < 0 ? d.z + DOOR_W / 2 : d.z - DOOR_W / 2;
-        if (d.side < 0) return <GalleryDoor key={d.z} hinge={[hingeX, 0, hingeZ]} rotationY={rotationY} />;
+        if (d.side < 0)
+          return (
+            <KeyedDoor
+              key={d.z}
+              id="gallery-door"
+              door="gallery"
+              lock="gallery"
+              room={d.room}
+              inside="gallery"
+              hinge={[hingeX, 0, hingeZ]}
+              rotationY={rotationY}
+              width={DOOR_W}
+              height={DOOR_H}
+              lockedHint={() => (game().progress.completed.mirrors ? 'Did you take the key from the Hall of Mirrors?' : 'Perhaps another room holds the key.')}
+            />
+          );
         return (
-          <Door
+          <KeyedDoor
             key={d.z}
-            id={`locked-${d.z}`}
+            id="dining-door"
+            door="dining"
+            lock="dining"
+            room={d.room}
+            inside="dining"
             hinge={[hingeX, 0, hingeZ]}
             rotationY={rotationY}
             width={DOOR_W}
             height={DOOR_H}
-            open={false}
-            label={() => `${d.room} (locked)`}
-            plaqueText={[d.room, 'Locked']}
-            onUse={() => {
-              audio.locked([hingeX, 1, d.z]);
-              if (game().progress.keys.galleryKey) showNotice('The Gallery Key slides into the lock, but it will not turn.', 'Not yet. This room opens in the next chapter.');
-              else showNotice(`${d.room} is locked.`, 'The keyhole is shaped like a word you have not learned yet.');
-            }}
+            lockedHint={() => (game().progress.completed.gallery ? 'Did you take the key from the Portrait Gallery?' : 'The keyhole is shaped like a word you have not learned yet.')}
           />
         );
       })}
@@ -86,59 +96,6 @@ export function Corridor() {
       </OnWall>
       <MirrorDoor />
     </group>
-  );
-}
-
-/**
- * The Portrait Gallery door. Locked until the Mirror Key is turned in it;
- * after that it stays unlocked and opens like any other door.
- * From the inside the lock always turns, so nobody can be shut in.
- */
-function GalleryDoor({ hinge, rotationY }: { hinge: [number, number, number]; rotationY: number }) {
-  const open = useGame((s) => s.doors.gallery);
-  const state = useGame((s) => galleryDoorState(s.progress));
-  const at: [number, number, number] = [hinge[0], 1.2, CORRIDOR.lockedDoors[0].z];
-  const turning = useRef(false);
-  return (
-    <Door
-      id="gallery-door"
-      hinge={hinge}
-      rotationY={rotationY}
-      width={DOOR_W}
-      height={DOOR_H}
-      open={open}
-      plaqueText={['The Portrait Gallery', '']}
-      label={() => {
-        if (state === 'open' || game().zone === 'gallery') return open ? 'Close the door' : 'Open the Portrait Gallery';
-        return state === 'unlockable' ? 'Unlock the door with the Mirror Key' : 'The Portrait Gallery (locked)';
-      }}
-      onUse={() => {
-        const g = useGame.getState();
-        if (turning.current) return;
-        if (state === 'open' || g.zone === 'gallery') {
-          g.setDoor('gallery', !open);
-          if (open) audio.doorClose(at);
-          else audio.doorOpen(at, true);
-          return;
-        }
-        if (state === 'locked') {
-          audio.locked(at);
-          g.showNotice('The Portrait Gallery is locked.', g.progress.completed.mirrors ? 'Did you take the key from the Hall of Mirrors?' : 'Perhaps another room holds the key.');
-          return;
-        }
-        // The Mirror Key turns: a scrape, the bolt, a pause, then the door swings in.
-        turning.current = true;
-        audio.unlockDoor(at);
-        g.showNotice('The Mirror Key turns in the lock.', 'The Portrait Gallery is open.');
-        window.setTimeout(() => {
-          const s2 = useGame.getState();
-          s2.progressDispatch({ type: 'UNLOCK_GALLERY' });
-          s2.setDoor('gallery', true);
-          audio.doorOpen(at, true);
-          turning.current = false;
-        }, 1100);
-      }}
-    />
   );
 }
 

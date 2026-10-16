@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { startIntro } from '../lesson/navigation';
+import type { Zone } from '../world/layout';
 import { useGame } from '../state/store';
 import { audio } from '../systems/audio';
 import { skipCinematic } from '../scene/Player';
@@ -45,12 +46,20 @@ export function TitleScreen() {
   );
 }
 
-const ZONE_NAMES: Record<string, string> = {
+// Typed by Zone so a new room cannot be added without a name for the corner label.
+const ZONE_NAMES: Record<Zone, string> = {
   exterior: 'The Drive',
   hall: 'The Entrance Hall',
   corridor: 'The Long Corridor',
   mirrors: 'The Hall of Mirrors',
   gallery: 'The Portrait Gallery',
+  dining: 'The Giant’s Dining Room',
+  nursery: 'The Nursery',
+  echoes: 'The Chamber of Echoes',
+  press: 'The Whispering Press',
+  kitchen: 'The Crooked Kitchen',
+  ballroom: 'The Ballroom of Contradictions',
+  study: 'The Forgotten Scholar’s Study',
 };
 
 export function HUD() {

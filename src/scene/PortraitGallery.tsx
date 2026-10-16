@@ -2,10 +2,9 @@
  * Room 2: the Portrait Gallery (METAPHOR).
  * A long, top-lit picture gallery behind the corridor's first locked door.
  */
-import { useEffect, useMemo, useRef, type ReactElement } from 'react';
+import { useMemo, useRef, type ReactElement } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import { PAINTINGS } from '../content/paintings';
 import { gfx } from '../lesson/galleryFx';
 import { game, useGame } from '../state/store';
@@ -16,23 +15,17 @@ import { GALLERY, WALL_T } from '../world/layout';
 import { Cornice, OnWall, PanelField, Run, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
 import { ArtPainting } from './parts/Artwork';
 import { Painting, Stanchions } from './parts/Furnishings';
-import { CandleLight, Sconce } from './parts/Lights';
+import { Sconce } from './parts/Lights';
 import { CollectibleKey } from './parts/Key';
 import { RoundedBox } from '@react-three/drei';
-
-RectAreaLightUniformsLib.init();
 
 const { x0, x1, zN, zS, height } = GALLERY;
 const LAY = { x0: -11.6, x1: -4.3, z0: -15.55, z1: -12.65 };
 
-/** The glazed laylight in the ceiling: pale moonlight falling straight down. */
+/** The glazed laylight in the ceiling. Its pale moonlight comes from the shared room lights (RoomLights). */
 function Laylight() {
   const m = mats();
-  const light = useRef<THREE.RectAreaLight>(null!);
   const glass = useMemo(() => new THREE.MeshStandardMaterial({ color: '#141518', emissive: new THREE.Color('#5d6673'), emissiveIntensity: 0.22, roughness: 0.95 }), []);
-  useEffect(() => {
-    light.current.lookAt(light.current.position.x, 0, light.current.position.z);
-  }, []);
   const w = LAY.x1 - LAY.x0;
   const d = LAY.z1 - LAY.z0;
   const cx = (LAY.x0 + LAY.x1) / 2;
@@ -56,7 +49,6 @@ function Laylight() {
       {[LAY.x0 - 0.15, LAY.x1 + 0.15].map((x) => (
         <mesh key={x} geometry={boxGeo(0.3, 0.22, d)} material={m.ceiling} position={[x, height - 0.11, cz]} castShadow />
       ))}
-      <rectAreaLight ref={light} position={[cx, height - 0.05, cz]} width={w} height={d} intensity={2.4} color="#a6b6cf" />
     </group>
   );
 }
@@ -223,7 +215,7 @@ export function PortraitGallery() {
       <OnWall axis="z" face={x1} normal={-1}>
         <Wainscot x0={wallLocal('z', -1, zN)} x1={wallLocal('z', -1, zS)} height={1.3} gaps={[[wallLocal('z', -1, GALLERY.doorZ), 0.96 + 0.36]]} />
         <PanelField x0={wallLocal('z', -1, -14.4)} x1={wallLocal('z', -1, -17.2)} y0={1.6} y1={3.9} cols={2} material={m.walnutPanel} />
-        <Sconce x={wallLocal('z', -1, -11.55)} y={2.15} seed={73} intensity={3.4} />
+        <Sconce x={wallLocal('z', -1, -11.55)} y={2.15} seed={73} light={false} />
         <Sconce x={wallLocal('z', -1, -14.25)} y={2.15} seed={74} light={false} />
         <Run profile="pictureRail" x0={wallLocal('z', -1, zN)} x1={wallLocal('z', -1, zS)} y={4.3} material={m.gilt} />
       </OnWall>
@@ -236,7 +228,6 @@ export function PortraitGallery() {
           <mesh geometry={latheGeo('vase', LATHES.vase)} material={m.ceramic} position={[0, 1.05, 0]} castShadow />
         </group>
       ))}
-      <CandleLight position={[(x0 + x1) / 2, 2.6, (zN + zS) / 2]} intensity={2.6} distance={9} seed={75} />
     </group>
   );
 }

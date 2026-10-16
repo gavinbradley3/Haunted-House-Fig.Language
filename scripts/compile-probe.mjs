@@ -1,6 +1,6 @@
 // Counts compiled shader programs as the player moves between rooms. A rise
 // after the title screen means a mid-game shader compile (a visible stutter).
-// Usage: node scripts/compile-probe.mjs [url]   (needs `npm run preview` running)
+// Usage: node scripts/compile-probe.mjs [url]   (needs `npm run build:test` then `npm run preview:test` running)
 import { chromium } from 'playwright';
 
 const base = process.argv[2] ?? 'http://localhost:4173/?testdt=0.5';

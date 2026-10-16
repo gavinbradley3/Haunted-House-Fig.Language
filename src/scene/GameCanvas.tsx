@@ -1,10 +1,11 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer, N8AO, Noise, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { BlendFunction, ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { game, useGame } from '../state/store';
+import { TEST_BUILD } from '../systems/testBuild';
 import { mats } from '../systems/materials';
 import { setMaxAnisotropy } from '../systems/textures';
 import { shadowClock } from '../systems/time';
@@ -19,19 +20,34 @@ import { Sky } from './Sky';
 import { LessonCamera, LessonDirector } from '../lesson/director';
 import { GalleryDirector } from '../lesson/galleryDirector';
 import { PortraitGallery } from './PortraitGallery';
+import { DiningRoom } from './DiningRoom';
+import { RoomLights } from './RoomLights';
+import { DiningDirector } from '../lesson/diningDirector';
+import { Nursery } from './Nursery';
+import { NurseryDirector } from '../lesson/nurseryDirector';
+import { Finale } from './Finale';
+import { FinaleDirector } from '../lesson/finaleDirector';
 import { HouseEvents } from './HouseEvents';
+import { ChamberOfEchoes } from './ChamberOfEchoes';
+import { WhisperingPress } from './WhisperingPress';
+import { CrookedKitchen } from './CrookedKitchen';
+import { BallroomOfContradictions } from './BallroomOfContradictions';
+import { ScholarsStudy } from './ScholarsStudy';
+import { LaterDirectors } from '../lesson/laterDirector';
 import { preloadArt } from './parts/Artwork';
 import { renderer } from '../systems/renderer';
 
 /** Builds materials/textures once the GL context exists, then reports ready. */
 function Setup() {
-  const { gl, scene } = useThree();
+  const { gl, scene, camera } = useThree();
   const setPhase = useGame((s) => s.setPhase);
   useMemo(() => {
     renderer.gl = gl;
+    renderer.scene = scene;
+    renderer.camera = camera;
     setMaxAnisotropy(gl.capabilities.getMaxAnisotropy());
     mats();
-  }, [gl]);
+  }, [gl, scene, camera]);
   useEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -86,15 +102,31 @@ const HIDDEN_LAYER = 5;
  * intensity: three.js compiles the number of lights into every material's shader,
  * so removing a room's lights would recompile the whole house (a visible stutter).
  */
-function Culling({ children, area }: { children: React.ReactNode; area: 'exterior' | 'mirrors' | 'gallery' }) {
+type Area = 'exterior' | 'mirrors' | 'gallery' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study';
+
+function Culling({ children, area }: { children: React.ReactNode; area: Area }) {
   const zone = useGame((s) => s.zone);
   const mirrorOpen = useGame((s) => s.doors.mirror);
   const frontOpen = useGame((s) => s.doors.front);
   const galleryOpen = useGame((s) => s.doors.gallery);
+  const diningOpen = useGame((s) => s.doors.dining);
+  const jibOpen = useGame((s) => s.doors.jib);
+  const echoesOpen = useGame((s) => s.doors.echoes);
+  const pressOpen = useGame((s) => s.doors.press);
+  const kitchenOpen = useGame((s) => s.doors.kitchen);
+  const ballroomOpen = useGame((s) => s.doors.ballroom);
+  const studyOpen = useGame((s) => s.doors.study);
   let visible = true;
   if (area === 'gallery') visible = zone === 'gallery' || (zone === 'corridor' && galleryOpen);
   if (area === 'exterior') visible = zone === 'exterior' || zone === 'hall' || (zone === 'corridor' && frontOpen);
-  if (area === 'mirrors') visible = zone === 'mirrors' || zone === 'corridor' || (zone === 'hall' && mirrorOpen);
+  if (area === 'mirrors') visible = zone === 'mirrors' || zone === 'corridor' || zone === 'nursery' || (zone === 'hall' && mirrorOpen);
+  if (area === 'dining') visible = zone === 'dining' || (zone === 'corridor' && diningOpen) || (zone === 'ballroom' && ballroomOpen);
+  if (area === 'nursery') visible = zone === 'nursery' || (zone === 'mirrors' && jibOpen) || (zone === 'echoes' && echoesOpen);
+  if (area === 'echoes') visible = zone === 'echoes' || (zone === 'nursery' && echoesOpen) || (zone === 'press' && pressOpen);
+  if (area === 'press') visible = zone === 'press' || (zone === 'echoes' && pressOpen);
+  if (area === 'kitchen') visible = zone === 'kitchen' || (zone === 'hall' && kitchenOpen);
+  if (area === 'study') visible = zone === 'study' || (zone === 'hall' && studyOpen);
+  if (area === 'ballroom') visible = zone === 'ballroom' || (zone === 'dining' && ballroomOpen);
   const group = useRef<THREE.Group>(null!);
   const st = useMemo(() => ({ shown: true, lights: [] as THREE.Light[], frames: 0, dirty: true }), []);
   if (st.shown !== visible) {
@@ -176,7 +208,7 @@ function Precompile() {
  */
 function FpsGuard() {
   const acc = useMemo(() => ({ t: 0, frames: 0, bad: 0 }), []);
-  const testing = useMemo(() => new URLSearchParams(location.search).has('testdt'), []);
+  const testing = useMemo(() => TEST_BUILD && new URLSearchParams(location.search).has('testdt'), []);
   useFrame((_, dt) => {
     const s = game();
     if (testing || !s.autoQuality || s.phase !== 'play' || s.quality === 'low' || document.hidden) return;
@@ -197,18 +229,37 @@ function FpsGuard() {
 }
 
 export const QUALITY = {
-  high: { dpr: [1, 1.5] as [number, number], msaa: 4, ao: 'medium' as const, reflect: 0.5 },
-  balanced: { dpr: [1, 1] as [number, number], msaa: 2, ao: 'low' as const, reflect: 0.35 },
-  low: { dpr: [0.8, 0.8] as [number, number], msaa: 0, ao: null, reflect: 0.25 },
+  high: { dpr: [1, 1.5] as [number, number], msaa: 4, ao: 'performance' as const, reflect: 0.5, maxWidth: Infinity },
+  // No ambient occlusion: on integrated graphics it re-draws the whole scene and costs as much as everything else.
+  balanced: { dpr: [1, 1] as [number, number], msaa: 2, ao: null, reflect: 0.35, maxWidth: 1600 },
+  // On a large projector screen, Low draws at most about 1280 pixels across and scales up.
+  low: { dpr: [0.8, 0.8] as [number, number], msaa: 0, ao: null, reflect: 0.25, maxWidth: 1280 },
 };
+
+/** The device-pixel-ratio range for a quality, capped so wide screens do not multiply the pixel count. */
+function dprFor(q: (typeof QUALITY)[keyof typeof QUALITY], width: number): [number, number] {
+  const cap = q.maxWidth / Math.max(1, width);
+  return [Math.min(q.dpr[0], cap), Math.min(q.dpr[1], cap)];
+}
+
+function useWindowWidth() {
+  const [w, setW] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const on = () => setW(window.innerWidth);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return w;
+}
 
 export function GameCanvas() {
   const quality = useGame((s) => s.quality);
   const q = QUALITY[quality];
+  const width = useWindowWidth();
   return (
     <Canvas
       shadows={{ type: THREE.PCFShadowMap }}
-      dpr={q.dpr}
+      dpr={dprFor(q, width)}
       gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
       camera={{ fov: 62, near: 0.05, far: 420, position: [0, 3, 30] }}
       onCreated={({ gl }) => {
@@ -225,6 +276,7 @@ export function GameCanvas() {
           <Exterior />
         </Culling>
         <EntranceHall />
+        <Finale />
         <Corridor />
         <Culling area="mirrors">
           <HallOfMirrors />
@@ -232,10 +284,36 @@ export function GameCanvas() {
         <Culling area="gallery">
           <PortraitGallery />
         </Culling>
+        <Culling area="dining">
+          <DiningRoom />
+        </Culling>
+        <Culling area="nursery">
+          <Nursery />
+        </Culling>
+        <Culling area="echoes">
+          <ChamberOfEchoes />
+        </Culling>
+        <Culling area="press">
+          <WhisperingPress />
+        </Culling>
+        <Culling area="kitchen">
+          <CrookedKitchen />
+        </Culling>
+        <Culling area="ballroom">
+          <BallroomOfContradictions />
+        </Culling>
+        <Culling area="study">
+          <ScholarsStudy />
+        </Culling>
+        <RoomLights />
         <DustMotes />
         <Player />
         <LessonDirector />
         <GalleryDirector />
+        <DiningDirector />
+        <NurseryDirector />
+        <FinaleDirector />
+        <LaterDirectors />
         <LessonCamera />
         <HouseEvents />
         <FpsGuard />

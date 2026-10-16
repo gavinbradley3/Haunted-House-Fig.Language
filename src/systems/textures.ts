@@ -7,6 +7,7 @@
  * normal map. All tiling textures are seamless.
  */
 import * as THREE from 'three';
+import { TEST_BUILD } from './testBuild';
 import { clamp01, fbm, hash2, lerp, mulberry32, smoothstep, vnoise } from './noise';
 
 export type RGB = [number, number, number];
@@ -128,8 +129,14 @@ const canvas = (w: number, h: number) => {
 };
 
 const cache = new Map<string, unknown>();
+/** Milliseconds spent generating each texture (test builds only, for start-up profiling). */
+export const textureTimes = new Map<string, number>();
 function once<T>(key: string, fn: () => T): T {
-  if (!cache.has(key)) cache.set(key, fn());
+  if (!cache.has(key)) {
+    const t0 = TEST_BUILD ? performance.now() : 0;
+    cache.set(key, fn());
+    if (TEST_BUILD) textureTimes.set(key, performance.now() - t0);
+  }
   return cache.get(key) as T;
 }
 

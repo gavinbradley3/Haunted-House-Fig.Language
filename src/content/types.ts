@@ -1,6 +1,12 @@
 /** Shared shapes for every room's lesson content. */
 
-export type RoomId = 'mirrors' | 'gallery';
+export type RoomId = 'mirrors' | 'gallery' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study' | 'finale';
+
+/** Every lesson in the house, in the order the class meets them. */
+export const ROOMS: RoomId[] = ['mirrors', 'gallery', 'dining', 'nursery', 'echoes', 'press', 'kitchen', 'ballroom', 'study', 'finale'];
+
+/** The nine device rooms that must all be complete before the house's final lesson can end. */
+export const DEVICE_ROOMS: RoomId[] = ROOMS.filter((r) => r !== 'finale');
 
 /** How the velvet curtains in the Hall of Mirrors should move. */
 export type CurtainMood = 'still' | 'ordinary' | 'tremble' | 'flutter' | 'slow' | 'breathe';
@@ -29,6 +35,43 @@ export interface ChoiceOption {
   effect?: string;
 }
 
+/**
+ * One part of a multi-part challenge: a sentence the class sorts, completes or labels.
+ * Each part has its own options, check and feedback.
+ */
+export interface ChallengeItem {
+  id: string;
+  /** The sentence or remark being judged. Use ___ for a blank the options fill. */
+  text: string;
+  /** Small caption above the sentence (where it comes from in the room). */
+  source?: string;
+  options: ChoiceOption[];
+  /** A sound the room plays for this item (a listening item). Played on request. */
+  sound?: string;
+  /** Written description of that sound, for anyone who cannot hear it. */
+  caption?: string;
+  /** Background the class reads before answering (allusions: what the reference is). */
+  evidence?: { title: string; text: string };
+}
+
+/** One tile of type in a phrase-building challenge. */
+export interface BuildTile {
+  id: string;
+  text: string;
+  /** The beginning consonant SOUND, e.g. 'f' for "phantom", 's' for "ceiling". */
+  sound: string;
+  /** What the word can sensibly go with; neighbouring tiles must share at least one tag. */
+  tags: string[];
+}
+
+/** Build a short phrase by choosing one tile from each tray, in order. */
+export interface BuildSpec {
+  goal: string;
+  trays: { label: string; tiles: BuildTile[] }[];
+  /** How many tiles must begin with the same sound. */
+  minRepeats: number;
+}
+
 export interface ChoiceChallenge {
   id: 'playA' | 'playB';
   title: string;
@@ -36,9 +79,16 @@ export interface ChoiceChallenge {
   prompt: string;
   baseSentence?: string;
   discussion: string;
+  /** Single-question challenges. Multi-part challenges leave this empty and use `items`. */
   options: ChoiceOption[];
+  /** Multi-part challenge: every item must be solved before the class moves on. */
+  items?: ChallengeItem[];
+  /** Phrase-building challenge: solved when the built phrase meets the rules. */
+  build?: BuildSpec;
   /** Shown after the correct answer is found or revealed. */
   takeaway: string;
+  /** Hint shown after a wrong check, in place of the default. */
+  retryHint?: string;
 }
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -107,4 +157,21 @@ export interface LessonContent {
     summary: string[];
     nextHint: string;
   };
+  /** Words used in the panel for this room's Prove stage. */
+  proveNoun?: string;
+  proveButton?: string;
+  /**
+   * Writing checkpoint: the lesson can be completed only after the class has entered its own
+   * sentence and ticked every success criterion for it in the class self-check. The ticks are
+   * the class's own judgement; the game never assesses student writing.
+   */
+  requireMastery?: boolean;
+}
+
+/** Put the correct option at position `pos` (others keep their order) and re-letter A, B, C… */
+export function place(options: ChoiceOption[], pos: number): ChoiceOption[] {
+  const right = options.find((o) => o.correct)!;
+  const rest = options.filter((o) => !o.correct);
+  rest.splice(Math.min(pos, rest.length), 0, right);
+  return rest.map((o, i) => ({ ...o, letter: 'ABCDEFGHI'[i] }));
 }

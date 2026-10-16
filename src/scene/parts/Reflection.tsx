@@ -14,6 +14,14 @@ import type { MirrorFx } from '../../lesson/fx';
 import { useGame } from '../../state/store';
 
 const QUALITY_REFLECT = { high: 0.5, balanced: 0.35, low: 0.25 };
+/**
+ * On Balanced and Low the walls take turns: each wall's reflection is redrawn every other frame.
+ * The reflected render is a whole second view of the room, so this halves the mirror room's extra cost.
+ */
+const QUALITY_ALTERNATE = { high: false, balanced: true, low: true };
+const frustum = new THREE.Frustum();
+const projView = new THREE.Matrix4();
+const sphere = new THREE.Sphere();
 
 interface PlaneCtx {
   texture: THREE.Texture;
@@ -39,7 +47,11 @@ const q = new THREE.Vector4();
  */
 export function ReflectionPlane({ point, normal, active, children }: { point: [number, number, number]; normal: [number, number, number]; active: () => boolean; children: ReactNode }) {
   const { gl, scene, camera, size } = useThree();
-  const resolution = QUALITY_REFLECT[useGame((s) => s.quality)];
+  const quality = useGame((s) => s.quality);
+  const resolution = QUALITY_REFLECT[quality];
+  // Opposite walls face opposite ways, so they land on alternate frames.
+  const slot = normal[0] + normal[2] > 0 ? 0 : 1;
+  const frame = useRef(0);
   const rt = useMemo(() => {
     const t = new THREE.WebGLRenderTarget(256, 256, { type: THREE.HalfFloatType, samples: 2 });
     t.texture.generateMipmaps = false;
@@ -56,7 +68,22 @@ export function ReflectionPlane({ point, normal, active, children }: { point: [n
 
   useFrame(() => {
     if (!active()) return;
+    if (QUALITY_ALTERNATE[quality] && ++frame.current % 2 !== slot) return;
     const cam = camera as THREE.PerspectiveCamera;
+    // Skip the whole reflected render when none of this wall's mirrors is on screen.
+    projView.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projView);
+    let seen = false;
+    for (const m of ctx.members) {
+      const mesh = m as THREE.Mesh;
+      if (!mesh.geometry.boundingSphere) mesh.geometry.computeBoundingSphere();
+      sphere.copy(mesh.geometry.boundingSphere!).applyMatrix4(mesh.matrixWorld);
+      if (frustum.intersectsSphere(sphere)) {
+        seen = true;
+        break;
+      }
+    }
+    if (!seen) return;
     vPos.set(...point);
     vNormal.set(...normal).normalize();
     vCam.setFromMatrixPosition(cam.matrixWorld);

@@ -5,7 +5,22 @@
  * The teacher drives every transition. Nothing advances on a timer.
  */
 import { getChallenge, SIMILE, type ChallengeId, type CurtainMood } from '../content/simile';
-import type { LessonContent } from '../content/types';
+import type { BuildSpec, BuildTile, LessonContent } from '../content/types';
+
+/** The first combination of tiles (in tray order) that the rules accept. */
+function firstValidBuild(spec: BuildSpec): string[] {
+  const walk = (i: number, acc: string[]): string[] | null => {
+    if (i === spec.trays.length) return evaluateBuild(spec, acc).ok ? acc : null;
+    for (const t of spec.trays[i].tiles) {
+      const r = walk(i + 1, [...acc, t.id]);
+      if (r) return r;
+    }
+    return null;
+  };
+  const found = walk(0, []);
+  if (!found) throw new Error('Build challenge has no valid answer');
+  return found;
+}
 
 export const STAGES = ['discover', 'learn', 'playA', 'playB', 'prove', 'complete'] as const;
 export type Stage = (typeof STAGES)[number];
@@ -19,7 +34,8 @@ export const STAGE_LABELS: Record<Stage, string> = {
   complete: 'Complete',
 };
 
-export interface ChoiceState {
+/** Selection state of one question: a whole challenge, or one item of a multi-part challenge. */
+export interface ItemState {
   selected: string | null;
   /** True once the teacher has pressed "Check" for the current selection. */
   checked: boolean;
@@ -28,6 +44,55 @@ export interface ChoiceState {
   /** Correct answer found (by checking) or revealed by the teacher. */
   solved: boolean;
   revealedByTeacher: boolean;
+}
+
+export interface ChoiceState extends ItemState {
+  /** Multi-part challenges: one state per item id (missing means untouched). */
+  items: Record<string, ItemState>;
+  /** The item the class touched most recently (drives the room's reaction). */
+  activeItem: string | null;
+  /** Phrase-building challenges: the chosen tile id in each tray. */
+  build: (string | null)[];
+  /** Phrases the class checked that did not work, in order. */
+  buildAttempts: string[];
+}
+
+export type BuildVerdict =
+  | { ok: true; sound: string }
+  | { ok: false; reason: 'incomplete' | 'noRepeat' | 'letterOnly' | 'nonsense'; detail: string };
+
+/**
+ * Judge a built phrase: it must repeat a beginning SOUND (not just a letter) at least
+ * `minRepeats` times, and neighbouring words must make sense together.
+ */
+export function evaluateBuild(spec: BuildSpec, chosen: (string | null)[]): BuildVerdict {
+  const tiles = spec.trays.map((t, i) => t.tiles.find((x) => x.id === chosen[i]) ?? null);
+  if (tiles.some((t) => !t)) return { ok: false, reason: 'incomplete', detail: 'Choose one word from every tray.' };
+  const ts = tiles as BuildTile[];
+  const counts = new Map<string, number>();
+  for (const t of ts) counts.set(t.sound, (counts.get(t.sound) ?? 0) + 1);
+  const [best, n] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+  const sensible = ts.every((t, i) => i === 0 || t.tags.some((g) => ts[i - 1].tags.includes(g)));
+  if (n < spec.minRepeats) {
+    // Same first LETTER but different first SOUND: the key misconception.
+    const letters = new Map<string, BuildTile[]>();
+    for (const t of ts) letters.set(t.text[0].toLowerCase(), [...(letters.get(t.text[0].toLowerCase()) ?? []), t]);
+    const clash = [...letters.values()].find((g) => g.length >= 2 && new Set(g.map((t) => t.sound)).size > 1);
+    if (clash)
+      return {
+        ok: false,
+        reason: 'letterOnly',
+        detail: `“${clash[0].text}” and “${clash[1].text}” start with the same letter, but not the same sound. Alliteration is about sound, not spelling.`,
+      };
+    return { ok: false, reason: 'noRepeat', detail: 'No beginning sound repeats, so there is no alliteration. Choose words that begin with the same sound.' };
+  }
+  if (!sensible)
+    return {
+      ok: false,
+      reason: 'nonsense',
+      detail: 'It alliterates, but the words do not make sense together. Alliteration should make a phrase more vivid, not turn it into nonsense.',
+    };
+  return { ok: true, sound: best };
 }
 
 export interface LessonState {
@@ -56,6 +121,10 @@ export type LessonAction =
   | { type: 'GOTO_STAGE'; stage: Stage }
   | { type: 'SELECT_OPTION'; challenge: ChallengeId; optionId: string }
   | { type: 'CHECK_ANSWER'; challenge: ChallengeId }
+  | { type: 'SELECT_ITEM_OPTION'; challenge: ChallengeId; itemId: string; optionId: string }
+  | { type: 'CHECK_ITEM'; challenge: ChallengeId; itemId: string }
+  | { type: 'SET_BUILD'; challenge: ChallengeId; tray: number; tileId: string }
+  | { type: 'CHECK_BUILD'; challenge: ChallengeId }
   | { type: 'REVEAL_ANSWER'; challenge: ChallengeId }
   | { type: 'RESET_QUESTION' }
   | { type: 'SET_DRAFT'; text: string }
@@ -67,13 +136,33 @@ export type LessonAction =
   | { type: 'COMPLETE' }
   | { type: 'RESET_LESSON' };
 
-const emptyChoice = (): ChoiceState => ({
+const emptyItem = (): ItemState => ({
   selected: null,
   checked: false,
   wrongAttempts: [],
   solved: false,
   revealedByTeacher: false,
 });
+
+const emptyChoice = (): ChoiceState => ({ ...emptyItem(), items: {}, activeItem: null, build: [], buildAttempts: [] });
+
+/**
+ * Has the class passed the Prove stage's writing checkpoint: a sentence of its own, with every
+ * success criterion ticked in the class self-check? This records the class's own judgement; the
+ * game does not assess the writing.
+ */
+export function masteryMet(s: LessonState): boolean {
+  return s.prove.responses.length > 0 && s.prove.criteria.length > 0 && s.prove.criteria.every(Boolean);
+}
+
+/** State of one item of a multi-part challenge (untouched items read as empty). */
+export const itemState = (c: ChoiceState, itemId: string): ItemState => c.items[itemId] ?? emptyItem();
+
+/** Check one selection: record a wrong attempt, or mark it solved. */
+function checked(st: ItemState, ok: boolean): ItemState {
+  const sel = st.selected!;
+  return { ...st, checked: true, solved: ok, wrongAttempts: ok || st.wrongAttempts.includes(sel) ? st.wrongAttempts : [...st.wrongAttempts, sel] };
+}
 
 const emptyProve = (content: LessonContent = SIMILE) => ({
   draft: '',
@@ -92,6 +181,65 @@ export function initialLessonState(content: LessonContent = SIMILE): LessonState
     playB: emptyChoice(),
     prove: emptyProve(content),
     completed: false,
+  };
+}
+
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+const isStrArr = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string');
+function isItem(v: unknown): v is ItemState {
+  return isObj(v) && (v.selected === null || typeof v.selected === 'string') && typeof v.checked === 'boolean' && typeof v.solved === 'boolean' && isStrArr(v.wrongAttempts);
+}
+function restoreChoice(v: unknown): ChoiceState | null {
+  if (!isItem(v)) return null;
+  const c = v as unknown as Record<string, unknown>;
+  const items = isObj(c.items) ? c.items : {};
+  if (!Object.values(items).every(isItem)) return null;
+  return {
+    ...emptyChoice(),
+    selected: v.selected,
+    checked: v.checked,
+    solved: v.solved,
+    wrongAttempts: v.wrongAttempts,
+    revealedByTeacher: !!(v as ItemState).revealedByTeacher,
+    items: items as Record<string, ItemState>,
+    activeItem: typeof c.activeItem === 'string' ? c.activeItem : null,
+    build: Array.isArray(c.build) ? (c.build as unknown[]).map((x) => (typeof x === 'string' ? x : null)) : [],
+    buildAttempts: isStrArr(c.buildAttempts) ? c.buildAttempts : [],
+  };
+}
+
+/**
+ * Rebuild a lesson saved in the browser (so a class can carry on after a reload). Anything
+ * missing, malformed or from an older version of the lesson gives a fresh lesson instead.
+ */
+export function restoreLesson(saved: unknown, content: LessonContent): LessonState {
+  const fresh = initialLessonState(content);
+  if (!isObj(saved) || !STAGES.includes(saved.stage as Stage)) return fresh;
+  const d = saved.discover;
+  const p = saved.prove;
+  const playA = restoreChoice(saved.playA);
+  const playB = restoreChoice(saved.playB);
+  if (!isObj(d) || !isObj(p) || !playA || !playB) return fresh;
+  const criteria = Array.isArray(p.criteria) && p.criteria.length === content.prove.criteria.length && p.criteria.every((x) => typeof x === 'boolean') ? (p.criteria as boolean[]) : fresh.prove.criteria;
+  return {
+    stage: saved.stage as Stage,
+    discover: {
+      revealedA: d.revealedA === true,
+      revealedB: d.revealedB === true,
+      active: d.active === 'A' || d.active === 'B' ? d.active : null,
+      questionsShown: d.questionsShown === true,
+    },
+    learnStep: Math.max(0, Math.min(content.learn.steps.length - 1, Number(saved.learnStep) || 0)),
+    playA,
+    playB,
+    prove: {
+      draft: typeof p.draft === 'string' ? p.draft.slice(0, 220) : '',
+      responses: isStrArr(p.responses) ? p.responses.slice(-20).map((r) => r.slice(0, 220)) : [],
+      criteria,
+      questionsShown: p.questionsShown === true,
+      modelRevealed: p.modelRevealed === true,
+    },
+    completed: saved.completed === true,
   };
 }
 
@@ -182,20 +330,69 @@ export function lessonReducer(s: LessonState, a: LessonAction, content: LessonCo
       if (s.stage !== a.challenge) return s;
       const c = s[a.challenge];
       if (!c.selected || c.solved) return s;
-      const ok = isCorrect(a.challenge, c.selected, content);
+      return { ...s, [a.challenge]: { ...c, ...checked(c, isCorrect(a.challenge, c.selected, content)) } };
+    }
+    case 'SELECT_ITEM_OPTION': {
+      if (s.stage !== a.challenge) return s;
+      const c = s[a.challenge];
+      const item = getChallenge(a.challenge, content).items?.find((i) => i.id === a.itemId);
+      if (!item || !item.options.some((o) => o.id === a.optionId)) return s;
+      const st = itemState(c, a.itemId);
+      if (st.solved) return s;
+      const items = { ...c.items, [a.itemId]: { ...st, selected: a.optionId, checked: false } };
+      return { ...s, [a.challenge]: { ...c, items, activeItem: a.itemId } };
+    }
+    case 'CHECK_ITEM': {
+      if (s.stage !== a.challenge) return s;
+      const c = s[a.challenge];
+      const ch = getChallenge(a.challenge, content);
+      const item = ch.items?.find((i) => i.id === a.itemId);
+      const st = itemState(c, a.itemId);
+      if (!item || !st.selected || st.solved) return s;
+      const ok = item.options.some((o) => o.id === st.selected && o.correct);
+      const items = { ...c.items, [a.itemId]: checked(st, ok) };
+      const all = ch.items!.every((i) => items[i.id]?.solved);
+      return { ...s, [a.challenge]: { ...c, items, activeItem: a.itemId, solved: all } };
+    }
+    case 'SET_BUILD': {
+      if (s.stage !== a.challenge) return s;
+      const c = s[a.challenge];
+      const spec = getChallenge(a.challenge, content).build;
+      if (!spec || c.solved || !spec.trays[a.tray]?.tiles.some((t) => t.id === a.tileId)) return s;
+      const build = spec.trays.map((_, i) => (i === a.tray ? a.tileId : (c.build[i] ?? null)));
+      return { ...s, [a.challenge]: { ...c, build, checked: false } };
+    }
+    case 'CHECK_BUILD': {
+      if (s.stage !== a.challenge) return s;
+      const c = s[a.challenge];
+      const spec = getChallenge(a.challenge, content).build;
+      if (!spec || c.solved) return s;
+      const v = evaluateBuild(spec, c.build);
+      if (!v.ok && v.reason === 'incomplete') return s;
+      const phrase = c.build.join('|');
       return {
         ...s,
-        [a.challenge]: {
-          ...c,
-          checked: true,
-          solved: ok,
-          wrongAttempts: ok || c.wrongAttempts.includes(c.selected) ? c.wrongAttempts : [...c.wrongAttempts, c.selected],
-        },
+        [a.challenge]: { ...c, checked: true, solved: v.ok, buildAttempts: v.ok || c.buildAttempts.includes(phrase) ? c.buildAttempts : [...c.buildAttempts, phrase] },
       };
     }
     case 'REVEAL_ANSWER': {
       if (s.stage !== a.challenge) return s;
       const c = s[a.challenge];
+      const ch = getChallenge(a.challenge, content);
+      if (ch.build) {
+        // Show one phrase that works: the first combination the rules accept.
+        const pick = firstValidBuild(ch.build);
+        return { ...s, [a.challenge]: { ...c, build: pick, checked: true, solved: true, revealedByTeacher: true } };
+      }
+      if (ch.items?.length) {
+        // Reveal every item the class has not solved yet.
+        const items = { ...c.items };
+        for (const it of ch.items) {
+          const st = itemState(c, it.id);
+          if (!st.solved) items[it.id] = { ...st, selected: it.options.find((o) => o.correct)!.id, checked: true, solved: true, revealedByTeacher: true };
+        }
+        return { ...s, [a.challenge]: { ...c, items, solved: true, revealedByTeacher: true } };
+      }
       return {
         ...s,
         [a.challenge]: { ...c, selected: correctId(a.challenge, content), checked: true, solved: true, revealedByTeacher: true },
@@ -230,7 +427,9 @@ export function lessonReducer(s: LessonState, a: LessonAction, content: LessonCo
     }
     case 'REMOVE_RESPONSE': {
       const responses = s.prove.responses.filter((_, i) => i !== a.index);
-      return { ...s, prove: { ...s.prove, responses } };
+      // The ticks belong to the latest sentence: removing it clears them.
+      const removedLatest = a.index === s.prove.responses.length - 1;
+      return { ...s, prove: { ...s.prove, responses, criteria: removedLatest ? s.prove.criteria.map(() => false) : s.prove.criteria } };
     }
     case 'TOGGLE_CRITERION': {
       const criteria = s.prove.criteria.map((v, i) => (i === a.index ? !v : v));
@@ -242,6 +441,8 @@ export function lessonReducer(s: LessonState, a: LessonAction, content: LessonCo
       return { ...s, prove: { ...s.prove, modelRevealed: true, questionsShown: true } };
     case 'COMPLETE':
       if (s.stage !== 'prove') return s;
+      // Writing checkpoint. The teacher can still jump straight to "Complete" from the teacher panel.
+      if (content.requireMastery && !masteryMet(s)) return s;
       return { ...s, stage: 'complete', completed: true };
     case 'RESET_LESSON':
       return initialLessonState(content);

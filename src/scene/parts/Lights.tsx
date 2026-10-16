@@ -108,6 +108,14 @@ function Candle({ seed, height = 0.12 }: { seed: number; height?: number }) {
 }
 
 /** Flickering point light that follows the global room mood. */
+/** A stuttering, nearly-out flame near the strange event's point: deep dips, then a recovery (1 = unaffected). */
+export function stutterAt(x: number, z: number) {
+  const f = houseState.flicker;
+  if (world.t >= f.until || Math.hypot(x - f.x, z - f.z) >= 6) return 1;
+  const u = (f.until - world.t) * 9;
+  return Math.sin(u * 1.7) > 0.2 ? 0.12 + 0.2 * Math.abs(Math.sin(u * 5.3)) : 1;
+}
+
 export function CandleLight({
   position,
   intensity,
@@ -129,14 +137,9 @@ export function CandleLight({
   const wp = useRef(new THREE.Vector3());
   useFrame(() => {
     let k = flicker(world.t, seed) * lightMood[room];
-    const f = houseState.flicker;
-    if (world.t < f.until) {
+    if (world.t < houseState.flicker.until) {
       ref.current.getWorldPosition(wp.current);
-      if (Math.hypot(wp.current.x - f.x, wp.current.z - f.z) < 6) {
-        // A stuttering, nearly-out flame: deep dips, then a recovery
-        const u = (f.until - world.t) * 9;
-        k *= Math.sin(u * 1.7) > 0.2 ? 0.12 + 0.2 * Math.abs(Math.sin(u * 5.3)) : 1;
-      }
+      k *= stutterAt(wp.current.x, wp.current.z);
     }
     ref.current.intensity = intensity * k * lampLevel(world.t, seed);
   });
@@ -211,6 +214,7 @@ export function Chandelier({
   seed = 0,
   room = 'hall',
   castShadow = false,
+  light = true,
 }: {
   position: [number, number, number];
   drop?: number;
@@ -220,6 +224,8 @@ export function Chandelier({
   seed?: number;
   room?: 'hall' | 'mirrors';
   castShadow?: boolean;
+  /** False for rooms lit by the shared room lights instead of their own. */
+  light?: boolean;
 }) {
   const m = mats();
   const body = latheGeo('chandBody', [
@@ -276,7 +282,7 @@ export function Chandelier({
           );
         })}
       </group>
-      <CandleLight position={[0, -drop + 0.35, 0]} intensity={intensity} distance={14} seed={seed} room={room} castShadow={castShadow} />
+      {light && <CandleLight position={[0, -drop + 0.35, 0]} intensity={intensity} distance={14} seed={seed} room={room} castShadow={castShadow} />}
     </group>
   );
 }

@@ -24,7 +24,7 @@ export const PAINTINGS: Record<string, PaintingInfo> = {
     medium: 'Oil on canvas. Artist unknown.',
     note: 'An ordinary house seems to wait for something that never arrives. Not a branch moves. Even the pond refuses to ripple.',
     ask: 'Houses cannot breathe. Why would the artist say this one is holding its breath?',
-    teacherNote: 'Personification: a house given a human action. Introduced in a later room.',
+    teacherNote: 'Personification: a house given a human action. Taught in the Nursery.',
   },
   deafeningSilence: {
     id: 'deafeningSilence',
@@ -33,7 +33,7 @@ export const PAINTINGS: Record<string, PaintingInfo> = {
     medium: 'Oil on canvas, c. 1890.',
     note: 'One small figure stands in a hall built for hundreds. Nothing moves, and the quiet seems almost loud.',
     ask: 'Can silence really be deafening? What do those two words do when they are put side by side?',
-    teacherNote: 'Oxymoron: two contradictory words together. Introduced in a later room.',
+    teacherNote: 'Oxymoron: two contradictory words together. Not taught in this version: use it as an extension question.',
   },
   caretaker: {
     id: 'caretaker',
@@ -51,7 +51,7 @@ export const PAINTINGS: Record<string, PaintingInfo> = {
     medium: 'Oil on board. Artist unknown.',
     note: 'Someone stands one step from an open door and does not take it. Look closely at the floor around their feet.',
     ask: 'People say they have "cold feet" before something big. What do they mean? What has the painter done with the phrase?',
-    teacherNote: 'Idiom, painted literally. Introduced in a later room.',
+    teacherNote: 'Idiom, painted literally. Not taught in this version: use it as an extension question.',
   },
   whisperingWalls: {
     id: 'whisperingWalls',
@@ -60,7 +60,7 @@ export const PAINTINGS: Record<string, PaintingInfo> = {
     medium: 'Oil on canvas, c. 1870.',
     note: 'A corridor much like the one outside. Stare at the wallpaper long enough and the pattern stops being flowers.',
     ask: 'What do you notice in the wallpaper? Why might the painter call these walls "whispering"?',
-    teacherNote: 'Personification: walls cannot whisper. Introduced in a later room.',
+    teacherNote: 'Personification: walls cannot whisper. Taught in the Nursery.',
   },
   oldManShadow: {
     id: 'oldManShadow',

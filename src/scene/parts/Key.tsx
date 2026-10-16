@@ -77,7 +77,20 @@ export function useKeyMaterial(tint: string) {
  * A key lying in the world that the teacher can take with E or a click.
  * It appears only after its room is complete, and vanishes for good once taken.
  */
-export function CollectibleKey({ keyId, variant, tint = '#b8924c' }: { keyId: KeyId; variant: 'mirror' | 'gallery'; tint?: string }) {
+/** What the house says when each key is taken: a nudge toward the lock it opens. */
+const TAKEN: Record<KeyId, string> = {
+  mirrorKey: 'Somewhere in the house, a lock is waiting for it.',
+  galleryKey: 'In the corridor, a door with a giant’s name on its plaque is waiting.',
+  diningKey: 'A key this small fits a keyhole you would never notice. Look closely at the Hall of Mirrors.',
+  nurseryKey: 'It is not for a music box at all. A door in the nursery’s south wall has a keyhole this shape.',
+  echoesKey: 'In the music room’s west wall, a door has a keyhole shaped like a bell.',
+  pressKey: 'Back in the entrance hall, a door beside the fireplace wall is waiting for a key cast in type.',
+  kitchenKey: 'In the Giant’s Dining Room, a door in the south wall has a pantry lock.',
+  ballroomKey: 'Under the landing in the entrance hall, a small door has been waiting all night.',
+  studyKey: 'The Lady’s writing box in the entrance hall has a keyhole just this shape.',
+};
+
+export function CollectibleKey({ keyId, variant, tint = '#b8924c', scale = 1 }: { keyId: KeyId; variant: 'mirror' | 'gallery'; tint?: string; scale?: number }) {
   const progress = useGame((s) => s.progress);
   const mat = useKeyMaterial(tint);
   const group = useRef<THREE.Group>(null!);
@@ -112,10 +125,12 @@ export function CollectibleKey({ keyId, variant, tint = '#b8924c' }: { keyId: Ke
           taking.current = 0.001;
           audio.keyPickup();
           s.progressDispatch({ type: 'COLLECT_KEY', key: keyId });
-          s.showNotice(`You took ${KEY_NAMES[keyId]}.`, keyId === 'mirrorKey' ? 'Somewhere in the house, a lock is waiting for it.' : 'It does not fit any door you have seen. Not yet.');
+          s.showNotice(`You took ${KEY_NAMES[keyId]}.`, TAKEN[keyId]);
         }}
       >
-        <BrassKeyMesh material={mat} variant={variant} />
+        <group scale={scale}>
+          <BrassKeyMesh material={mat} variant={variant} />
+        </group>
         {/* Generous invisible hit area: a small key is hard to aim at on a projector */}
         <mesh visible={false}>
           <boxGeometry args={[0.2, 0.08, 0.12]} />

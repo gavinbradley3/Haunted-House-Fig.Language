@@ -4,3 +4,7 @@ dist
 .DS_Store
 test-results
 scripts/out
+dist-test
+.playwright-mcp
+.claude-flow
+src/.claude-flow

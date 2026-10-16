@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { game, useGame } from '../state/store';
+import { TEST_BUILD } from '../systems/testBuild';
 import { resolveCircle } from '../world/collision';
 import { EYE_HEIGHT, groundAt, POSES, SHOTS, surfaceAt, zoneAt } from '../world/layout';
 import { audio } from '../systems/audio';
@@ -27,7 +28,7 @@ const isTyping = () => {
 };
 
 /** Automated tests run on a software renderer at a few frames per second; let them use a fixed large step. */
-const TEST_DT = Number(new URLSearchParams(location.search).get('testdt')) || 0;
+const TEST_DT = (TEST_BUILD && Number(new URLSearchParams(location.search).get('testdt'))) || 0;
 
 const ease = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 

@@ -1,6 +1,19 @@
 import { BLANK_TITLE, PAINTINGS } from '../content/paintings';
 import { openLesson } from '../lesson/director';
+import type { KeyId } from '../lesson/progression';
 import { useGame } from '../state/store';
+
+const KEY_LABELS: Record<KeyId, string> = {
+  mirrorKey: 'Mirror Key',
+  galleryKey: 'Gallery Key',
+  diningKey: 'Tiny Key',
+  nurseryKey: 'Music Box Key',
+  echoesKey: 'Bell Key',
+  pressKey: 'Type Key',
+  kitchenKey: 'Pantry Key',
+  ballroomKey: 'Ballroom Key',
+  studyKey: 'Scholar’s Key',
+};
 
 /** Museum-label caption for the painting being inspected. */
 export function PaintingCard() {
@@ -40,11 +53,13 @@ export function KeyRing() {
   const phase = useGame((s) => s.phase);
   const lessonActive = useGame((s) => s.lessonActive);
   const busy = useGame((s) => !!s.cinematic || !!s.inspecting);
-  if (phase !== 'play' || lessonActive || busy || (!keys.mirrorKey && !keys.galleryKey)) return null;
+  const held = (Object.keys(keys) as (keyof typeof keys)[]).filter((k) => keys[k]);
+  if (phase !== 'play' || lessonActive || busy || !held.length) return null;
   return (
     <div className="keyring" title="Keys found in the house">
-      {keys.mirrorKey && <KeyGlyph label="Mirror Key" />}
-      {keys.galleryKey && <KeyGlyph label="Gallery Key" />}
+      {held.map((k) => (
+        <KeyGlyph key={k} label={KEY_LABELS[k]} />
+      ))}
     </div>
   );
 }
