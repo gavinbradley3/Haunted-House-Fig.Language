@@ -239,7 +239,7 @@ function JibDoor() {
             }
             if (st !== 'unlockable') return;
             turning.current = true;
-            audio.unlockDoor(at);
+            const wait = audio.unlockDoor(at);
             g.showNotice('The Tiny Key turns in a keyhole no bigger than a grain of rice.', 'A door that was never a wall swings open.');
             window.setTimeout(() => {
               const s2 = useGame.getState();
@@ -248,7 +248,7 @@ function JibDoor() {
               audio.doorOpen(at, false);
               audio.musicBox('two', [NURSERY.musicBox.x, 0.9, NURSERY.musicBox.z], 0.7);
               turning.current = false;
-            }, 1100);
+            }, wait);
           }}
         >
           <mesh geometry={boxGeo(W, jib.height, 0.04)} material={m.wallMirror} position={[W / 2, jib.height / 2, 0]} castShadow />

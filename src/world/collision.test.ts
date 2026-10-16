@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { box, removeDynamicCollider, resolveCircle, setDynamicActive, setDynamicCollider } from './collision';
-import { BALLROOM, CORRIDOR, DINING, ECHOES, HALL, KITCHEN, MIRRORS, NURSERY, POSES, PRESS, STUDY, zoneAt } from './layout';
+import { BALLROOM, CORRIDOR, DINING, ECHOES, HALL, KITCHEN, MIRRORS, NURSERY, POSES, PRESS, STUDY, surfaceAt, zoneAt } from './layout';
 
 describe('collision', () => {
   it('pushes the player out of a wall', () => {
@@ -124,5 +124,22 @@ describe('the five later rooms', () => {
     expect(z).toBeGreaterThan(NURSERY.zS + 0.2);
     const [, z2] = resolveCircle(3.0, DINING.zS + 0.1);
     expect(z2).toBeGreaterThan(DINING.zS + 0.2);
+  });
+});
+
+describe('footstep surfaces', () => {
+  it('each room plays the right floor', () => {
+    expect(surfaceAt(0, 5)).toBe('gravel'); // the drive
+    expect(surfaceAt(3.5, 2)).toBe('gravel'); // beside the porch
+    expect(surfaceAt(0, 1.5)).toBe('stone'); // porch platform
+    expect(surfaceAt(0, 3.2)).toBe('stone'); // porch steps
+    expect(surfaceAt(0.6, -4.6)).toBe('carpet'); // hall rug
+    expect(surfaceAt(3.5, -2)).toBe('wood'); // hall floorboards
+    expect(surfaceAt(0, -14)).toBe('carpet'); // corridor runner
+    expect(surfaceAt(10.4, -7.5)).toBe('stone'); // Crooked Kitchen
+    expect(surfaceAt(KITCHEN.x0 + 0.3, KITCHEN.zS + 0.3)).toBe('stone');
+    expect(surfaceAt(8.8, -24)).toBe('wood'); // ballroom parquet
+    expect(surfaceAt(-10.4, -5.0)).toBe('carpet'); // study rug
+    expect(surfaceAt(-13.5, -2.5)).toBe('wood'); // study floor by the bookcases
   });
 });

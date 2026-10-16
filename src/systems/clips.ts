@@ -4,31 +4,60 @@
  * `whisper-2.mp3` for variants) and rebuild. A slot with no file keeps the
  * synthesised sound, or its event simply does not happen.
  *
- * See docs/SOUNDS.md for what to look for in each slot.
+ * Each slot has a loading tier, so the game never decodes every clip at start-up:
+ *  - `core`: needed within seconds of entering (footsteps, doors, locks). Decoded right after the first click.
+ *  - `idle`: room ambience and lesson sounds. Decoded one at a time in the background, a little later.
+ *  - `demand`: rare events. Decoded the first time they are wanted (that first time falls back to the synth or is skipped).
+ *
+ * See docs/SOUNDS.md for what to look for in each slot, and ASSETS.md for the sources of the files in use.
  */
+
+export type ClipTier = 'core' | 'idle' | 'demand';
 
 export const CLIP_SLOTS = {
   /** Background music, looped quietly under exploration and lower during lessons. */
-  music: 'loop',
+  music: { use: 'loop', tier: 'idle' },
   /** Wind outside the house, looped. Replaces the synthesised wind. */
-  wind: 'loop',
+  wind: { use: 'loop', tier: 'idle' },
   /** Soft, unintelligible whispering, heard close behind you. */
-  whisper: 'event',
+  whisper: { use: 'event', tier: 'demand' },
   /** A single child's giggle, far away in the house. */
-  giggle: 'event',
+  giggle: { use: 'event', tier: 'demand' },
   /** A few notes of a music box from another room. */
-  'music-box': 'event',
+  'music-box': { use: 'event', tier: 'demand' },
   /** Slow footsteps on the floor above. */
-  'footsteps-above': 'event',
+  'footsteps-above': { use: 'event', tier: 'demand' },
   /** A tired sigh or breath near a painting or mirror. */
-  sigh: 'event',
-  /** An old door creaking open. Replaces the synthesised door creak. */
-  'door-creak': 'replace',
+  sigh: { use: 'event', tier: 'demand' },
+  /** An old door creaking open, played after the synthesised latch. Kept for older sound packs; `door-open` is preferred. */
+  'door-creak': { use: 'replace', tier: 'core' },
+  /** A whole door opening (handle and creak). Replaces the synthesised latch and creak. */
+  'door-open': { use: 'replace', tier: 'core' },
+  /** A door closing and latching. Replaces the synthesised creak, thud and latch. */
+  'door-close': { use: 'replace', tier: 'core' },
+  /** A key turning in an old lock. Replaces the synthesised unlock. */
+  unlock: { use: 'replace', tier: 'core' },
+  /** A single floorboard creak (under footsteps now and then, and the "creak" event). */
+  'creak-floor': { use: 'replace', tier: 'core' },
   /** Your own footsteps on wooden boards. Replaces the synthesised wood steps. */
-  'step-wood': 'replace',
+  'step-wood': { use: 'replace', tier: 'core' },
   /** Your own footsteps on a rug. Replaces the synthesised carpet steps. */
-  'step-carpet': 'replace',
-} as const;
+  'step-carpet': { use: 'replace', tier: 'core' },
+  /** Your own footsteps on stone flags (the Crooked Kitchen, the porch). Without it, the wood step plays brighter and thinner: a stand-in, not a stone sound. */
+  'step-stone': { use: 'replace', tier: 'core' },
+  /** A book falling open or shutting (the Scholar's Study evidence books). */
+  book: { use: 'event', tier: 'idle' },
+  /** A page turning (the Lady's letter, the press proof). */
+  page: { use: 'event', tier: 'idle' },
+  /** The Entrance Hall grandfather clock, looped. Replaces the synthesised tick-tock. */
+  'clock-grandfather': { use: 'loop', tier: 'idle' },
+  /** A clock ticking, used for the "tick-tock" lesson item in the Chamber of Echoes. */
+  'clock-tick': { use: 'replace', tier: 'idle' },
+  /** The Entrance Hall fire, looped. Replaces the synthesised crackle. */
+  fire: { use: 'loop', tier: 'idle' },
+  /** A single drip into the bucket (Chamber of Echoes lesson item and ambience). */
+  drip: { use: 'replace', tier: 'idle' },
+} as const satisfies Record<string, { use: 'loop' | 'event' | 'replace'; tier: ClipTier }>;
 
 export type ClipSlot = keyof typeof CLIP_SLOTS;
 

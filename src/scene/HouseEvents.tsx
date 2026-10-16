@@ -218,7 +218,7 @@ const EVENTS: StrangeEvent[] = [
     id: 'stepsAbove',
     zones: ['hall', 'corridor'],
     cooldown: 180,
-    run: ({ cam }) => audio.playClip('footsteps-above', { at: [cam.position.x + 2, cam.position.y + 3.6, cam.position.z - 1], gain: 1.1 }),
+    run: ({ cam }) => audio.footstepsAbove([cam.position.x + 2, cam.position.y + 3.6, cam.position.z - 1]),
   },
   {
     id: 'sigh',

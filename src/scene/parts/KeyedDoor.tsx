@@ -61,7 +61,7 @@ export function KeyedDoor({ id, door, lock, room, inside, hinge, rotationY, widt
         }
         // The key turns: a scrape, the bolt, a pause, then the door swings open.
         turning.current = true;
-        audio.unlockDoor(at);
+        const wait = audio.unlockDoor(at);
         const Key = keyName.charAt(0).toUpperCase() + keyName.slice(1);
         g.showNotice(`${Key} turns in the lock.`, `${room} is open.`);
         window.setTimeout(() => {
@@ -70,7 +70,7 @@ export function KeyedDoor({ id, door, lock, room, inside, hinge, rotationY, widt
           s2.setDoor(door, true);
           audio.doorOpen(at, true);
           turning.current = false;
-        }, 1100);
+        }, wait);
       }}
     />
   );

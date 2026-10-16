@@ -88,7 +88,7 @@ function WritingBox() {
             return;
           }
           turning.current = true;
-          audio.unlockDoor([x, y + 0.1, z]);
+          const wait = audio.unlockDoor([x, y + 0.1, z]);
           g.showNotice(`${BOX_KEY.charAt(0).toUpperCase() + BOX_KEY.slice(1)} turns. The lid lifts by itself.`, 'Inside is a letter, addressed to you.');
           window.setTimeout(() => {
             const s2 = useGame.getState();
@@ -97,7 +97,7 @@ function WritingBox() {
             audio.mechanism([x, y + 0.1, z]);
             turning.current = false;
             window.setTimeout(() => openLesson('finale'), 1600);
-          }, 1100);
+          }, wait);
         }}
       >
         <mesh geometry={boxGeo(0.4, 0.1, 0.28, 'x')} material={m.mahogany} position={[0, 0.05, 0]} castShadow />

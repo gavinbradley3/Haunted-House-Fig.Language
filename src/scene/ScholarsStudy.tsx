@@ -32,7 +32,7 @@ function EvidenceCues() {
     const offs = BOOKS.map((id) =>
       registerCue(`evidence:${id}`, `A book on the desk falls open: “${EVIDENCE[id].title}”.`, () => {
         sfx.opened.add(id);
-        audio.whisperS([STUDY.desk.x, 1, STUDY.desk.z]);
+        audio.book([STUDY.desk.x, 1, STUDY.desk.z]);
       }),
     );
     return () => offs.forEach((o) => o());

@@ -328,8 +328,13 @@ export function groundAt(x: number, z: number): number {
 }
 
 /** What the floor is made of here, for footstep sounds. */
-export function surfaceAt(x: number, z: number): 'wood' | 'carpet' | 'gravel' {
+export function surfaceAt(x: number, z: number): 'wood' | 'carpet' | 'gravel' | 'stone' {
+  // The porch and its steps are stone flags (the same stone as the kitchen floor).
+  const fz = EXTERIOR.facadeZ;
+  if (Math.abs(x) < 2.3 && z > fz && z <= fz + 3.36) return 'stone';
   if (z > HALL.zFront + 0.05 && groundAt(x, z) < -0.05) return 'gravel';
+  // The Crooked Kitchen is floored with stone flags.
+  if (x >= KITCHEN.x0 && x <= KITCHEN.x1 && z <= KITCHEN.zN && z >= KITCHEN.zS) return 'stone';
   const rugs: [number, number, number, number][] = [
     [0.6, -4.6, 3.0, 4.4], // hall rug
     [0, -14.25, 0.95, 7.2], // corridor runner
