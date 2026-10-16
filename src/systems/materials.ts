@@ -133,6 +133,38 @@ function build() {
   const foliage = new THREE.MeshStandardMaterial({ color: '#2a3322', roughness: 0.85 });
   const driedFlower = new THREE.MeshStandardMaterial({ color: '#6a4a3a', roughness: 0.85 });
   const ceramic = new THREE.MeshStandardMaterial({ color: '#2e3c3a', roughness: 0.25 });
+  // Rooms 3 and 4 reuse the existing texture maps with a tint, so nothing new is generated at load.
+  const tinted = (base: THREE.MeshStandardMaterial, color: string) => {
+    const t = base.clone();
+    t.color = new THREE.Color(color);
+    return t;
+  };
+  const wallDining = tinted(wallMirror, '#a9bccd');
+  const wallNursery = tinted(plasterWarm, '#d9b3ad');
+  const silver = new THREE.MeshStandardMaterial({ color: '#c9c9c4', metalness: 1, roughness: 0.28 });
+  const porcelain = new THREE.MeshStandardMaterial({ color: '#e9e3d6', roughness: 0.3 });
+  const pastry = new THREE.MeshStandardMaterial({ color: '#b07a3c', roughness: 0.7 });
+  const slateBoard = new THREE.MeshStandardMaterial({ color: '#1c201f', roughness: 0.9 });
+  const toyRed = new THREE.MeshStandardMaterial({ color: '#7a2a22', roughness: 0.55 });
+  const toyCream = new THREE.MeshStandardMaterial({ color: '#d8c8a4', roughness: 0.6 });
+  const toyBlue = new THREE.MeshStandardMaterial({ color: '#2f4660', roughness: 0.55 });
+  const fur = new THREE.MeshStandardMaterial({ color: '#7a5634', roughness: 1 });
+  // The five later rooms: again only tints of existing maps, plus a few plain colours.
+  const wallEchoes = tinted(wallMirror, '#c3b2d2');
+  const wallPress = tinted(plasterWarm, '#8f8a80');
+  const wallKitchen = tinted(plasterWarm, '#c4cfb4');
+  const wallBallroom = tinted(wallHall, '#e2cfa8');
+  const wallStudy = tinted(wallCorridor, '#b0a08a');
+  const copper = new THREE.MeshStandardMaterial({ color: '#a8643a', metalness: 1, roughness: 0.38 });
+  const ice = new THREE.MeshStandardMaterial({ color: '#cfe4ee', roughness: 0.12, emissive: new THREE.Color('#2a4a5a'), emissiveIntensity: 0.4 });
+  // Cold blue flames (the ballroom's "frozen fire"). Kept separate from the shared warm flame.
+  const coldFlame = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.4, 2.6, 4.2), toneMapped: true });
+  const bean = new THREE.MeshStandardMaterial({ color: '#6e3b22', roughness: 0.55 });
+  const sacking = new THREE.MeshStandardMaterial({ color: '#8a7350', roughness: 1 });
+  const dressFabric = new THREE.MeshStandardMaterial({ color: '#3a2c2a', roughness: 0.85 });
+  const cloud = new THREE.MeshStandardMaterial({ color: '#8d96a0', roughness: 1, emissive: new THREE.Color('#20262c'), emissiveIntensity: 0.6 });
+  const paper = new THREE.MeshStandardMaterial({ color: '#e4d9bf', roughness: 0.9, side: THREE.DoubleSide });
+  const leadType = new THREE.MeshStandardMaterial({ color: '#55585c', metalness: 0.8, roughness: 0.5 });
   return {
     floorHall,
     floorDark,
@@ -180,6 +212,30 @@ function build() {
     foliage,
     driedFlower,
     ceramic,
+    wallDining,
+    wallNursery,
+    silver,
+    porcelain,
+    pastry,
+    slateBoard,
+    toyRed,
+    toyCream,
+    toyBlue,
+    fur,
+    wallEchoes,
+    wallPress,
+    wallKitchen,
+    wallBallroom,
+    wallStudy,
+    copper,
+    ice,
+    coldFlame,
+    bean,
+    sacking,
+    dressFabric,
+    cloud,
+    paper,
+    leadType,
   };
 }
 

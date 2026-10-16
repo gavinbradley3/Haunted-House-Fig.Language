@@ -355,6 +355,66 @@ class AudioEngine {
       const env = Math.sin(Math.PI * Math.min(1, t / 4)) ** 1.5;
       return gl * 5 * env * (0.8 + 0.2 * Math.sin(t * 9));
     });
+    // A giant's rumble: very low, slowly wavering, like a stomach or distant furniture dragged
+    let rl = 0;
+    this.buffers.rumble = this.buf(3, (t) => {
+      rl = (rl + 0.012 * (r() * 2 - 1)) / 1.012;
+      const env = Math.sin(Math.PI * Math.min(1, t / 3)) ** 1.2;
+      return (rl * 9 + Math.sin(2 * Math.PI * (38 + 6 * Math.sin(t * 2.3)) * t) * 0.35) * env * (0.7 + 0.3 * Math.sin(t * 5.7));
+    });
+    // Cutlery and plates rattling on a table: a scatter of small metallic pings
+    this.buffers.clink = this.buf(1.1, (t) => {
+      let v = 0;
+      for (let k = 0; k < 9; k++) {
+        const h = k * 0.11 + (k % 3) * 0.017;
+        if (t < h) continue;
+        const tt = t - h;
+        const f = 2400 + ((k * 977) % 1900);
+        v += (Math.sin(2 * Math.PI * f * tt) + 0.5 * Math.sin(2 * Math.PI * f * 2.63 * tt)) * Math.exp(-tt * 38) * (1 - k / 11);
+      }
+      return v * 0.3;
+    });
+    // A water drop into a metal bucket: a rising "plink" and a tiny ring
+    this.buffers.drip = this.buf(0.5, (t) => {
+      const f = 900 + 1400 * Math.min(1, t / 0.03);
+      return Math.sin(2 * Math.PI * f * t) * Math.exp(-t * 28) * 0.7 + Math.sin(2 * Math.PI * 2650 * t) * Math.exp(-t * 9) * 0.12;
+    });
+    // A steady hiss of air, as from a gramophone horn
+    let hp2 = 0;
+    let pv2 = 0;
+    this.buffers.hiss = this.buf(1.8, (t) => {
+      const n = r() * 2 - 1;
+      hp2 = 0.9 * (hp2 + n - pv2);
+      pv2 = n;
+      const env = Math.min(1, t / 0.15) * Math.min(1, (1.8 - t) / 0.4);
+      return hp2 * env * 0.35 * (0.85 + 0.15 * Math.sin(t * 40));
+    });
+    // Something heavy into deep water
+    let sl = 0;
+    this.buffers.splash = this.buf(1.4, (t) => {
+      sl = (sl + 0.25 * (r() * 2 - 1)) / 1.25;
+      return (sl * 2.2 * Math.exp(-t * 4) + Math.sin(2 * Math.PI * 70 * t) * Math.exp(-t * 9) * 0.5) * Math.min(1, t / 0.01);
+    });
+    // Knuckles on hollow wood: two raps
+    this.buffers.knock = this.buf(0.7, (t) => {
+      let v = 0;
+      for (const h of [0, 0.32]) {
+        if (t < h) continue;
+        const tt = t - h;
+        v += Math.sin(2 * Math.PI * 180 * tt) * Math.exp(-tt * 38) + Math.sin(2 * Math.PI * 410 * tt) * Math.exp(-tt * 60) * 0.5 + (tt < 0.004 ? (r() * 2 - 1) * 0.6 : 0);
+      }
+      return v * 0.6;
+    });
+    // The printing press: a heavy iron thump with a short clank
+    this.buffers.thump = this.buf(0.6, (t) => Math.sin(2 * Math.PI * 62 * t) * Math.exp(-t * 16) + Math.sin(2 * Math.PI * 1150 * t) * Math.exp(-t * 45) * 0.25 + (t < 0.006 ? (r() * 2 - 1) * 0.5 : 0));
+    // A soft whispered "sss", like type sliding into a tray
+    let ws = 0;
+    this.buffers.whisperS = this.buf(0.9, (t) => {
+      const n = r() * 2 - 1;
+      ws = 0.5 * ws + 0.5 * n;
+      const env = Math.sin(Math.PI * Math.min(1, t / 0.9)) ** 2;
+      return (n - ws) * env * 0.4;
+    });
     // Thunder: brown-ish noise with a slow swell and a long rolling decay
     let tl = 0;
     this.buffers.thunder = this.buf(4.5, (t) => {
@@ -597,6 +657,106 @@ class AudioEngine {
   /** A draught finds its way through the house: candles bow, the curtains stir. */
   gust() {
     this.play('gust', { gain: 0.5, rate: 0.9 + Math.random() * 0.2, reverb: 0.5 });
+  }
+  /** A deep rumble from the giant's end of the dining room. */
+  giantRumble(at: V3, strength = 1) {
+    this.play('rumble', { at, gain: 0.7 * strength, rate: 0.85 + Math.random() * 0.15 });
+  }
+  /** Plates and cutlery rattling on the table. */
+  cutleryRattle(at: V3, strength = 1) {
+    this.play('clink', { at, gain: 0.35 * strength, rate: 0.9 + Math.random() * 0.2 });
+  }
+  private musicBoxOut: GainNode | null = null;
+
+  /**
+   * The nursery's music box. Each performance is a few bars of an original tune played on
+   * bell-like tines (a sine plus an inharmonic overtone, each note ringing down).
+   *  cheerful: quick and bright · dance: skipping · lullaby: slows, sags in pitch and stops
+   *  plain: evenly spaced notes, no tune · hum: a few quiet notes · two: just two notes, far off
+   */
+  musicBox(kind: 'cheerful' | 'dance' | 'lullaby' | 'plain' | 'hum' | 'two', at: V3, gain = 1) {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    this.stopMusicBox();
+    const out = ctx.createGain();
+    out.gain.value = gain;
+    const p = this.panner(at, 1.0, 1.1);
+    out.connect(p).connect(this.sfx);
+    p.connect(this.reverbSend);
+    this.musicBoxOut = out;
+    const C5 = 523.25;
+    const f = (semi: number) => C5 * Math.pow(2, semi / 12);
+    const tune = [4, 7, 12, 11, 7, 4, 5, 7, 4, 0, 2, 4, 2, -1, 0];
+    let notes: { s: number; t: number; v: number; bend?: number }[] = [];
+    if (kind === 'cheerful') notes = [0, 4, 7, 12, 7, 4, 0, 4, 7, 12, 16, 12, 7, 4, 12].map((s, i) => ({ s: s + 7, t: i * 0.14, v: 0.9 }));
+    if (kind === 'dance') notes = tune.map((s, i) => ({ s: s + 12, t: Math.floor(i / 2) * 0.42 + (i % 2) * 0.28, v: i % 2 ? 0.6 : 1 }));
+    if (kind === 'lullaby') {
+      let t = 0;
+      notes = tune.slice(0, 12).map((s, i) => {
+        const n = { s, t, v: 1 - i * 0.05, bend: -0.25 * (i / 11) ** 2 };
+        t += 0.5 + i * 0.09 + (i > 8 ? (i - 8) * 0.35 : 0);
+        return n;
+      });
+    }
+    if (kind === 'plain') notes = [0, 2, 4, 5, 7].map((s, i) => ({ s, t: i * 0.5, v: 0.8 }));
+    if (kind === 'hum') notes = tune.slice(0, 6).map((s, i) => ({ s, t: i * 0.55, v: 0.45 }));
+    if (kind === 'two') notes = [{ s: 7, t: 0, v: 0.6 }, { s: 4, t: 0.62, v: 0.5 }];
+    const t0 = ctx.currentTime + 0.05;
+    for (const n of notes) {
+      const freq = f(n.s) * Math.pow(2, (n.bend ?? 0) / 12);
+      const start = t0 + n.t;
+      for (const [mult, amp, decay] of [
+        [1, 0.32, 1.6],
+        [3.9, 0.07, 5],
+      ] as const) {
+        const o = ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = freq * mult;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, start);
+        g.gain.linearRampToValueAtTime(amp * n.v, start + 0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + decay);
+        o.connect(g).connect(out);
+        o.start(start);
+        o.stop(start + decay + 0.05);
+      }
+    }
+  }
+  stopMusicBox() {
+    const ctx = this.ctx;
+    if (!ctx || !this.musicBoxOut) return;
+    this.musicBoxOut.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
+    const old = this.musicBoxOut;
+    window.setTimeout(() => old.disconnect(), 1500);
+    this.musicBoxOut = null;
+  }
+  /** Sounds for the Chamber of Echoes and the later rooms. `n` repeats the sound a few times. */
+  drip(at: V3, n = 3) {
+    for (let i = 0; i < n; i++) this.play('drip', { at, gain: 0.55, rate: 0.95 + Math.random() * 0.1, delay: i * 0.85 });
+  }
+  hiss(at: V3) {
+    this.play('hiss', { at, gain: 0.5 });
+  }
+  tickTock(at: V3, n = 6) {
+    for (let i = 0; i < n; i++) this.play(i % 2 ? 'tock' : 'tick', { at, gain: 0.7, delay: i * 0.5 });
+  }
+  creakLong(at: V3) {
+    this.play('creakDoor', { at, gain: 0.5, rate: 0.75 });
+  }
+  knock(at: V3) {
+    this.play('knock', { at, gain: 0.8 });
+  }
+  thudFar(at: V3) {
+    this.play('thud', { at, gain: 0.7, rate: 0.85 });
+  }
+  splash(at: V3) {
+    this.play('splash', { at, gain: 0.6 });
+  }
+  pressThump(at: V3, n = 1, gap = 0.55) {
+    for (let i = 0; i < n; i++) this.play('thump', { at, gain: 0.6, rate: 0.95 + Math.random() * 0.1, delay: i * gap });
+  }
+  whisperS(at: V3) {
+    this.play('whisperS', { at, gain: 0.45, rate: 0.9 + Math.random() * 0.2 });
   }
   /** Footsteps somewhere in an empty hall: used after the model simile is revealed. */
   distantSteps() {

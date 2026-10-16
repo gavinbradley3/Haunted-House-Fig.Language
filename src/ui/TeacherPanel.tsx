@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import type { RoomId } from '../content/types';
+import { DEVICE_ROOMS, ROOMS, type RoomId } from '../content/types';
 import { STAGE_LABELS, STAGES } from '../lesson/lessonMachine';
-import { closeLesson, goToKey, openLesson } from '../lesson/director';
+import { closeLesson, goToKey, jumpToRoom, openLesson } from '../lesson/director';
 import { jumpToGallery, jumpToHall, jumpToMirrors, walkToHall, walkToMirrors } from '../lesson/navigation';
-import { canCollect, KEY_FOR_ROOM } from '../lesson/progression';
+import { canCollect, GRANT_STEPS, KEY_FOR_ROOM, type GrantStep, type KeyId, type Progress } from '../lesson/progression';
 import { triggerStrangeEvent } from '../scene/HouseEvents';
 import { skipCinematic } from '../scene/Player';
 import { activeLesson, EVENT_LEVELS, useGame, type EventLevel } from '../state/store';
@@ -16,7 +16,57 @@ const EVENT_HELP: Record<EventLevel, string> = {
   eerie: 'More often, and some you will notice: candles bow in a draught, lights sink, a mirror fogs.',
 };
 
-const ROOM_NAMES: Record<RoomId, string> = { mirrors: 'Hall of Mirrors · Simile', gallery: 'Portrait Gallery · Metaphor' };
+const ROOM_NAMES: Record<RoomId, string> = {
+  mirrors: 'Hall of Mirrors · Simile',
+  gallery: 'Portrait Gallery · Metaphor',
+  dining: 'Dining Room · Hyperbole',
+  nursery: 'Nursery · Personification',
+  echoes: 'Chamber of Echoes · Onomatopoeia',
+  press: 'Whispering Press · Alliteration',
+  kitchen: 'Crooked Kitchen · Idiom',
+  ballroom: 'Ballroom · Oxymoron',
+  study: 'Scholar’s Study · Allusion',
+  finale: 'The Lady’s Letter · All nine',
+};
+
+const GRANT_LABELS: Record<GrantStep, string> = {
+  mirrorKey: 'Mirror Key',
+  galleryOpen: 'Gallery unlocked',
+  galleryKey: 'Gallery Key',
+  diningOpen: 'Dining Room unlocked',
+  diningKey: 'Tiny Key',
+  nurseryOpen: 'Nursery unlocked',
+  nurseryKey: 'Music Box Key',
+  echoesOpen: 'Chamber of Echoes unlocked',
+  echoesKey: 'Bell Key',
+  pressOpen: 'Whispering Press unlocked',
+  pressKey: 'Type Key',
+  kitchenOpen: 'Kitchen unlocked',
+  kitchenKey: 'Pantry Key',
+  ballroomOpen: 'Ballroom unlocked',
+  ballroomKey: 'Ballroom Key',
+  studyOpen: 'Study unlocked',
+  studyKey: 'Scholar’s Key',
+  deskOpen: 'Writing box open',
+};
+
+/** Where the class is in the chain of keys, in a few words. */
+function chainStatus(p: Progress) {
+  const done = DEVICE_ROOMS.filter((r) => p.completed[r]);
+  const next = DEVICE_ROOMS.find((r) => !p.completed[r]);
+  const waiting = (Object.keys(p.keys) as KeyId[]).find((k) => canCollect(p, k));
+  const held = (Object.keys(p.keys) as KeyId[]).filter((k) => p.keys[k]).length;
+  return [
+    `Rooms complete: ${done.length} of ${DEVICE_ROOMS.length}`,
+    next ? `Next: ${ROOM_NAMES[next]}` : 'All nine rooms complete',
+    `Keys taken: ${held} of 9`,
+    waiting ? 'A key is waiting to be taken' : '',
+    `Writing box: ${p.unlocked.desk ? 'open' : 'locked'}`,
+    p.completed.finale ? 'Finished' : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
 
 /** A button that asks for a second press instead of a browser dialog (dialogs are blocked in some views). */
 function ConfirmButton({ label, confirmLabel, onConfirm }: { label: string; confirmLabel: string; onConfirm: () => void }) {
@@ -38,6 +88,25 @@ function ConfirmButton({ label, confirmLabel, onConfirm }: { label: string; conf
     >
       {armed ? confirmLabel : label}
     </button>
+  );
+}
+
+/** Skip ahead: put the house in the state it would be in after a chosen step. */
+function GrantControl({ onGrant }: { onGrant: (s: GrantStep) => void }) {
+  const [step, setStep] = useState<GrantStep>('galleryKey');
+  return (
+    <div className="grant">
+      <select value={step} onChange={(e) => setStep(e.target.value as GrantStep)} aria-label="Skip ahead to">
+        {GRANT_STEPS.map((g) => (
+          <option key={g} value={g}>
+            Up to: {GRANT_LABELS[g]}
+          </option>
+        ))}
+      </select>
+      <button className="btn small" onClick={() => onGrant(step)}>
+        Skip ahead
+      </button>
+    </div>
   );
 }
 
@@ -77,7 +146,7 @@ export function TeacherPanel() {
 
       <h5>Lesson</h5>
       <div className="grid">
-        {(['mirrors', 'gallery'] as RoomId[]).map((r) => (
+        {ROOMS.map((r) => (
           <button key={r} className={`btn ${s.room === r ? 'now' : ''}`} onClick={() => openLesson(r)}>
             {ROOM_NAMES[r]}
           </button>
@@ -109,6 +178,17 @@ export function TeacherPanel() {
         <button className="btn" onClick={jumpToGallery}>
           Jump to the Gallery
         </button>
+        <button className="btn" onClick={() => jumpToRoom('dining')}>
+          Jump to the Dining Room
+        </button>
+        <button className="btn" onClick={() => jumpToRoom('nursery')}>
+          Jump to the Nursery
+        </button>
+        {(['echoes', 'press', 'kitchen', 'ballroom', 'study'] as RoomId[]).map((r) => (
+          <button key={r} className="btn" onClick={() => jumpToRoom(r)}>
+            Jump to {ROOM_NAMES[r].split(' · ')[0].replace(/^The /, 'the ')}
+          </button>
+        ))}
         <button className="btn" onClick={jumpToHall}>
           Jump to the Hall
         </button>
@@ -122,19 +202,13 @@ export function TeacherPanel() {
 
       <h5>Keys and doors</h5>
       <div className="sub" style={{ marginBottom: 8 }}>
-        Mirror Key: {p.keys.mirrorKey ? 'taken' : p.completed.mirrors ? 'waiting in the drawer' : 'not yet earned'} · Gallery door: {p.galleryUnlocked ? 'unlocked' : 'locked'} · Gallery Key:{' '}
-        {p.keys.galleryKey ? 'taken' : p.completed.gallery ? 'waiting in the safe' : 'not yet earned'}
+        {chainStatus(p)}
       </div>
       <div className="grid">
         <button className="btn" disabled={!canCollect(p, KEY_FOR_ROOM[s.room])} onClick={() => goToKey(s.room)}>
           Stand at the key
         </button>
-        <button className="btn" disabled={p.galleryUnlocked} onClick={() => s.progressDispatch({ type: 'GRANT', upTo: 'galleryOpen' })}>
-          Unlock the Gallery
-        </button>
-        <button className="btn" disabled={p.keys.galleryKey} onClick={() => s.progressDispatch({ type: 'GRANT', upTo: 'galleryKey' })}>
-          Give both keys
-        </button>
+        <GrantControl onGrant={(upTo) => s.progressDispatch({ type: 'GRANT', upTo })} />
         <ConfirmButton
           label="Reset all progress"
           confirmLabel="Press again: lock everything"

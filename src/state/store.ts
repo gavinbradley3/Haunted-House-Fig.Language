@@ -10,13 +10,50 @@ import type { Pose, ShotName, Zone } from '../world/layout';
 import type { LessonContent, RoomId } from '../content/types';
 import { SIMILE } from '../content/simile';
 import { METAPHOR } from '../content/metaphor';
+import { HYPERBOLE } from '../content/hyperbole';
+import { PERSONIFICATION } from '../content/personification';
+import { FINALE } from '../content/finale';
+import { ONOMATOPOEIA } from '../content/onomatopoeia';
+import { ALLITERATION } from '../content/alliteration';
+import { IDIOM } from '../content/idiom';
+import { OXYMORON } from '../content/oxymoron';
+import { ALLUSION } from '../content/allusion';
+import { DEVICE_ROOMS } from '../content/types';
 import { initialProgress, parseProgress, progressReducer, KEY_FOR_ROOM, type Progress, type ProgressAction } from '../lesson/progression';
 
-export const CONTENT: Record<RoomId, LessonContent> = { mirrors: SIMILE, gallery: METAPHOR };
+export const CONTENT: Record<RoomId, LessonContent> = {
+  mirrors: SIMILE,
+  gallery: METAPHOR,
+  dining: HYPERBOLE,
+  nursery: PERSONIFICATION,
+  echoes: ONOMATOPOEIA,
+  press: ALLITERATION,
+  kitchen: IDIOM,
+  ballroom: OXYMORON,
+  study: ALLUSION,
+  finale: FINALE,
+};
+
+const freshLessons = (): Record<RoomId, LessonState> => ({
+  mirrors: initialLessonState(SIMILE),
+  gallery: initialLessonState(METAPHOR),
+  dining: initialLessonState(HYPERBOLE),
+  nursery: initialLessonState(PERSONIFICATION),
+  echoes: initialLessonState(ONOMATOPOEIA),
+  press: initialLessonState(ALLITERATION),
+  kitchen: initialLessonState(IDIOM),
+  ballroom: initialLessonState(OXYMORON),
+  study: initialLessonState(ALLUSION),
+  finale: initialLessonState(FINALE),
+});
+
+/** The device rooms the class has not completed yet (the ending waits for all of them). */
+export const unfinishedRooms = (p: Progress) => DEVICE_ROOMS.filter((r) => !p.completed[r]);
 export type { RoomId };
 
 export type Phase = 'loading' | 'title' | 'intro' | 'play';
-export type DoorId = 'front' | 'mirror' | 'jib' | 'gallery';
+/** `jib` is the hidden door to the Nursery; `desk` is the lid of the Lady's writing box. */
+export type DoorId = 'front' | 'mirror' | 'jib' | 'gallery' | 'dining' | 'desk' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study';
 export type Quality = 'high' | 'balanced' | 'low';
 
 export type Vec3 = [number, number, number];
@@ -78,6 +115,8 @@ export interface GameState {
   fading: boolean;
   /** Camera shot override during the completion sequence. */
   completionShot: ShotName | null;
+  /** The end card after the final lesson. */
+  endingOpen: boolean;
 
   /** One lesson per room; `room` is the one the lesson panel shows. */
   lessons: Record<RoomId, LessonState>;
@@ -112,6 +151,7 @@ export interface GameState {
   markMirrorsVisited: () => void;
   setFading: (v: boolean) => void;
   setCompletionShot: (s: ShotName | null) => void;
+  setEndingOpen: (v: boolean) => void;
   dispatch: (a: LessonAction) => void;
   gotoStage: (s: Stage) => void;
   setRoom: (r: RoomId) => void;
@@ -154,7 +194,7 @@ export const useGame = create<GameState>()((set, get) => ({
   pointerLocked: false,
   notice: null,
   hover: null,
-  doors: { front: false, mirror: false, jib: false, gallery: false },
+  doors: { front: false, mirror: false, jib: false, gallery: false, dining: false, desk: false, echoes: false, press: false, kitchen: false, ballroom: false, study: false },
   cinematic: null,
   teleport: null,
   shot: null,
@@ -165,7 +205,8 @@ export const useGame = create<GameState>()((set, get) => ({
   mirrorsVisited: false,
   fading: false,
   completionShot: null,
-  lessons: { mirrors: initialLessonState(SIMILE), gallery: initialLessonState(METAPHOR) },
+  endingOpen: false,
+  lessons: freshLessons(),
   room: 'mirrors',
   progress: loadProgress(),
   eventLevel: EVENT_LEVELS[loadNumber('hosl.eventLevel', 2)] ?? 'eerie',
@@ -209,9 +250,17 @@ export const useGame = create<GameState>()((set, get) => ({
   markMirrorsVisited: () => set({ mirrorsVisited: true }),
   setFading: (fading) => set({ fading }),
   setCompletionShot: (completionShot) => set({ completionShot }),
+  setEndingOpen: (endingOpen) => set({ endingOpen }),
   dispatch: (a) => {
     const { lessons, room, progress } = get();
     const before = lessons[room];
+    // The ending waits for every device room, however the final lesson was opened.
+    const ending = room === 'finale' && (a.type === 'COMPLETE' || (a.type === 'GOTO_STAGE' && a.stage === 'complete'));
+    const left = unfinishedRooms(progress);
+    if (ending && left.length) {
+      get().showNotice('The letter will not end yet.', `Still to complete: ${left.map((r) => CONTENT[r].room.replace(/^The /, '')).join(', ')}.`);
+      return;
+    }
     const after = lessonReducer(before, a, CONTENT[room]);
     if (after === before) return;
     let nextProgress = progress;
@@ -229,9 +278,10 @@ export const useGame = create<GameState>()((set, get) => ({
     save('hosl.progress', JSON.stringify(progress));
     const patch: Partial<GameState> = { progress };
     if (a.type === 'RESET_PROGRESS') {
-      patch.lessons = { mirrors: initialLessonState(SIMILE), gallery: initialLessonState(METAPHOR) };
-      patch.doors = { ...get().doors, gallery: false, jib: false };
+      patch.lessons = freshLessons();
+      patch.doors = { ...get().doors, gallery: false, jib: false, dining: false, desk: false, echoes: false, press: false, kitchen: false, ballroom: false, study: false };
       patch.completionShot = null;
+      patch.endingOpen = false;
     }
     set(patch);
   },

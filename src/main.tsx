@@ -9,7 +9,9 @@ import '@fontsource/literata/600.css';
 import '@fontsource/literata/400-italic.css';
 import './index.css';
 import App from './App';
-import { useGame } from './state/store';
+import { CONTENT, useGame } from './state/store';
+import { evaluateBuild } from './lesson/lessonMachine';
+import { doorState } from './lesson/progression';
 import * as nav from './lesson/navigation';
 import * as director from './lesson/director';
 import { skipCinematic } from './scene/Player';
@@ -23,7 +25,7 @@ import { audio } from './systems/audio';
 import { mats } from './systems/materials';
 
 // Test hook used by the automated browser checks (scripts/shots.mjs).
-(window as unknown as Record<string, unknown>).__hosl = { useGame, nav, director, skipCinematic, liveCamera, getInteractable, triggerStrangeEvent, hungPaintings, audio, houseState, world, mats,
+(window as unknown as Record<string, unknown>).__hosl = { useGame, nav, director, skipCinematic, liveCamera, getInteractable, triggerStrangeEvent, hungPaintings, audio, houseState, world, mats, content: CONTENT, evaluateBuild, doorState,
   programs: () => renderer.gl?.info.programs?.length ?? -1 };
 
 // Canvas textures (clock face, plaques, mirror text) use the display font, so wait for it.

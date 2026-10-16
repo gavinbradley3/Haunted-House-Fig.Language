@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { useGame } from '../state/store';
+import { game, useGame } from '../state/store';
 import { audio } from '../systems/audio';
 import { boxGeo, latheGeo, LATHES, profileGeo, PROFILES, runTransform } from '../systems/geometry';
 import { mats } from '../systems/materials';
-import { HALL, WALL_T } from '../world/layout';
+import { HALL, KITCHEN, STUDY, WALL_T } from '../world/layout';
+import { KeyedDoor } from './parts/KeyedDoor';
 import { Architrave, CeilingRose, Cornice, OnWall, PanelField, Run, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
 import { Door, DoorLeaf } from './parts/Door';
 import { CandleLight, Chandelier, Sconce } from './parts/Lights';
@@ -197,8 +198,8 @@ export function EntranceHall() {
       {/* Walls */}
       <Wall axis="x" from={x0 - WALL_T} to={x1 + WALL_T} at={zFront + WALL_T / 2} height={height + 0.4} openings={frontOpenings} matPos={m.brick} matNeg={m.wallHall} />
       <Wall axis="x" from={x0 - WALL_T} to={x1 + WALL_T} at={zBack - WALL_T / 2} height={height} openings={[{ c: 0, w: HALL.corridorOpening.width, b: 0, t: HALL.corridorOpening.height }]} matPos={m.wallHall} matNeg={m.wallCorridor} />
-      <Wall axis="z" from={zFront} to={zBack} at={x0 - WALL_T / 2} height={height} matPos={m.wallHall} matNeg={m.brick} />
-      <Wall axis="z" from={zFront} to={zBack} at={x1 + WALL_T / 2} height={height} matPos={m.brick} matNeg={m.wallHall} />
+      <Wall axis="z" from={zFront} to={zBack} at={x0 - WALL_T / 2} height={height} openings={[{ c: STUDY.doorZ, w: 0.96, b: 0, t: 2.3 }]} matPos={m.wallHall} matNeg={m.wallStudy} />
+      <Wall axis="z" from={zFront} to={zBack} at={x1 + WALL_T / 2} height={height} openings={[{ c: KITCHEN.doorZ, w: 0.96, b: 0, t: 2.3 }]} matPos={m.wallKitchen} matNeg={m.wallHall} />
 
       {/* --- Front wall interior --- */}
       <OnWall axis="x" face={zFront} normal={-1}>
@@ -275,7 +276,8 @@ export function EntranceHall() {
       {/* --- Left wall --- */}
       <OnWall axis="z" face={x0} normal={1}>
         <Wainscot x0={wallLocal('z', 1, zFront)} x1={wallLocal('z', 1, S.zStart + 0.05)} />
-        <Wainscot x0={wallLocal('z', 1, S.zEnd)} x1={wallLocal('z', 1, zBack)} height={1.12} />
+        <Wainscot x0={wallLocal('z', 1, S.zEnd)} x1={wallLocal('z', 1, zBack)} height={1.12} gaps={[[wallLocal('z', 1, STUDY.doorZ), 0.96 + 0.36]]} />
+        <Architrave c={wallLocal('z', 1, STUDY.doorZ)} w={0.96} h={2.3} />
         <group position={[0, L.y, 0]}>
           <Wainscot x0={wallLocal('z', 1, L.zEdge)} x1={wallLocal('z', 1, zBack)} />
         </group>
@@ -288,7 +290,8 @@ export function EntranceHall() {
 
       {/* --- Right wall with fireplace --- */}
       <OnWall axis="z" face={x1} normal={-1}>
-        <Wainscot x0={wallLocal('z', -1, zFront)} x1={wallLocal('z', -1, zBack)} gaps={[[wallLocal('z', -1, ft.z), 2.4]]} />
+        <Wainscot x0={wallLocal('z', -1, zFront)} x1={wallLocal('z', -1, zBack)} gaps={[[wallLocal('z', -1, ft.z), 2.4], [wallLocal('z', -1, KITCHEN.doorZ), 0.96 + 0.36]]} />
+        <Architrave c={wallLocal('z', -1, KITCHEN.doorZ)} w={0.96} h={2.3} />
         <Fireplace x={wallLocal('z', -1, ft.z)} ceiling={height} />
         <Sconce x={wallLocal('z', -1, -1.9)} y={2.2} seed={5} light={false} />
         <Sconce x={wallLocal('z', -1, -7.4)} y={2.2} seed={6} intensity={4.5} />
@@ -298,6 +301,31 @@ export function EntranceHall() {
         <Painting x={wallLocal('z', -1, -8.6)} y={4.6} w={0.8} h={0.6} kind="sea" seed={8} />
       </OnWall>
 
+      {/* Room 9 (under the landing) and Room 7 (beyond the fireplace) */}
+      <KeyedDoor
+        id="study-door"
+        door="study"
+        lock="study"
+        room="The Scholar’s Study"
+        inside="study"
+        hinge={[x0 - WALL_T / 2, 0, STUDY.doorZ + 0.48]}
+        rotationY={Math.PI / 2}
+        width={0.96}
+        height={2.3}
+        lockedHint={() => (game().progress.completed.ballroom ? 'Did you take the key from the ballroom’s glass case?' : 'The keyhole is shaped like a word you have not learned yet.')}
+      />
+      <KeyedDoor
+        id="kitchen-door"
+        door="kitchen"
+        lock="kitchen"
+        room="The Crooked Kitchen"
+        inside="kitchen"
+        hinge={[x1 + WALL_T / 2, 0, KITCHEN.doorZ - 0.48]}
+        rotationY={-Math.PI / 2}
+        width={0.96}
+        height={2.3}
+        lockedHint={() => (game().progress.completed.press ? 'Did you take the key from the printing press?' : 'The keyhole is shaped like a word you have not learned yet.')}
+      />
       <Staircase />
       <Landing />
       <Stanchions a={[S.x0 + 0.25, 0, S.zStart + 0.3]} b={[S.x1 - 0.12, 0, S.zStart + 0.3]} />

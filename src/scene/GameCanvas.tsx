@@ -19,7 +19,20 @@ import { Sky } from './Sky';
 import { LessonCamera, LessonDirector } from '../lesson/director';
 import { GalleryDirector } from '../lesson/galleryDirector';
 import { PortraitGallery } from './PortraitGallery';
+import { DiningRoom } from './DiningRoom';
+import { RoomLights } from './RoomLights';
+import { DiningDirector } from '../lesson/diningDirector';
+import { Nursery } from './Nursery';
+import { NurseryDirector } from '../lesson/nurseryDirector';
+import { Finale } from './Finale';
+import { FinaleDirector } from '../lesson/finaleDirector';
 import { HouseEvents } from './HouseEvents';
+import { ChamberOfEchoes } from './ChamberOfEchoes';
+import { WhisperingPress } from './WhisperingPress';
+import { CrookedKitchen } from './CrookedKitchen';
+import { BallroomOfContradictions } from './BallroomOfContradictions';
+import { ScholarsStudy } from './ScholarsStudy';
+import { LaterDirectors } from '../lesson/laterDirector';
 import { preloadArt } from './parts/Artwork';
 import { renderer } from '../systems/renderer';
 
@@ -86,15 +99,31 @@ const HIDDEN_LAYER = 5;
  * intensity: three.js compiles the number of lights into every material's shader,
  * so removing a room's lights would recompile the whole house (a visible stutter).
  */
-function Culling({ children, area }: { children: React.ReactNode; area: 'exterior' | 'mirrors' | 'gallery' }) {
+type Area = 'exterior' | 'mirrors' | 'gallery' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study';
+
+function Culling({ children, area }: { children: React.ReactNode; area: Area }) {
   const zone = useGame((s) => s.zone);
   const mirrorOpen = useGame((s) => s.doors.mirror);
   const frontOpen = useGame((s) => s.doors.front);
   const galleryOpen = useGame((s) => s.doors.gallery);
+  const diningOpen = useGame((s) => s.doors.dining);
+  const jibOpen = useGame((s) => s.doors.jib);
+  const echoesOpen = useGame((s) => s.doors.echoes);
+  const pressOpen = useGame((s) => s.doors.press);
+  const kitchenOpen = useGame((s) => s.doors.kitchen);
+  const ballroomOpen = useGame((s) => s.doors.ballroom);
+  const studyOpen = useGame((s) => s.doors.study);
   let visible = true;
   if (area === 'gallery') visible = zone === 'gallery' || (zone === 'corridor' && galleryOpen);
   if (area === 'exterior') visible = zone === 'exterior' || zone === 'hall' || (zone === 'corridor' && frontOpen);
-  if (area === 'mirrors') visible = zone === 'mirrors' || zone === 'corridor' || (zone === 'hall' && mirrorOpen);
+  if (area === 'mirrors') visible = zone === 'mirrors' || zone === 'corridor' || zone === 'nursery' || (zone === 'hall' && mirrorOpen);
+  if (area === 'dining') visible = zone === 'dining' || (zone === 'corridor' && diningOpen) || (zone === 'ballroom' && ballroomOpen);
+  if (area === 'nursery') visible = zone === 'nursery' || (zone === 'mirrors' && jibOpen) || (zone === 'echoes' && echoesOpen);
+  if (area === 'echoes') visible = zone === 'echoes' || (zone === 'nursery' && echoesOpen) || (zone === 'press' && pressOpen);
+  if (area === 'press') visible = zone === 'press' || (zone === 'echoes' && pressOpen);
+  if (area === 'kitchen') visible = zone === 'kitchen' || (zone === 'hall' && kitchenOpen);
+  if (area === 'study') visible = zone === 'study' || (zone === 'hall' && studyOpen);
+  if (area === 'ballroom') visible = zone === 'ballroom' || (zone === 'dining' && ballroomOpen);
   const group = useRef<THREE.Group>(null!);
   const st = useMemo(() => ({ shown: true, lights: [] as THREE.Light[], frames: 0, dirty: true }), []);
   if (st.shown !== visible) {
@@ -198,7 +227,8 @@ function FpsGuard() {
 
 export const QUALITY = {
   high: { dpr: [1, 1.5] as [number, number], msaa: 4, ao: 'medium' as const, reflect: 0.5 },
-  balanced: { dpr: [1, 1] as [number, number], msaa: 2, ao: 'low' as const, reflect: 0.35 },
+  // No ambient occlusion: on integrated graphics it re-draws the whole scene and costs as much as everything else.
+  balanced: { dpr: [1, 1] as [number, number], msaa: 2, ao: null, reflect: 0.35 },
   low: { dpr: [0.8, 0.8] as [number, number], msaa: 0, ao: null, reflect: 0.25 },
 };
 
@@ -225,6 +255,7 @@ export function GameCanvas() {
           <Exterior />
         </Culling>
         <EntranceHall />
+        <Finale />
         <Corridor />
         <Culling area="mirrors">
           <HallOfMirrors />
@@ -232,10 +263,36 @@ export function GameCanvas() {
         <Culling area="gallery">
           <PortraitGallery />
         </Culling>
+        <Culling area="dining">
+          <DiningRoom />
+        </Culling>
+        <Culling area="nursery">
+          <Nursery />
+        </Culling>
+        <Culling area="echoes">
+          <ChamberOfEchoes />
+        </Culling>
+        <Culling area="press">
+          <WhisperingPress />
+        </Culling>
+        <Culling area="kitchen">
+          <CrookedKitchen />
+        </Culling>
+        <Culling area="ballroom">
+          <BallroomOfContradictions />
+        </Culling>
+        <Culling area="study">
+          <ScholarsStudy />
+        </Culling>
+        <RoomLights />
         <DustMotes />
         <Player />
         <LessonDirector />
         <GalleryDirector />
+        <DiningDirector />
+        <NurseryDirector />
+        <FinaleDirector />
+        <LaterDirectors />
         <LessonCamera />
         <HouseEvents />
         <FpsGuard />

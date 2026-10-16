@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { world } from '../systems/time';
+import { ffx } from '../lesson/finaleFx';
 
 /** Direction toward the moon (behind the house, above the roof line as seen from the drive). */
 export const MOON_DIR = new THREE.Vector3(-0.32, 0.46, -1).normalize();
@@ -17,6 +18,7 @@ const vert = /* glsl */ `
 const frag = /* glsl */ `
   uniform vec3 uMoon;
   uniform float uTime;
+  uniform float uDawn;
   varying vec3 vDir;
   float hash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
   float noise(vec2 p) {
@@ -51,6 +53,10 @@ const frag = /* glsl */ `
     float cl = smoothstep(0.45, 0.85, fbm(cp * 1.5));
     vec3 cloudCol = mix(vec3(0.04, 0.05, 0.065), vec3(0.22, 0.24, 0.3), pow(max(md, 0.0), 6.0));
     col = mix(col, cloudCol, cl * 0.75 * smoothstep(0.02, 0.25, h) * (1.0 - disc * 0.6));
+    // Dawn (the ending): a warm horizon under a pale blue sky; stars and moon fade.
+    vec3 dawnSky = mix(vec3(0.95, 0.55, 0.32), vec3(0.32, 0.42, 0.62), pow(max(h, 0.0), 0.45));
+    dawnSky = mix(dawnSky, vec3(0.75, 0.62, 0.58), cl * 0.6 * smoothstep(0.02, 0.25, h));
+    col = mix(col, dawnSky, uDawn);
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -61,7 +67,7 @@ export function Sky() {
       new THREE.ShaderMaterial({
         vertexShader: vert,
         fragmentShader: frag,
-        uniforms: { uMoon: { value: MOON_DIR }, uTime: { value: 0 } },
+        uniforms: { uMoon: { value: MOON_DIR }, uTime: { value: 0 }, uDawn: { value: 0 } },
         side: THREE.BackSide,
         depthWrite: false,
         fog: false,
@@ -70,6 +76,8 @@ export function Sky() {
   );
   useFrame(({ camera }, _dt) => {
     mat.uniforms.uTime.value = world.t;
+    ffx.dawn += (ffx.dawnTarget - ffx.dawn) * (1 - Math.exp(-(world.dt || 0.016) * 0.35));
+    mat.uniforms.uDawn.value = ffx.dawn;
     void camera;
   });
   return (

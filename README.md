@@ -2,7 +2,7 @@
 
 *Some doors are opened with keys. Others are opened with words.*
 
-A first-person 3D mystery for teaching figurative language to Grade 7–8 classes. You drive it on the classroom screen while students discuss, vote and create. It currently has two complete lessons: **the Hall of Mirrors** (simile) and **the Portrait Gallery** (metaphor), joined by a trail of keys.
+A first-person 3D mystery for teaching figurative language to Grade 7–9 classes. You drive it on the classroom screen while students discuss, vote and create. It has ten lessons joined by a trail of keys: **the Hall of Mirrors** (simile), **the Portrait Gallery** (metaphor), **the Giant's Dining Room** (hyperbole), **the Nursery** (personification), **the Chamber of Echoes** (onomatopoeia), **the Whispering Press** (alliteration), **the Crooked Kitchen** (idiom), **the Ballroom of Contradictions** (oxymoron), **the Forgotten Scholar's Study** (allusion) and **the Lady's Letter** (all nine together), which ends the game.
 
 ---
 
@@ -56,7 +56,17 @@ The `dist/` folder is a self-contained website. It needs no internet connection 
 2. When the lesson is complete, a drawer under the mirror slides open. Press **Go and take the key**, then press **E** (or click) on the brass key.
 3. Back in the corridor, the first door on the left is *The Portrait Gallery*. With the Mirror Key it unlocks and swings open. It stays unlocked after that.
 4. In the gallery, look at the large portrait at the far end (*The Caretaker Was a Storm*) and choose **Begin the lesson here**.
-5. When the metaphor lesson is complete, the empty frame swings away from the wall. Take the Gallery Key from the safe behind it. The door opposite the gallery (*The Giant's Dining Room*) recognises the key but will not open yet: that is the next chapter.
+5. When the metaphor lesson is complete, the empty frame swings away from the wall. Take the Gallery Key from the safe behind it.
+6. The door opposite the gallery, *The Giant's Dining Room*, opens with the Gallery Key. Use the giant's place (the silver cloche at the end of the table) to start the hyperbole lesson. At the end the cloche lifts: take **the Tiny Key** from the giant's plate.
+7. Go back to the Hall of Mirrors. Between the first two mirrors on the left, the panelling now shows a tiny keyhole. The Tiny Key opens a hidden door into **the Nursery**. Use the music box to start the personification lesson. Sound matters in Challenge B, so turn the speakers up. At the end, take **the Music Box Key** from inside the music box.
+8. In the Nursery, the door in the south wall (*The Chamber of Echoes*) opens with the Music Box Key. Use the piano to start the onomatopoeia lesson. Every sound has a **Play the sound** button and a written caption, and captions also appear at the top of the screen, so the lesson works without speakers. Take **the Bell Key** from the piano lid.
+9. The door in the music room's west wall (*The Whispering Press*) opens with the Bell Key. Use the press to start the alliteration lesson. In Challenge B the class builds a headline from three trays of words; the game checks the beginning **sound** (not the letter) and rejects headlines that alliterate but make no sense. Take **the Type Key** from the bed of the press.
+10. Go back to the entrance hall. The door on the right, just past the fireplace (*The Crooked Kitchen*), opens with the Type Key. Look at the kitchen table to start the idiom lesson. Take **the Pantry Key** from beside the cake.
+11. Go through the Giant's Dining Room. The door in its far (south) wall (*The Ballroom*) opens with the Pantry Key. Look at the dancers to start the oxymoron lesson. When it is complete the glass case opens: take **the Ballroom Key**.
+12. Back in the entrance hall, the door on the left under the landing (*The Scholar's Study*) opens with the Ballroom Key. Sit at the scholar's desk to start the allusion lesson. In Challenge A the answers stay hidden until the class opens the book of evidence for each card, so nobody needs to know the story beforehand. Take **the Scholar's Key** from the desk.
+13. The Scholar's Key opens **the Lady's writing box** on the centre table. Her letter begins the final lesson, which uses all nine devices. It cannot be finished until all nine rooms are complete. When it is, press **Finish the night** for the ending.
+
+**Mastery checkpoint (rooms 5–9):** *Complete the challenge* stays greyed out until the class has written at least one sentence and you have ticked every success criterion together.
 
 **Paintings:** many paintings can be inspected. Aim at one and press **E** (or click it) to step closer and read its museum label and a question for the class. Press **E** or **Esc** to step back. Their titles hint at devices the class will meet later.
 
@@ -71,13 +81,14 @@ The `dist/` folder is a self-contained website. It needs no internet connection 
 - **Reset this question** clears only the current step.
 - **Reset the lesson** starts the simile lesson from the beginning.
 - **Lesson** chooses which room's lesson the panel shows (Mirrors or Gallery), and **Jump to lesson stage** goes straight to any stage of it.
-- **Keys and doors** shows where the class is. **Stand at the key** moves you in front of a waiting key. **Unlock the Gallery** and **Give both keys** skip ahead. **Reset all progress** locks everything again (press twice to confirm).
+- **Keys and doors** shows where the class is in the whole chain. **Stand at the key** moves you in front of a waiting key. **Skip ahead** (with the drop-down) puts the house in the state it would be in after any step, for example "Up to: Tiny Key". **Reset all progress** locks everything again (press twice to confirm).
+- **Lesson** lists all ten lessons; **Go to** has jumps to every room.
 - **Atmosphere**: set how often the house does strange things while the class explores (*off*, *subtle*, or *eerie*, the default), make one happen on demand, and turn footsteps and music on or off. Nothing strange happens during a lesson.
 - **Sound clips**: whispers, a distant giggle, a music box, footsteps upstairs and background music play once you add the sound files. See [docs/SOUNDS.md](docs/SOUNDS.md) for what to look for and where to put them.
 - **Walk to / Jump to the Mirrors or the Hall**: *Walk* plays a guided camera walk and opens doors automatically. *Jump* fades to black and moves you instantly.
 - **Open the lesson / Leave lesson view** opens or closes the lesson panel. Your place in the lesson is kept.
 - **Sound** has mute and a volume slider.
-- **Graphics**: High, Balanced or Low. On High, the game lowers itself automatically if the computer struggles.
+- **Graphics**: High, Balanced or Low. On High, the game lowers itself automatically if the computer struggles. On a typical school computer with built-in graphics, choose **Low** for smooth movement (see `docs/PHASE3_COMPLETION_REPORT.md` for measured frame rates).
 
 Nothing in the lesson advances on a timer. Every step waits for you.
 
@@ -101,7 +112,27 @@ The game never auto-grades student writing. You decide when the class has shown 
 5. **Prove: The Portrait's Final Request.** Rewrite *The house was quiet.* as a metaphor. Each student metaphor is painted onto the empty frame. Model answer: *The house was a sleeping giant.*
 6. **Complete.** The empty frame swings open; the Gallery Key waits in a small wall safe.
 
-## 7. For developers
+## 7. The new lessons at a glance
+
+**The Giant's Dining Room (hyperbole).** Discover: "The giant was very hungry" against "…he ate the table, then asked for the chairs" (the dishes swell). Learn: definition, why writers exaggerate, two annotated examples, and the non-example "The giant's table was nine metres long" (big, but true). **Challenge A, The Giant's Place Cards:** six remarks, each sorted *Hyperbole* or *Literal* one at a time; only the exaggerations make their dishes grow. **Challenge B:** which hyperbole makes the giant frightening, not funny? Prove: "The soup was hot." becomes a hyperbole, chalked on the giant's menu.
+
+**The Nursery (personification).** Discover: "The rocking horse stood in the corner" against "…waited in the corner, hoping someone would come back to play" (the horse starts to rock). Learn: definition, annotated "The music box sang itself to sleep", the non-example "The rocking chair creaked by the fire". **Challenge A, Wake the Toys:** for each toy, choose the word that personifies it (*stood* or *sulked*); the right word wakes that toy. **Challenge B, The Music Box's Song:** each option plays its own tune; the class listens for the lonely one. Prove: "The wind blew through the nursery window." gets personified on the slate.
+
+**The Chamber of Echoes (onomatopoeia).** Discover: "The pipe made a noise in the dark" against "Drip. Drip. Drip." (the pipe drips into the bucket, with a caption). **Challenge A, Name That Sound:** five objects in the room make a sound (play it or read its caption); choose the word that imitates it. **Challenge B:** find the sound word in five sentences, one of which has none. Prove: "The music room was noisy at midnight." rewritten so the reader can hear the room, written on the score.
+
+**The Whispering Press (alliteration).** **Challenge A:** six pairs judged by sound, including traps that share a letter but not a sound (*cold ceiling*, *giant goat*). **Challenge B, Set the Headline:** choose one word from each of three trays; the game explains whether the headline repeats a sound, only repeats a letter, or alliterates but makes no sense. Prove: "The press worked all night." rewritten with alliteration that fits the mood.
+
+**The Crooked Kitchen (idiom).** Learn teaches five common idioms (*spill the beans*, *in hot water*, *a piece of cake*, *under the weather*, *break the ice*), each shown literally in the room. **Challenge A:** choose each idiom's real meaning from its sentence. **Challenge B, Literal or Idiom?:** the same words in four contexts; the class decides from context whether they happened literally. Prove: a sentence using one idiom whose context makes its meaning clear.
+
+**The Ballroom of Contradictions (oxymoron).** **Challenge A, Sort the Ballroom:** six phrases sorted as *oxymoron*, *ordinary opposites* (black and white) or *no contradiction*; every oxymoron found appears in the room (frozen fire burns blue, the dancers stop in a deafening silence, the open secret glows). **Challenge B:** complete three oxymorons. Prove: describe the ballroom with an oxymoron.
+
+**The Forgotten Scholar's Study (allusion).** Five index cards (Pandora, Achilles, Goliath, Sleeping Beauty, Houdini), each with a book of evidence that falls open on the desk. **Challenge A:** what is the sentence referring to? **Challenge B:** why does the reference matter here? Prove: a sentence with an allusion, with the class ready to say what it refers to and why it fits.
+
+**The Lady's Letter (all nine).** Discover: a sentence with a simile and personification in it. Learn: the nine devices side by side with a question for each, and "one sentence can do two jobs". **Challenge A, Decode the Letter:** nine phrases, one for each device; each one decoded brings light back into the hall. **Challenge B:** what does "The house is a sleeping giant, and it dreams of company" really mean? Prove: one sentence about the house using two devices. Then the ending: the Lady turns, the doors open, and morning comes.
+
+The full design is in `docs/MANSION_BLUEPRINT.md`.
+
+## 8. For developers
 
 ```bash
 npm run typecheck   # TypeScript

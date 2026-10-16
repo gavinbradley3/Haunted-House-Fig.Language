@@ -211,6 +211,7 @@ export function Chandelier({
   seed = 0,
   room = 'hall',
   castShadow = false,
+  light = true,
 }: {
   position: [number, number, number];
   drop?: number;
@@ -220,6 +221,8 @@ export function Chandelier({
   seed?: number;
   room?: 'hall' | 'mirrors';
   castShadow?: boolean;
+  /** False for rooms lit by the shared room lights instead of their own. */
+  light?: boolean;
 }) {
   const m = mats();
   const body = latheGeo('chandBody', [
@@ -276,7 +279,7 @@ export function Chandelier({
           );
         })}
       </group>
-      <CandleLight position={[0, -drop + 0.35, 0]} intensity={intensity} distance={14} seed={seed} room={room} castShadow={castShadow} />
+      {light && <CandleLight position={[0, -drop + 0.35, 0]} intensity={intensity} distance={14} seed={seed} room={room} castShadow={castShadow} />}
     </group>
   );
 }

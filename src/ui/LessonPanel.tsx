@@ -1,7 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { ROLE_LABELS, type AnnotatedPart, type ChoiceChallenge, type Role } from '../content/types';
-import { canAdvance, STAGES, type Stage } from '../lesson/lessonMachine';
-import { closeLesson, goToKey, panelSide } from '../lesson/director';
+import { canAdvance, evaluateBuild, itemState, masteryMet, STAGES, type Stage } from '../lesson/lessonMachine';
+import { playCue } from '../systems/soundCues';
+import { closeLesson, goToKey, panelSide, ROOM_PLACES } from '../lesson/director';
 import { canCollect, KEY_FOR_ROOM } from '../lesson/progression';
 import { walkToHall } from '../lesson/navigation';
 import { activeContent, activeLesson, useGame } from '../state/store';
@@ -52,7 +53,7 @@ export function Annotated({ parts, showLegend = true }: { parts: AnnotatedPart[]
       </div>
       {showLegend && (
         <div className="legend">
-          {(['subject', 'word', 'compared'] as const).map((r, i) => (
+          {(['subject', 'word', 'compared'] as const).filter((r) => labels[r] && parts.some((p) => p.role === r)).map((r, i) => (
             <span key={r} style={{ animationDelay: `${0.2 + i * 0.35}s` }}>
               <b style={{ background: `var(--${r})` }} />
               {labels[r]}
@@ -252,7 +253,7 @@ function Choice({ ch }: { ch: ChoiceChallenge }) {
           <h4>{selected.verdict}</h4>
           <p>{selected.explanation}</p>
           <p className="dim" style={{ marginTop: 8, fontStyle: 'italic' }}>
-            Good thinking to test it. Look again: which sentence compares two different things?
+            Good thinking to test it. {ch.retryHint ?? 'Look again: which sentence compares two different things?'}
           </p>
           <ScrollHere />
         </div>
@@ -295,12 +296,245 @@ function Choice({ ch }: { ch: ChoiceChallenge }) {
   );
 }
 
+/** Fill a sentence's ___ blank with the chosen words (or leave a visible gap). */
+function filled(text: string, chosen: string | null) {
+  if (!text.includes('___')) return <>{text}</>;
+  const [a, b] = text.split('___');
+  return (
+    <>
+      {a}
+      <span className={chosen ? 'blank filled' : 'blank'}>{chosen ?? '______'}</span>
+      {b}
+    </>
+  );
+}
+
+/**
+ * A multi-part challenge: the class works through each item (a place card, a toy, a phrase
+ * of a letter) in turn. One item is open at a time so the panel stays readable on a projector.
+ */
+/** Evidence the class has opened, per room and item (kept while the game runs). */
+const openedEvidence = new Set<string>();
+
+function Items({ ch }: { ch: ChoiceChallenge }) {
+  const c = useGame((s) => activeLesson(s)[ch.id]);
+  const room = useGame((s) => s.room);
+  const dispatch = useGame((s) => s.dispatch);
+  const [, rerender] = useState(0);
+  const evidenceOpen = (id: string) => openedEvidence.has(`${room}:${id}`) || itemState(c, id).solved;
+  const openEvidence = (id: string) => {
+    openedEvidence.add(`${room}:${id}`);
+    // The book on the desk opens too (and the caption says so).
+    playCue(`evidence:${id}`);
+    rerender((n) => n + 1);
+  };
+  const items = ch.items ?? [];
+  const firstOpen = items.find((it) => !itemState(c, it.id).solved)?.id ?? null;
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = openId && !itemState(c, openId).solved ? openId : firstOpen;
+  const done = items.filter((it) => itemState(c, it.id).solved).length;
+  return (
+    <>
+      <p className="lead" style={{ marginTop: 6 }}>
+        {ch.prompt}
+      </p>
+      <div className="items-count">
+        {done} of {items.length} done
+      </div>
+      {items.map((it, n) => {
+        const st = itemState(c, it.id);
+        const sel = it.options.find((o) => o.id === st.selected) ?? null;
+        const expanded = it.id === open;
+        const shown = st.solved || (st.checked && sel) ? sel : expanded ? sel : null;
+        return (
+          <div key={it.id} className={`item ${expanded ? 'open' : ''} ${st.solved ? 'solved' : ''}`}>
+            <button className="item-head" onClick={() => setOpenId(it.id)} disabled={st.solved}>
+              <span className="item-num">{st.solved ? '✓' : n + 1}</span>
+              <span className="item-text">
+                {it.source && <small>{it.source}</small>}
+                {it.text.endsWith('?') ? it.text : <>“{filled(it.text, it.text.includes('___') ? (shown?.text ?? null) : null)}”</>}
+              </span>
+              {st.solved && sel && <span className="item-verdict">{sel.verdict}</span>}
+            </button>
+            {expanded && (
+              <div className="item-body">
+                <ScrollHere key={it.id} />
+                {it.sound && (
+                  <div className="item-sound">
+                    <button className="btn small" onClick={() => playCue(it.sound!)}>
+                      ▶ Play the sound
+                    </button>
+                    {it.caption && <span className="item-caption">Caption: {it.caption}</span>}
+                  </div>
+                )}
+                {it.evidence && !evidenceOpen(it.id) && (
+                  <div className="item-sound">
+                    <button className="btn small primary" onClick={() => openEvidence(it.id)}>
+                      Open the book: read the evidence
+                    </button>
+                  </div>
+                )}
+                {it.evidence && evidenceOpen(it.id) && (
+                  <div className="evidence">
+                    <strong>{it.evidence.title}</strong>
+                    {it.evidence.text}
+                  </div>
+                )}
+                {/* Investigation first: in Challenge A the answers appear once the evidence has been read. */}
+                {(!it.evidence || evidenceOpen(it.id) || ch.id === 'playB') && (
+                <div className="item-options">
+                  {it.options.map((o) => {
+                    const isSel = st.selected === o.id;
+                    const wrong = st.wrongAttempts.includes(o.id);
+                    const cls = isSel && !(st.checked && !o.correct) ? 'selected' : wrong ? 'wrong' : '';
+                    return (
+                      <button key={o.id} className={`option compact ${cls}`} onClick={() => dispatch({ type: 'SELECT_ITEM_OPTION', challenge: ch.id, itemId: it.id, optionId: o.id })}>
+                        <span className="letter">
+                          <span>{o.letter}</span>
+                        </span>
+                        <span>{o.text}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                )}
+                <button className="btn primary small" disabled={!st.selected || st.checked} onClick={() => dispatch({ type: 'CHECK_ITEM', challenge: ch.id, itemId: it.id })}>
+                  Check the class’s answer
+                </button>
+                {st.checked && sel && !st.solved && (
+                  <div className="feedback bad">
+                    <h4>{sel.verdict}</h4>
+                    <p>{sel.explanation}</p>
+                    <p className="dim" style={{ marginTop: 8, fontStyle: 'italic' }}>
+                      {ch.retryHint ?? 'Look again.'}
+                    </p>
+                    <ScrollHere />
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Only the item just answered keeps its explanation, so the next one stays in view. */}
+            {st.solved && sel && (c.activeItem === it.id || c.solved) && (
+              <div className="item-why">
+                {st.revealedByTeacher ? 'The answer: ' : ''}
+                {sel.explanation}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {!c.solved && <div className="discuss">{ch.discussion}</div>}
+      {c.solved && (
+        <>
+          <div className="effect">
+            <strong>Watch the room</strong>
+            {ch.takeaway}
+          </div>
+          <ScrollHere />
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * Phrase building: one word from each tray of type. After every check the panel shows each
+ * word's beginning SOUND, so the class sees why a phrase does or does not alliterate.
+ */
+function Build({ ch }: { ch: ChoiceChallenge }) {
+  const c = useGame((s) => activeLesson(s)[ch.id]);
+  const dispatch = useGame((s) => s.dispatch);
+  const spec = ch.build!;
+  const chosen = spec.trays.map((t, i) => t.tiles.find((x) => x.id === c.build[i]) ?? null);
+  const verdict = evaluateBuild(spec, c.build);
+  const complete = chosen.every(Boolean);
+  const sounds = (
+    <div className="sounds">
+      Beginning sounds:{' '}
+      {chosen.map((t, i) => (
+        <Fragment key={i}>
+          {i > 0 && ' · '}
+          {t?.text} <b>/{t?.sound}/</b>
+        </Fragment>
+      ))}
+    </div>
+  );
+  return (
+    <>
+      <p className="lead" style={{ marginTop: 6 }}>
+        {ch.prompt}
+      </p>
+      <div className="build-preview" aria-live="polite">
+        {chosen.map((t, i) => (
+          <Fragment key={i}>
+            {i > 0 && ' '}
+            {t ? t.text : <span className="gap">____</span>}
+          </Fragment>
+        ))}
+      </div>
+      {spec.trays.map((tray, ti) => (
+        <div className="tray" key={tray.label}>
+          <small>{tray.label}</small>
+          <div className="tray-tiles">
+            {tray.tiles.map((tile) => (
+              <button key={tile.id} className={`tile ${c.build[ti] === tile.id ? 'on' : ''}`} disabled={c.solved} onClick={() => dispatch({ type: 'SET_BUILD', challenge: ch.id, tray: ti, tileId: tile.id })}>
+                {tile.text}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      {!c.solved && <div className="discuss">{ch.discussion}</div>}
+      {!c.solved && (
+        <div className="row-actions">
+          <button className="btn primary" disabled={!complete || c.checked} onClick={() => dispatch({ type: 'CHECK_BUILD', challenge: ch.id })}>
+            Check the headline
+          </button>
+        </div>
+      )}
+      {c.checked && !c.solved && !verdict.ok && (
+        <div className="feedback bad">
+          <h4>{verdict.reason === 'nonsense' ? 'It alliterates, but it makes no sense' : verdict.reason === 'letterOnly' ? 'Same letter, different sounds' : 'No repeated sound'}</h4>
+          <p>{verdict.detail}</p>
+          {sounds}
+          <p className="dim" style={{ marginTop: 8, fontStyle: 'italic' }}>
+            {ch.retryHint}
+          </p>
+          <ScrollHere />
+        </div>
+      )}
+      {c.solved && verdict.ok && (
+        <>
+          <div className="feedback good">
+            <h4>{c.revealedByTeacher ? 'One headline that works' : 'Set in type'}</h4>
+            <p>It repeats the beginning “{verdict.sound}” sound, and the words make sense together.</p>
+            {sounds}
+          </div>
+          <div className="effect">
+            <strong>Watch the room</strong>
+            {ch.takeaway}
+          </div>
+          <ScrollHere />
+        </>
+      )}
+    </>
+  );
+}
+
+/** The right view for a challenge: phrase building, several items, or one question. */
+function Challenge({ ch }: { ch: ChoiceChallenge }) {
+  if (ch.build) return <Build ch={ch} />;
+  if (ch.items?.length) return <Items ch={ch} />;
+  return <Choice ch={ch} />;
+}
+
 function Prove() {
   const p = useGame((s) => activeLesson(s).prove);
   const dispatch = useGame((s) => s.dispatch);
-  const c = useGame(activeContent).prove;
+  const content = useGame(activeContent);
+  const c = content.prove;
   const room = useGame((s) => s.room);
-  const noun = room === 'gallery' ? 'metaphor' : 'simile';
+  const noun = content.proveNoun ?? (room === 'gallery' ? 'metaphor' : 'simile');
   const latest = p.responses[p.responses.length - 1];
   return (
     <>
@@ -330,9 +564,10 @@ function Prove() {
           aria-label={`Student ${noun}`}
         />
         <button className="btn" type="submit" disabled={!p.draft.trim()}>
-          {room === 'gallery' ? 'Give the frame its title' : 'Show in the mirror'}
+          {content.proveButton ?? (room === 'gallery' ? 'Give the frame its title' : 'Show in the mirror')}
         </button>
       </form>
+      {content.requireMastery && !latest && <p className="mastery-note">To finish this room, add the class’s own sentence and tick every success criterion for it.</p>}
       {latest && (
         <>
           <div className="response">
@@ -346,6 +581,7 @@ function Prove() {
               </label>
             ))}
           </div>
+          {content.requireMastery && !p.criteria.every(Boolean) && <p className="mastery-note">To finish this room, tick every success criterion for the class’s sentence.</p>}
           {p.responses.slice(0, -1).reverse().slice(0, 3).map((r, i) => (
             <div className="earlier" key={i}>
               <span>“{r}”</span>
@@ -455,8 +691,8 @@ export function LessonPanel() {
       <div className="panel-body" key={`${stage}-${learnStep}`}>
         {stage === 'discover' && <Discover />}
         {stage === 'learn' && <Learn />}
-        {stage === 'playA' && <Choice ch={C.playA} />}
-        {stage === 'playB' && <Choice ch={C.playB} />}
+        {stage === 'playA' && <Challenge ch={C.playA} />}
+        {stage === 'playB' && <Challenge ch={C.playB} />}
         {stage === 'prove' && <Prove />}
         {stage === 'complete' && <Complete />}
       </div>
@@ -467,12 +703,17 @@ export function LessonPanel() {
               Back
             </button>
           )}
-          <button className="btn quiet" onClick={closeLesson} title={`Close the lesson and walk freely. ${room === 'gallery' ? 'Look at the caretaker' : 'Use the mirror'} to come back.`}>
+          <button className="btn quiet" onClick={closeLesson} title={`Close the lesson and walk freely. ${ROOM_PLACES[room].hint} to come back.`}>
             Explore
           </button>
         </div>
         {stage === 'prove' ? (
-          <button className="btn primary" onClick={() => dispatch({ type: 'COMPLETE' })}>
+          <button
+            className="btn primary"
+            disabled={!!C.requireMastery && !masteryMet(lesson)}
+            title={C.requireMastery && !masteryMet(lesson) ? 'Add a class sentence and tick every success criterion first.' : undefined}
+            onClick={() => dispatch({ type: 'COMPLETE' })}
+          >
             Complete the challenge
           </button>
         ) : stage === 'complete' ? (
@@ -480,7 +721,11 @@ export function LessonPanel() {
             <button className="btn quiet" onClick={() => dispatch({ type: 'RESET_LESSON' })}>
               Replay lesson
             </button>
-            {keyWaiting ? (
+            {room === 'finale' ? (
+              <button className="btn primary" onClick={() => useGame.getState().setEndingOpen(true)}>
+                Finish the night
+              </button>
+            ) : keyWaiting ? (
               <button className="btn primary" onClick={() => goToKey(room)}>
                 Go and take the key
               </button>

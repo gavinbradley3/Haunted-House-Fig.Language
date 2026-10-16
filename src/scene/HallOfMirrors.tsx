@@ -7,8 +7,10 @@ import { game, useGame } from '../state/store';
 import { boxGeo, latheGeo, LATHES } from '../systems/geometry';
 import { mats } from '../systems/materials';
 import { world } from '../systems/time';
-import { removeDynamicCollider, setDynamicCollider, boxAt } from '../world/collision';
-import { CORRIDOR, MIRRORS, WALL_T } from '../world/layout';
+import { removeDynamicCollider, setDynamicActive, setDynamicCollider, boxAt } from '../world/collision';
+import { CORRIDOR, MIRRORS, NURSERY, WALL_T } from '../world/layout';
+import { doorState } from '../lesson/progression';
+import { audio } from '../systems/audio';
 import { Architrave, CeilingRose, Cornice, OnWall, PanelField, Run, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
 import { Curtains } from './parts/Curtains';
 import { Chandelier, Sconce, lightMood } from './parts/Lights';
@@ -186,24 +188,80 @@ function KeyDrawer() {
   );
 }
 
-/** A jib door papered to match the wall: only the seams give it away. It stays shut. */
+/**
+ * A jib door papered to match the wall: only the seams give it away. It leads to the Nursery.
+ * It shows no prompt at all until the class holds the Tiny Key; then a tiny keyhole is noticed,
+ * the key turns, and the door swings into the room behind. From the nursery side it always opens.
+ */
 function JibDoor() {
   const m = mats();
   const localC = wallLocal('z', 1, jib.z);
   const hingeX = localC - jib.width / 2;
+  const leaf = useRef<THREE.Group>(null!);
+  const angle = useRef(0);
+  const turning = useRef(false);
+  const open = useGame((s) => s.doors.jib);
+  const at: [number, number, number] = [x0, 1.2, jib.z];
   useEffect(() => {
     const id = 'door:jib';
     setDynamicCollider(id, boxAt(x0 - 0.15, jib.z, 0.3, jib.width + 0.1), true);
     return () => removeDynamicCollider(id);
   }, []);
+  useFrame(() => {
+    const target = game().doors.jib ? 1.45 : 0;
+    angle.current += (target - angle.current) * (1 - Math.exp(-world.dt * 2.2));
+    leaf.current.rotation.y = angle.current;
+    setDynamicActive('door:jib', angle.current < 0.5);
+  });
   const W = jib.width - 0.006;
   return (
     <group position={[hingeX, 0, -0.02]}>
-      <mesh geometry={boxGeo(W, jib.height, 0.04)} material={m.wallMirror} position={[W / 2, jib.height / 2, 0]} castShadow />
-      <group position={[0, 0, 0.02]}>
-        <PanelField x0={0.003} x1={W - 0.003} y0={0.2} y1={1.1} cols={1} material={m.walnutPanel} />
-        <Run profile="dado" x0={0} x1={W} y={1.12} material={m.walnutPanel} />
-        <Run profile="skirting" x0={0} x1={W} y={0} material={m.walnutPanel} />
+      <group ref={leaf}>
+        <Interactive
+          id="jib-door"
+          maxDist={2.8}
+          label={() => {
+            const s = game();
+            const st = doorState(s.progress, 'nursery');
+            if (st === 'open' || s.zone === 'nursery') return s.doors.jib ? 'Close the hidden door' : 'Open the hidden door';
+            // Until the class has the Tiny Key, this is just wall.
+            return st === 'unlockable' ? 'A tiny keyhole in the panelling: use the Tiny Key' : null;
+          }}
+          onUse={() => {
+            const g = useGame.getState();
+            if (turning.current) return;
+            const st = doorState(g.progress, 'nursery');
+            if (st === 'open' || g.zone === 'nursery') {
+              g.setDoor('jib', !open);
+              if (open) audio.doorClose(at);
+              else audio.doorOpen(at, false);
+              return;
+            }
+            if (st !== 'unlockable') return;
+            turning.current = true;
+            audio.unlockDoor(at);
+            g.showNotice('The Tiny Key turns in a keyhole no bigger than a grain of rice.', 'A door that was never a wall swings open.');
+            window.setTimeout(() => {
+              const s2 = useGame.getState();
+              s2.progressDispatch({ type: 'UNLOCK', lock: 'nursery' });
+              s2.setDoor('jib', true);
+              audio.doorOpen(at, false);
+              audio.musicBox('two', [NURSERY.musicBox.x, 0.9, NURSERY.musicBox.z], 0.7);
+              turning.current = false;
+            }, 1100);
+          }}
+        >
+          <mesh geometry={boxGeo(W, jib.height, 0.04)} material={m.wallMirror} position={[W / 2, jib.height / 2, 0]} castShadow />
+          {/* The nursery side of the leaf */}
+          <mesh material={m.wallNursery} position={[W / 2, jib.height / 2, -0.0205]} rotation={[0, Math.PI, 0]}>
+            <planeGeometry args={[W, jib.height]} />
+          </mesh>
+          <group position={[0, 0, 0.02]}>
+            <PanelField x0={0.003} x1={W - 0.003} y0={0.2} y1={1.1} cols={1} material={m.walnutPanel} />
+            <Run profile="dado" x0={0} x1={W} y={1.12} material={m.walnutPanel} />
+            <Run profile="skirting" x0={0} x1={W} y={0} material={m.walnutPanel} />
+          </group>
+        </Interactive>
       </group>
     </group>
   );
@@ -246,7 +304,7 @@ export function HallOfMirrors() {
       {/* Walls */}
       <Wall axis="x" from={x0 - WALL_T} to={x1 + WALL_T} at={zStart + WALL_T / 2} height={height} openings={[{ c: 0, w: md.width, b: 0, t: md.height }]} matPos={m.wallCorridor} matNeg={m.wallMirror} />
       <Wall axis="x" from={x0 - WALL_T} to={x1 + WALL_T} at={zEnd - WALL_T / 2} height={height} openings={[{ c: 0, w: win.width, b: win.sill, t: win.top }]} matPos={m.wallMirror} matNeg={m.brick} />
-      <Wall axis="z" from={zStart} to={zEnd} at={x0 - WALL_T / 2} height={height} openings={[{ c: jib.z, w: jib.width, b: 0, t: jib.height }]} matPos={m.wallMirror} matNeg={m.brick} />
+      <Wall axis="z" from={zStart} to={zEnd} at={x0 - WALL_T / 2} height={height} openings={[{ c: jib.z, w: jib.width, b: 0, t: jib.height }]} matPos={m.wallMirror} matNeg={m.wallNursery} />
       <Wall axis="z" from={zStart} to={zEnd} at={x1 + WALL_T / 2} height={height} matPos={m.brick} matNeg={m.wallMirror} />
 
       {/* Near wall (door from the corridor) */}

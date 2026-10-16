@@ -79,7 +79,7 @@ let ladyTurned = false;
 const EVENTS: StrangeEvent[] = [
   {
     id: 'creak',
-    zones: ['hall', 'corridor', 'mirrors', 'gallery'],
+    zones: ['hall', 'corridor', 'mirrors', 'gallery', 'dining', 'nursery', 'echoes', 'press', 'kitchen', 'ballroom', 'study'],
     cooldown: 60,
     run: ({ cam }) => {
       audio.distantCreak(elsewhere(cam));
@@ -88,7 +88,7 @@ const EVENTS: StrangeEvent[] = [
   },
   {
     id: 'door',
-    zones: ['hall', 'corridor', 'mirrors', 'gallery'],
+    zones: ['hall', 'corridor', 'mirrors', 'gallery', 'dining', 'nursery', 'echoes', 'press', 'kitchen', 'ballroom', 'study'],
     cooldown: 150,
     run: ({ cam }) => {
       audio.distantDoor(elsewhere(cam));
@@ -160,7 +160,7 @@ const EVENTS: StrangeEvent[] = [
   },
   {
     id: 'gust',
-    zones: ['hall', 'corridor', 'mirrors', 'gallery'],
+    zones: ['hall', 'corridor', 'mirrors', 'gallery', 'dining', 'nursery', 'echoes', 'press', 'kitchen', 'ballroom', 'study'],
     cooldown: 110,
     eerie: true,
     run: () => {
@@ -172,7 +172,7 @@ const EVENTS: StrangeEvent[] = [
   },
   {
     id: 'dim',
-    zones: ['hall', 'corridor', 'mirrors', 'gallery'],
+    zones: ['hall', 'corridor', 'mirrors', 'gallery', 'dining', 'nursery', 'echoes', 'press', 'kitchen', 'ballroom', 'study'],
     cooldown: 150,
     eerie: true,
     run: () => {
@@ -197,14 +197,14 @@ const EVENTS: StrangeEvent[] = [
   // ---- recorded clips: these only happen once the sound files exist
   {
     id: 'whisper',
-    zones: ['hall', 'corridor', 'mirrors', 'gallery'],
+    zones: ['hall', 'corridor', 'mirrors', 'gallery', 'dining', 'nursery', 'echoes', 'press', 'kitchen', 'ballroom', 'study'],
     cooldown: 170,
     eerie: true,
     run: ({ cam }) => audio.playClip('whisper', { at: behind(cam), gain: 0.45 }),
   },
   {
     id: 'giggle',
-    zones: ['hall', 'corridor', 'mirrors', 'gallery'],
+    zones: ['hall', 'corridor', 'mirrors', 'gallery', 'dining', 'nursery', 'echoes', 'press', 'kitchen', 'ballroom', 'study'],
     cooldown: 220,
     run: ({ cam }) => audio.playClip('giggle', { at: elsewhere(cam), gain: 1.4 }),
   },

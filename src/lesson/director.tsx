@@ -8,13 +8,62 @@ import { SIMILE } from '../content/simile';
 import type { RoomId } from '../content/types';
 import { activeLesson, game, useGame } from '../state/store';
 import { audio } from '../systems/audio';
-import { POSES, type ShotName } from '../world/layout';
+import { POSES, type Pose, type ShotName, type Zone } from '../world/layout';
+import type { DoorId } from '../state/store';
 import { lightMood } from '../scene/parts/Lights';
 import { fx, pulseRipple, resetFx } from './fx';
 import type { LessonState } from './lessonMachine';
 import { jumpTo } from './navigation';
 
 export function shotFor(room: RoomId, l: LessonState): ShotName {
+  const later = LATER_SHOTS[room];
+  if (later) {
+    if (l.stage === 'discover') return room === 'kitchen' ? 'kitchenBeans' : room === 'echoes' ? 'echoesPipe' : later.wide;
+    if (l.stage === 'prove') return later.board;
+    if (l.stage === 'complete') return later.key;
+    return later.focus(l);
+  }
+  if (room === 'dining') {
+    switch (l.stage) {
+      case 'discover':
+      case 'playA':
+        return 'diningTable';
+      case 'learn':
+        return l.learnStep === 2 ? 'diningGiant' : 'diningTable';
+      case 'prove':
+        return 'diningMenu';
+      default:
+        return 'diningGiant';
+    }
+  }
+  if (room === 'nursery') {
+    switch (l.stage) {
+      case 'discover':
+        return 'nurseryHorse';
+      case 'learn':
+        return l.learnStep === 2 ? 'nurseryMusicBox' : 'nurseryToys';
+      case 'playA': {
+        // The camera turns to whichever toy the class is waking.
+        const it = l.playA.activeItem;
+        return it === 'horse' ? 'nurseryHorse' : it === 'musicBox' ? 'nurseryMusicBox' : 'nurseryToys';
+      }
+      case 'prove':
+        return 'nurserySlate';
+      default:
+        return 'nurseryMusicBox';
+    }
+  }
+  if (room === 'finale') {
+    switch (l.stage) {
+      case 'discover':
+        return 'hallLetter';
+      case 'playA':
+      case 'complete':
+        return 'hallDoors';
+      default:
+        return 'hallLady';
+    }
+  }
   if (room === 'gallery') {
     switch (l.stage) {
       case 'discover':
@@ -50,7 +99,40 @@ export function shotFor(room: RoomId, l: LessonState): ShotName {
 /** Shots whose subject is on the left of frame put the lesson panel on the right. */
 export const panelSide = (shot: ShotName | null) => (shot === 'tunnel' || shot === 'jib' ? 'right' : 'left');
 
-const ROOM_ENTRY = { mirrors: POSES.mirrorEntry, gallery: POSES.galleryEntry };
+/** Where each lesson happens: the zone, where to stand on arrival, the door to open, and where its key waits. */
+export const ROOM_PLACES: Record<RoomId, { zone: Zone; entry: Pose; door: DoorId | null; keyPose: Pose | null; hint: string }> = {
+  mirrors: { zone: 'mirrors', entry: POSES.mirrorEntry, door: 'mirror', keyPose: POSES.mirrorKey, hint: 'Use the mirror' },
+  gallery: { zone: 'gallery', entry: POSES.galleryEntry, door: 'gallery', keyPose: POSES.galleryKey, hint: 'Look at the caretaker' },
+  dining: { zone: 'dining', entry: POSES.diningEntry, door: 'dining', keyPose: POSES.diningKey, hint: 'Look at the giant’s place' },
+  nursery: { zone: 'nursery', entry: POSES.nurseryEntry, door: 'jib', keyPose: POSES.nurseryKey, hint: 'Use the music box' },
+  echoes: { zone: 'echoes', entry: POSES.echoesEntry, door: 'echoes', keyPose: POSES.echoesKey, hint: 'Use the piano' },
+  press: { zone: 'press', entry: POSES.pressEntry, door: 'press', keyPose: POSES.pressKey, hint: 'Use the press' },
+  kitchen: { zone: 'kitchen', entry: POSES.kitchenEntry, door: 'kitchen', keyPose: POSES.kitchenKey, hint: 'Look at the kitchen table' },
+  ballroom: { zone: 'ballroom', entry: POSES.ballroomEntry, door: 'ballroom', keyPose: POSES.ballroomKey, hint: 'Look at the dancers' },
+  study: { zone: 'study', entry: POSES.studyEntry, door: 'study', keyPose: POSES.studyKey, hint: 'Sit at the scholar’s desk' },
+  finale: { zone: 'hall', entry: POSES.finaleEntry, door: 'desk', keyPose: null, hint: 'Read the letter in the writing box' },
+};
+
+/** Camera shots for the five later rooms: wide for Discover, the object being studied, the board for Prove. */
+const LATER_SHOTS: Partial<Record<RoomId, { wide: ShotName; focus: (l: LessonState) => ShotName; board: ShotName; key: ShotName }>> = {
+  echoes: {
+    wide: 'echoesWide',
+    board: 'echoesBoard',
+    key: 'echoesPiano',
+    // Each listening item turns the camera to the object making the sound.
+    focus: (l) => {
+      const it = l.stage === 'playA' ? l.playA.activeItem : null;
+      if (it === 'drip') return 'echoesPipe';
+      if (it === 'hiss') return 'echoesGram';
+      if (it === 'tick' || it === 'knock') return 'echoesPiano';
+      return 'echoesWide';
+    },
+  },
+  press: { wide: 'pressWide', board: 'pressBoard', key: 'pressWide', focus: (l) => (l.stage === 'playB' ? 'pressBoard' : 'pressCases') },
+  kitchen: { wide: 'kitchenWide', board: 'kitchenBoard', key: 'kitchenWide', focus: (l) => (l.stage === 'learn' && l.learnStep === 0 ? 'kitchenBeans' : 'kitchenWide') },
+  ballroom: { wide: 'ballroomWide', board: 'ballroomBoard', key: 'ballroomCase', focus: (l) => (l.stage === 'playB' ? 'ballroomDancers' : 'ballroomWide') },
+  study: { wide: 'studyWide', board: 'studyBoard', key: 'studyDesk', focus: () => 'studyDesk' },
+};
 
 /** Begin (or resume) a room's lesson. If the camera is elsewhere, fade to that room first. */
 export function openLesson(room: RoomId = game().room) {
@@ -66,12 +148,27 @@ export function openLesson(room: RoomId = game().room) {
     audio.shimmer(0.25);
     if (room === 'mirrors') pulseRipple(fx.speaking, 0.8);
   };
-  if (game().zone !== room) {
-    jumpTo(ROOM_ENTRY[room], () => {
-      useGame.getState().setDoor(room === 'mirrors' ? 'mirror' : 'gallery', true);
+  const place = ROOM_PLACES[room];
+  if (game().zone !== place.zone) {
+    jumpTo(place.entry, () => {
+      if (place.door) useGame.getState().setDoor(place.door, true);
       enter();
     });
-  } else enter();
+  } else {
+    // Already in the room: make sure its door is open so nobody is shut in afterwards.
+    if (place.door && room === 'finale') useGame.getState().setDoor(place.door, true);
+    enter();
+  }
+}
+
+/** Teacher shortcut: fade into a room (opening its door so nobody is shut in) without starting the lesson. */
+export function jumpToRoom(room: RoomId) {
+  const place = ROOM_PLACES[room];
+  closeLesson();
+  useGame.getState().setCompletionShot(null);
+  jumpTo(place.entry, () => {
+    if (place.door && room !== 'finale') useGame.getState().setDoor(place.door, true);
+  });
 }
 
 export function closeLesson() {
@@ -82,8 +179,10 @@ export function closeLesson() {
 
 /** Leave the lesson view and stand in front of this room's key, ready to take it. */
 export function goToKey(room: RoomId) {
+  const pose = ROOM_PLACES[room].keyPose;
+  if (!pose) return;
   closeLesson();
-  jumpTo(room === 'mirrors' ? POSES.mirrorKey : POSES.galleryKey);
+  jumpTo(pose);
 }
 
 /** Camera follows the active lesson while the lesson view is open. */
