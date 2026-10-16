@@ -270,7 +270,7 @@ export function TeacherPanel() {
         ))}
       </div>
       <div className="sub" style={{ marginTop: 6 }}>
-        {s.autoQuality ? 'Automatic: lowers itself if the house runs slowly.' : 'Fixed by you. Choose High to let it adjust again.'}
+        {s.autoQuality ? 'Automatic: chosen for this computer’s graphics, and lowers itself if the house runs slowly. Low is recommended for most school computers.' : 'Fixed by you. Choose High to let it adjust again. Low is recommended for most school computers.'}
       </div>
 
       <div className="keys">T teacher · Space skip · P pause · M mute · F fullscreen · Esc free mouse / close</div>

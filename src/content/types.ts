@@ -161,8 +161,9 @@ export interface LessonContent {
   proveNoun?: string;
   proveButton?: string;
   /**
-   * Mastery checkpoint: the lesson can be completed only after the class has entered its own
-   * sentence and the teacher has ticked every success criterion for it.
+   * Writing checkpoint: the lesson can be completed only after the class has entered its own
+   * sentence and ticked every success criterion for it in the class self-check. The ticks are
+   * the class's own judgement; the game never assesses student writing.
    */
   requireMastery?: boolean;
 }

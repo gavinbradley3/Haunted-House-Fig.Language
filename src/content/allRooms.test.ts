@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONTENT } from '../state/store';
 import { ROOMS, type ChoiceChallenge } from './types';
-import { evaluateBuild, initialLessonState, itemState, lessonReducer, type LessonAction, type LessonState } from '../lesson/lessonMachine';
+import { evaluateBuild, initialLessonState, itemState, lessonReducer, restoreLesson, type LessonAction, type LessonState } from '../lesson/lessonMachine';
 
 const RENDERABLE_LEARN = ['term', 'why', 'annotate', 'example2', 'compare', 'nonExample'];
 
@@ -170,7 +170,61 @@ describe('mastery checkpoint', () => {
     s = run(s, { type: 'TOGGLE_CRITERION', index: 1 }, { type: 'TOGGLE_CRITERION', index: 2 }, { type: 'COMPLETE' });
     expect(s.completed).toBe(true);
   });
-  it('the first four rooms keep their original Prove behaviour', () => {
-    expect(CONTENT.mirrors.requireMastery).toBeUndefined();
+  it('every room, the original four and the final letter included, has the same writing checkpoint', () => {
+    for (const room of ROOMS) {
+      const c = CONTENT[room];
+      expect(c.requireMastery, room).toBe(true);
+      expect(c.prove.task.length, room).toBeGreaterThan(40);
+      expect(c.prove.criteria.length, room).toBeGreaterThanOrEqual(3);
+      expect(c.prove.baseSentence.length, room).toBeGreaterThan(5);
+    }
+  });
+
+  it('in every room, completion waits for a class sentence checked against every criterion', () => {
+    for (const room of ROOMS) {
+      const c = CONTENT[room];
+      const go = (s: LessonState, ...a: LessonAction[]) => a.reduce((x, y) => lessonReducer(x, y, c), s);
+      let s = go(initialLessonState(c), { type: 'GOTO_STAGE', stage: 'prove' }, { type: 'COMPLETE' });
+      expect(s.stage, room + ': no sentence').toBe('prove');
+      s = go(s, { type: 'SET_DRAFT', text: c.prove.model }, { type: 'SUBMIT_RESPONSE' });
+      for (let i = 0; i < c.prove.criteria.length - 1; i++) s = go(s, { type: 'TOGGLE_CRITERION', index: i });
+      expect(go(s, { type: 'COMPLETE' }).stage, room + ': one criterion unticked').toBe('prove');
+      s = go(s, { type: 'TOGGLE_CRITERION', index: c.prove.criteria.length - 1 }, { type: 'COMPLETE' });
+      expect(s.stage, room + ': all ticked').toBe('complete');
+    }
+  });
+
+  it('a new sentence, or removing the latest one, clears the ticks', () => {
+    let s = run(atProve(), { type: 'SET_DRAFT', text: 'The cook spilled the beans.' }, { type: 'SUBMIT_RESPONSE' });
+    s = run(s, { type: 'TOGGLE_CRITERION', index: 0 }, { type: 'TOGGLE_CRITERION', index: 1 }, { type: 'TOGGLE_CRITERION', index: 2 });
+    expect(run(s, { type: 'SET_DRAFT', text: 'It was a piece of cake.' }, { type: 'SUBMIT_RESPONSE' }).prove.criteria.some(Boolean)).toBe(false);
+    s = run(s, { type: 'SET_DRAFT', text: 'It was a piece of cake.' }, { type: 'SUBMIT_RESPONSE' }, { type: 'TOGGLE_CRITERION', index: 0 });
+    expect(run(s, { type: 'REMOVE_RESPONSE', index: 1 }).prove.criteria.some(Boolean)).toBe(false);
+  });
+});
+
+describe('saved lessons', () => {
+  it('a lesson saved mid-way comes back exactly, in every room', () => {
+    for (const room of ROOMS) {
+      const c = CONTENT[room];
+      const go = (s: LessonState, ...a: LessonAction[]) => a.reduce((x, y) => lessonReducer(x, y, c), s);
+      const s = go(initialLessonState(c), { type: 'GOTO_STAGE', stage: 'prove' }, { type: 'SET_DRAFT', text: c.prove.model }, { type: 'SUBMIT_RESPONSE' }, { type: 'TOGGLE_CRITERION', index: 0 });
+      expect(restoreLesson(JSON.parse(JSON.stringify(s)), c), room).toEqual(s);
+    }
+  });
+  it('damaged or outdated saves start the lesson fresh instead of breaking it', () => {
+    const c = CONTENT.mirrors;
+    const fresh = initialLessonState(c);
+    expect(restoreLesson(null, c)).toEqual(fresh);
+    expect(restoreLesson('nonsense', c)).toEqual(fresh);
+    expect(restoreLesson({ stage: 'flying' }, c)).toEqual(fresh);
+    expect(restoreLesson({ ...fresh, playA: { selected: 3 } }, c)).toEqual(fresh);
+    // Criteria from an older version of the lesson (a different number) are cleared, not misapplied.
+    const old = { ...fresh, stage: 'prove', prove: { ...fresh.prove, responses: ['x'], criteria: [true, true] } };
+    const r = restoreLesson(old, c);
+    expect(r.stage).toBe('prove');
+    expect(r.prove.criteria).toEqual(c.prove.criteria.map(() => false));
+    // An out-of-range learn step is pulled back into range.
+    expect(restoreLesson({ ...fresh, stage: 'learn', learnStep: 99 }, c).learnStep).toBe(c.learn.steps.length - 1);
   });
 });

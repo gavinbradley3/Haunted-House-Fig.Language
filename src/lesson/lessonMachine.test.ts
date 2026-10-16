@@ -141,9 +141,13 @@ describe('prove stage', () => {
     expect(s.prove.criteria).toEqual([false, false, false]);
   });
 
-  it('only completes through the explicit COMPLETE control', () => {
-    const s = atProve();
+  it('only completes through the explicit COMPLETE control, after the writing checkpoint', () => {
+    let s = atProve();
     expect(r(s, { type: 'NEXT' }).stage).toBe('prove');
+    // No class sentence yet: the checkpoint holds the room open.
+    expect(r(s, { type: 'COMPLETE' }).stage).toBe('prove');
+    s = r(r(s, { type: 'SET_DRAFT', text: 'The clock ticked like a heartbeat in an empty house.' }), { type: 'SUBMIT_RESPONSE' });
+    s.prove.criteria.forEach((_, i) => (s = r(s, { type: 'TOGGLE_CRITERION', index: i })));
     const done = r(s, { type: 'COMPLETE' });
     expect(done.stage).toBe('complete');
     expect(done.completed).toBe(true);

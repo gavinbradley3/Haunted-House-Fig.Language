@@ -1,6 +1,6 @@
 /**
  * The final lesson's pieces in the Entrance Hall: the Lady's writing box on the centre
- * table (opened with the Music Box Key), her letter, and the reply that stands on the
+ * table (opened with the Scholar’s Key, the last key in the chain), her letter, and the reply that stands on the
  * mantel under her portrait. No new lights: the finale dims and restores the hall's own.
  */
 import { useMemo, useRef } from 'react';
@@ -8,8 +8,8 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { openLesson } from '../lesson/director';
 import { ffx } from '../lesson/finaleFx';
-import { doorState } from '../lesson/progression';
-import { game, useGame } from '../state/store';
+import { doorState, KEY_NAMES, LOCK_KEY } from '../lesson/progression';
+import { CONTENT, game, unfinishedRooms, useGame } from '../state/store';
 import { audio } from '../systems/audio';
 import { boardText } from '../systems/boardText';
 import { boxGeo } from '../systems/geometry';
@@ -19,6 +19,9 @@ import { FINALE } from '../world/layout';
 import { hungPaintings } from './parts/Artwork';
 import { lightMood } from './parts/Lights';
 import { Interactive } from './Interactive';
+
+/** The key that opens the box, as messages name it ("the Scholar’s Key"). */
+const BOX_KEY = KEY_NAMES[LOCK_KEY.desk];
 
 const LETTER_OPENING = 'My dear visitors, when you first came in, the stairs groaned under every visitor…';
 
@@ -38,7 +41,7 @@ function FinaleTicker() {
   return null;
 }
 
-/** The Lady's writing box. Locked until the class brings the Music Box Key; inside, her letter. */
+/** The Lady's writing box. Locked until the class brings the last key (the Scholar’s Key); inside, her letter. */
 function WritingBox() {
   const m = mats();
   const lid = useRef<THREE.Group>(null!);
@@ -65,7 +68,7 @@ function WritingBox() {
           if (s.lessonActive) return null;
           const st = doorState(s.progress, 'desk');
           if (st === 'open') return 'Read the Lady’s letter';
-          return st === 'unlockable' ? 'Unlock the writing box with the Music Box Key' : 'The Lady’s writing box (locked)';
+          return st === 'unlockable' ? `Unlock the writing box with ${BOX_KEY}` : 'The Lady’s writing box (locked)';
         }}
         onUse={() => {
           const g = useGame.getState();
@@ -77,12 +80,16 @@ function WritingBox() {
           }
           if (st === 'locked') {
             audio.locked([x, y + 0.1, z]);
-            g.showNotice('The Lady’s writing box is locked.', g.progress.completed.nursery ? 'Did you take the key from the music box?' : 'Its keyhole is small and ornate, like the key of a music box.');
+            const left = unfinishedRooms(g.progress);
+            g.showNotice(
+              'The Lady’s writing box is locked.',
+              left.length ? `It opens only when every room is done. Still to complete: ${left.map((r) => CONTENT[r].room.replace(/^The /, '')).join(', ')}.` : `Did you take ${BOX_KEY} from the scholar’s desk?`,
+            );
             return;
           }
           turning.current = true;
           audio.unlockDoor([x, y + 0.1, z]);
-          g.showNotice('The Music Box Key turns. The lid lifts by itself.', 'Inside is a letter, addressed to you.');
+          g.showNotice(`${BOX_KEY.charAt(0).toUpperCase() + BOX_KEY.slice(1)} turns. The lid lifts by itself.`, 'Inside is a letter, addressed to you.');
           window.setTimeout(() => {
             const s2 = useGame.getState();
             s2.progressDispatch({ type: 'UNLOCK', lock: 'desk' });

@@ -7,6 +7,8 @@ import type { AnnotatedPart, LessonContent } from './types';
 export const PERSONIFICATION = {
   id: 'nursery',
   device: 'Personification',
+  // Writing checkpoint: the class writes its own sentence and checks it against every success criterion.
+  requireMastery: true,
   room: 'The Nursery',
   roleLabels: {
     subject: 'The thing that is not human',

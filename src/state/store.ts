@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import {
   initialLessonState,
+  restoreLesson,
   lessonReducer,
   type LessonAction,
   type LessonState,
@@ -18,7 +19,7 @@ import { ALLITERATION } from '../content/alliteration';
 import { IDIOM } from '../content/idiom';
 import { OXYMORON } from '../content/oxymoron';
 import { ALLUSION } from '../content/allusion';
-import { DEVICE_ROOMS } from '../content/types';
+import { DEVICE_ROOMS, ROOMS } from '../content/types';
 import { initialProgress, parseProgress, progressReducer, KEY_FOR_ROOM, type Progress, type ProgressAction } from '../lesson/progression';
 
 export const CONTENT: Record<RoomId, LessonContent> = {
@@ -173,6 +174,8 @@ const loadNumber = (k: string, d: number) => {
     return d;
   }
 };
+/** Has a graphics quality been chosen on this computer before (by the teacher or the frame-rate guard)? */
+export const hasSavedQuality = () => loadNumber('hosl.quality', -1) >= 0;
 const save = (k: string, v: string) => {
   try {
     localStorage.setItem(k, v);
@@ -206,7 +209,7 @@ export const useGame = create<GameState>()((set, get) => ({
   fading: false,
   completionShot: null,
   endingOpen: false,
-  lessons: freshLessons(),
+  lessons: loadLessons(),
   room: 'mirrors',
   progress: loadProgress(),
   eventLevel: EVENT_LEVELS[loadNumber('hosl.eventLevel', 2)] ?? 'eerie',
@@ -266,7 +269,9 @@ export const useGame = create<GameState>()((set, get) => ({
     let nextProgress = progress;
     // Finishing a lesson completes its room (and puts that room's key within reach).
     if (after.completed && !before.completed) nextProgress = progressReducer(progress, { type: 'COMPLETE_ROOM', room });
-    set({ lessons: { ...lessons, [room]: after } });
+    const nextLessons = { ...lessons, [room]: after };
+    set({ lessons: nextLessons });
+    saveLessons(nextLessons);
     if (nextProgress !== progress) get().progressDispatch({ type: 'COMPLETE_ROOM', room });
   },
   gotoStage: (stage) => get().dispatch({ type: 'GOTO_STAGE', stage }),
@@ -279,6 +284,7 @@ export const useGame = create<GameState>()((set, get) => ({
     const patch: Partial<GameState> = { progress };
     if (a.type === 'RESET_PROGRESS') {
       patch.lessons = freshLessons();
+      saveLessons(patch.lessons);
       patch.doors = { ...get().doors, gallery: false, jib: false, dining: false, desk: false, echoes: false, press: false, kitchen: false, ballroom: false, study: false };
       patch.completionShot = null;
       patch.endingOpen = false;
@@ -299,6 +305,26 @@ export const useGame = create<GameState>()((set, get) => ({
     set({ footstepsOn });
   },
 }));
+
+/** Each room's lesson, saved so a class can carry on after the page is reloaded or the computer restarts. */
+function loadLessons(): Record<RoomId, LessonState> {
+  try {
+    const raw = localStorage.getItem('hosl.lessons');
+    const saved = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+    const out = freshLessons();
+    for (const r of ROOMS) out[r] = restoreLesson(saved?.[r], CONTENT[r]);
+    return out;
+  } catch {
+    return freshLessons();
+  }
+}
+function saveLessons(lessons: Record<RoomId, LessonState>) {
+  try {
+    localStorage.setItem('hosl.lessons', JSON.stringify(lessons));
+  } catch {
+    /* storage unavailable or full: lessons simply won't survive a reload */
+  }
+}
 
 function loadProgress(): Progress {
   try {

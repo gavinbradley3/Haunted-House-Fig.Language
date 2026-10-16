@@ -101,8 +101,8 @@ export const panelSide = (shot: ShotName | null) => (shot === 'tunnel' || shot =
 
 /** Where each lesson happens: the zone, where to stand on arrival, the door to open, and where its key waits. */
 export const ROOM_PLACES: Record<RoomId, { zone: Zone; entry: Pose; door: DoorId | null; keyPose: Pose | null; hint: string }> = {
-  mirrors: { zone: 'mirrors', entry: POSES.mirrorEntry, door: 'mirror', keyPose: POSES.mirrorKey, hint: 'Use the mirror' },
-  gallery: { zone: 'gallery', entry: POSES.galleryEntry, door: 'gallery', keyPose: POSES.galleryKey, hint: 'Look at the caretaker' },
+  mirrors: { zone: 'mirrors', entry: POSES.mirrorEntry, door: 'mirror', keyPose: POSES.mirrorKey, hint: 'Look into the mirror' },
+  gallery: { zone: 'gallery', entry: POSES.galleryEntry, door: 'gallery', keyPose: POSES.galleryKey, hint: 'Look closer at the caretaker’s portrait' },
   dining: { zone: 'dining', entry: POSES.diningEntry, door: 'dining', keyPose: POSES.diningKey, hint: 'Look at the giant’s place' },
   nursery: { zone: 'nursery', entry: POSES.nurseryEntry, door: 'jib', keyPose: POSES.nurseryKey, hint: 'Use the music box' },
   echoes: { zone: 'echoes', entry: POSES.echoesEntry, door: 'echoes', keyPose: POSES.echoesKey, hint: 'Use the piano' },

@@ -10,6 +10,8 @@ import type { AnnotatedPart, ChoiceChallenge, LessonContent } from './types';
 export const SIMILE = {
   id: 'mirrors' as const,
   device: 'Simile',
+  // Writing checkpoint: the class writes its own sentence and checks it against every success criterion.
+  requireMastery: true,
   room: 'The Hall of Mirrors',
 
   discover: {

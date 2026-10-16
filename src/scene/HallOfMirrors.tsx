@@ -267,22 +267,13 @@ function JibDoor() {
   );
 }
 
-function ClockLight() {
-  const ref = useRef<THREE.PointLight>(null!);
+/** Eases the clock's glow and the room's light mood. The glows themselves are lit by the shared RoomLights. */
+function LightMood() {
   useFrame(() => {
     fx.clockLight += (fx.clockLightTarget - fx.clockLight) * (1 - Math.exp(-world.dt * 2));
-    ref.current.intensity = fx.clockLight * 2.6;
     lightMood.mirrors += (lightMood.mirrorsTarget - lightMood.mirrors) * (1 - Math.exp(-world.dt * 1.2));
   });
-  return <pointLight ref={ref} position={[MIRRORS.x1 - 0.9, 1.75, MIRRORS.clock.z + 0.25]} intensity={0} distance={3} decay={2} color="#ffcf8a" />;
-}
-
-function SpeakingGlow() {
-  const ref = useRef<THREE.PointLight>(null!);
-  useFrame(() => {
-    ref.current.intensity = fx.speaking.bright * 3.5 + fx.tunnel.tunnel * 0.0;
-  });
-  return <pointLight ref={ref} position={[MIRRORS.x1 - 0.7, 2.6, speak.z]} intensity={0} distance={5} decay={2} color="#d8d2c4" />;
+  return null;
 }
 
 export function HallOfMirrors() {
@@ -380,8 +371,7 @@ export function HallOfMirrors() {
 
       {/* Lighting */}
       <Chandelier position={[0, height, (zStart + zEnd) / 2]} drop={1.35} arms={6} radius={0.45} intensity={22} seed={51} room="mirrors" />
-      <ClockLight />
-      <SpeakingGlow />
+      <LightMood />
       {/* Candles near the window keep the curtains readable */}
       <Candelabrum position={[3.75, 1.02, zEnd + 0.55]} seed={52} intensity={3.4} />
     </group>

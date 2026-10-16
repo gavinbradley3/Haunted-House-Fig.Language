@@ -7,6 +7,8 @@ import type { AnnotatedPart, LessonContent } from './types';
 export const METAPHOR = {
   id: 'gallery',
   device: 'Metaphor',
+  // Writing checkpoint: the class writes its own sentence and checks it against every success criterion.
+  requireMastery: true,
   room: 'The Portrait Gallery',
   roleLabels: {
     subject: 'What is being described',

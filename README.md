@@ -66,11 +66,11 @@ The `dist/` folder is a self-contained website. It needs no internet connection 
 12. Back in the entrance hall, the door on the left under the landing (*The Scholar's Study*) opens with the Ballroom Key. Sit at the scholar's desk to start the allusion lesson. In Challenge A the answers stay hidden until the class opens the book of evidence for each card, so nobody needs to know the story beforehand. Take **the Scholar's Key** from the desk.
 13. The Scholar's Key opens **the Lady's writing box** on the centre table. Her letter begins the final lesson, which uses all nine devices. It cannot be finished until all nine rooms are complete. When it is, press **Finish the night** for the ending.
 
-**Mastery checkpoint (rooms 5–9):** *Complete the challenge* stays greyed out until the class has written at least one sentence and you have ticked every success criterion together.
+**Writing checkpoint (every lesson):** each room ends with the same sequence: the class writes its own sentence, then checks it together against the room's success criteria (the **Class self-check**). *Complete the challenge* stays greyed out until a sentence is added and every criterion is ticked. The ticks record the class's own judgement; the game does not mark student writing. If a sentence does not meet a criterion yet, improve it and add it again (a new sentence clears the ticks). As teacher you can still jump past the checkpoint with **Jump to lesson stage → Complete** in the teacher controls.
 
 **Paintings:** many paintings can be inspected. Aim at one and press **E** (or click it) to step closer and read its museum label and a question for the class. Press **E** or **Esc** to step back. Their titles hint at devices the class will meet later.
 
-**Progress is saved** in the browser (keys, unlocked doors, completed rooms). Use **Reset all progress** in the teacher controls to start a fresh class.
+**Progress is saved** in the browser: keys, unlocked doors, completed rooms, and where each lesson is up to (including the class's sentences and ticks). If the page is reloaded or the computer restarts mid-lesson, open the lesson again and it carries on where it stopped. Progress belongs to the browser on that computer. Use **Reset all progress** in the teacher controls to start a fresh class.
 
 ## 4. Teacher controls (press T)
 
@@ -88,7 +88,7 @@ The `dist/` folder is a self-contained website. It needs no internet connection 
 - **Walk to / Jump to the Mirrors or the Hall**: *Walk* plays a guided camera walk and opens doors automatically. *Jump* fades to black and moves you instantly.
 - **Open the lesson / Leave lesson view** opens or closes the lesson panel. Your place in the lesson is kept.
 - **Sound** has mute and a volume slider.
-- **Graphics**: High, Balanced or Low. On High, the game lowers itself automatically if the computer struggles. On a typical school computer with built-in graphics, choose **Low** for smooth movement (see `docs/PHASE3_COMPLETION_REPORT.md` for measured frame rates).
+- **Graphics**: High, Balanced or Low. The first time the game runs on a computer it picks a setting from the graphics chip (Low on built-in Intel, AMD and mobile graphics) and can lower itself further if the house runs slowly; your own choice is remembered and always wins. **Use Low on typical school computers** (measured on an Intel UHD 630: Low 24–42 fps, Balanced 14–24 fps, High 8–14 fps at 1600×900). On a large projector, Low draws at most about 1280 pixels across and scales up, so it stays smooth at 1920×1080.
 
 Nothing in the lesson advances on a timer. Every step waits for you.
 
@@ -137,12 +137,16 @@ The full design is in `docs/MANSION_BLUEPRINT.md`.
 ```bash
 npm run typecheck   # TypeScript
 npm test            # unit tests (lesson logic, content checks, collision)
-npm run build       # production build
+npm run build       # classroom build (dist/): no test hook, answers not exposed on window
+npm run build:test  # test build (dist-test/): adds window.__hosl for the automated browser checks
+npm run preview:test   # serves dist-test/ for the scripts below
 node scripts/shots.mjs "http://localhost:4173/?testdt=0.5"     # phase 1 walkthrough + screenshots (needs npm run preview running)
 node scripts/phase2.mjs                                        # keys, doors, paintings, gallery lesson, events (25 checks)
 node scripts/interact.mjs                                      # real mouse and keyboard checks
 npx vite-node scripts/render-footsteps.ts                      # renders footstep WAVs to docs/audio for listening
 ```
+
+**Test hook.** The browser checks drive the game through `window.__hosl` (`src/testHook.ts`), which exposes the store, every lesson's answers and shortcuts that skip progression. It is loaded only by `npm run dev` and `npm run build:test`; the classroom build replaces it with an empty stub (`vite.config.ts`), and the `?testdt` URL option is ignored there. Always give classes the output of `npm run build`.
 
 | Folder | What lives there |
 |---|---|

@@ -44,28 +44,73 @@ function std(set: PBRSet, extra: THREE.MeshStandardMaterialParameters = {}, norm
 
 let built: ReturnType<typeof build> | null = null;
 
+/**
+ * Every generated texture the materials use. They are slow to make (several seconds in all),
+ * so prewarmTextures() makes them one at a time before the game starts, keeping the page
+ * responsive; build() then finds them already cached.
+ */
+const TEX = {
+  floorDark: () => woodPlanks('gallery', { dark: hex('#1a100a'), mid: hex('#3a2416'), light: hex('#5c3c24') }, { planks: 8, seed: 9, gloss: 0.36 }),
+  floorHall: () => woodPlanks('hall', WOOD.floor, { planks: 7, seed: 3 }),
+  parquet: () => herringbone('mirror', WOOD.parquet),
+  walnut: () => veneer('walnut', WOOD.walnut),
+  walnutPanel: () => veneer('walnutPanel', WOOD.walnut, { seed: 8, gloss: 0.32 }),
+  mahogany: () => veneer('mahogany', WOOD.mahogany, { seed: 4, gloss: 0.42 }),
+  wallHall: () => damask('hall', '#3d3f2b', '#4e5036'),
+  wallMirror: () => damask('mirror', '#1f2b25', '#2c3b32', { seed: 5 }),
+  wallGallery: () => damask('gallery', '#3a2422', '#4a2e2a', { seed: 14 }),
+  wallCorridor: () => damask('corridor', '#40372a', '#4f4532', { seed: 9 }),
+  ceiling: () => plaster('ceiling', '#cbbf9f'),
+  plasterWarm: () => plaster('wall', '#b8aa88', { seed: 22 }),
+  marbleDark: () => marble('dark', '#1d2420', '#7d877a'),
+  marbleCream: () => marble('cream', '#c9bfa8', '#7b7466', { seed: 33 }),
+  brassSet: () => brass('brass', '#b08a45'),
+  giltSet: () => brass('gilt', '#a8823c', { patina: 0.8 }),
+  velvetSet: () => velvet(),
+  rugHall: () => persianRug('hall', { field: '#56221f', border: '#1f2633', accent: '#2e4038', cream: '#b29c72' }),
+  rugMirror: () => persianRug('mirror', { field: '#24302b', border: '#3b1d1b', accent: '#5d4a2c', cream: '#a8956d', seed: 12 }),
+  runnerMat: () => runner(),
+  brickMat: () => brick(),
+  stoneTrim: () => stone('trim', '#8b8474'),
+  stoneSteps: () => stone('steps', '#77716a', { seed: 44, blocks: [2, 1] }),
+  slateMat: () => slate(),
+  grass: () => ground('grass'),
+  gravel: () => ground('gravel'),
+  clockDial: () => clockFace(),
+};
+
+/** Generate every texture ahead of time, yielding between them so the loading screen can update. */
+export async function prewarmTextures(onProgress?: (done: number, total: number) => void) {
+  const steps = Object.values(TEX);
+  for (let i = 0; i < steps.length; i++) {
+    steps[i]();
+    onProgress?.(i + 1, steps.length);
+    await new Promise((r) => setTimeout(r, 0));
+  }
+}
+
 function build() {
-  const floorDark = std(tile(woodPlanks('gallery', { dark: hex('#1a100a'), mid: hex('#3a2416'), light: hex('#5c3c24') }, { planks: 8, seed: 9, gloss: 0.36 }), 1.4, 2.8), {}, 0.8);
-  const floorHall = std(tile(woodPlanks('hall', WOOD.floor, { planks: 7, seed: 3 }), 1.25, 2.6), {}, 0.8);
-  const parquet = std(tile(herringbone('mirror', WOOD.parquet), 0.62), {}, 0.7);
-  const walnut = std(tile(veneer('walnut', WOOD.walnut), 0.7), {}, 0.6);
-  const walnutPanel = std(tile(veneer('walnutPanel', WOOD.walnut, { seed: 8, gloss: 0.32 }), 0.9), {}, 0.5);
-  const mahogany = std(tile(veneer('mahogany', WOOD.mahogany, { seed: 4, gloss: 0.42 }), 0.6), {}, 0.5);
-  const wallHall = std(tile(damask('hall', '#3d3f2b', '#4e5036'), 0.56, 1.12), {}, 0.6);
-  const wallMirror = std(tile(damask('mirror', '#1f2b25', '#2c3b32', { seed: 5 }), 0.5, 1.0), {}, 0.6);
-  const wallGallery = std(tile(damask('gallery', '#3a2422', '#4a2e2a', { seed: 14 }), 0.6, 1.2), {}, 0.6);
-  const wallCorridor = std(tile(damask('corridor', '#40372a', '#4f4532', { seed: 9 }), 0.56, 1.12), {}, 0.6);
-  const ceiling = std(tile(plaster('ceiling', '#cbbf9f'), 2.5), {}, 0.4);
-  const plasterWarm = std(tile(plaster('wall', '#b8aa88', { seed: 22 }), 2.0), {}, 0.4);
-  const marbleDark = std(tile(marble('dark', '#1d2420', '#7d877a'), 0.9), {}, 0.5);
-  const marbleCream = std(tile(marble('cream', '#c9bfa8', '#7b7466', { seed: 33 }), 0.8), {}, 0.5);
-  const brassSet = tile(brass('brass', '#b08a45'), 0.25);
+  const floorDark = std(tile(TEX.floorDark(), 1.4, 2.8), {}, 0.8);
+  const floorHall = std(tile(TEX.floorHall(), 1.25, 2.6), {}, 0.8);
+  const parquet = std(tile(TEX.parquet(), 0.62), {}, 0.7);
+  const walnut = std(tile(TEX.walnut(), 0.7), {}, 0.6);
+  const walnutPanel = std(tile(TEX.walnutPanel(), 0.9), {}, 0.5);
+  const mahogany = std(tile(TEX.mahogany(), 0.6), {}, 0.5);
+  const wallHall = std(tile(TEX.wallHall(), 0.56, 1.12), {}, 0.6);
+  const wallMirror = std(tile(TEX.wallMirror(), 0.5, 1.0), {}, 0.6);
+  const wallGallery = std(tile(TEX.wallGallery(), 0.6, 1.2), {}, 0.6);
+  const wallCorridor = std(tile(TEX.wallCorridor(), 0.56, 1.12), {}, 0.6);
+  const ceiling = std(tile(TEX.ceiling(), 2.5), {}, 0.4);
+  const plasterWarm = std(tile(TEX.plasterWarm(), 2.0), {}, 0.4);
+  const marbleDark = std(tile(TEX.marbleDark(), 0.9), {}, 0.5);
+  const marbleCream = std(tile(TEX.marbleCream(), 0.8), {}, 0.5);
+  const brassSet = tile(TEX.brassSet(), 0.25);
   const brassMat = std(brassSet, { metalness: 1, color: '#ffffff' }, 0.3);
-  const giltSet = tile(brass('gilt', '#a8823c', { patina: 0.8 }), 0.3);
+  const giltSet = tile(TEX.giltSet(), 0.3);
   const gilt = std(giltSet, { metalness: 1 }, 0.4);
   const iron = new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.55, metalness: 0.8 });
   const blackPaint = new THREE.MeshStandardMaterial({ color: '#0f1110', roughness: 0.45 });
-  const velvetSet = tile(velvet(), 0.4);
+  const velvetSet = tile(TEX.velvetSet(), 0.4);
   const velvetGreen = new THREE.MeshPhysicalMaterial({
     map: velvetSet.map,
     roughnessMap: velvetSet.roughnessMap,
@@ -109,19 +154,19 @@ function build() {
   const flame = new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 3, 1.2), toneMapped: true });
   const ember = new THREE.MeshStandardMaterial({ color: '#1a0c06', emissive: '#ff5a1a', emissiveIntensity: 2.2, roughness: 1 });
   const soot = new THREE.MeshStandardMaterial({ color: '#0b0a09', roughness: 0.95 });
-  const rugHall = std(persianRug('hall', { field: '#56221f', border: '#1f2633', accent: '#2e4038', cream: '#b29c72' }), {}, 0.9);
-  const rugMirror = std(persianRug('mirror', { field: '#24302b', border: '#3b1d1b', accent: '#5d4a2c', cream: '#a8956d', seed: 12 }), {}, 0.9);
-  const runnerMat = std(tile(runner(), 0.9, 3.6), {}, 0.9);
-  const brickMat = std(tile(brick(), 0.9, 0.9), {}, 1.0);
-  const stoneTrim = std(tile(stone('trim', '#8b8474'), 1.2), {}, 0.8);
-  const stoneSteps = std(tile(stone('steps', '#77716a', { seed: 44, blocks: [2, 1] }), 1.6, 0.8), {}, 0.8);
-  const slateMat = std(tile(slate(), 1.2, 1.2), {}, 1.2);
-  const grass = std(tile(ground('grass'), 3), {}, 1);
-  const gravel = std(tile(ground('gravel'), 1.5), {}, 1);
+  const rugHall = std(TEX.rugHall(), {}, 0.9);
+  const rugMirror = std(TEX.rugMirror(), {}, 0.9);
+  const runnerMat = std(tile(TEX.runnerMat(), 0.9, 3.6), {}, 0.9);
+  const brickMat = std(tile(TEX.brickMat(), 0.9, 0.9), {}, 1.0);
+  const stoneTrim = std(tile(TEX.stoneTrim(), 1.2), {}, 0.8);
+  const stoneSteps = std(tile(TEX.stoneSteps(), 1.6, 0.8), {}, 0.8);
+  const slateMat = std(tile(TEX.slateMat(), 1.2, 1.2), {}, 1.2);
+  const grass = std(tile(TEX.grass(), 3), {}, 1);
+  const gravel = std(tile(TEX.gravel(), 1.5), {}, 1);
   const paintCream = new THREE.MeshStandardMaterial({ color: '#c9c0a8', roughness: 0.55 });
   const paintTrim = new THREE.MeshStandardMaterial({ color: '#ddd5bf', roughness: 0.5 });
   const darkInterior = new THREE.MeshBasicMaterial({ color: '#050505' });
-  const clockDial = new THREE.MeshStandardMaterial({ map: clockFace(), roughness: 0.5 });
+  const clockDial = new THREE.MeshStandardMaterial({ map: TEX.clockDial(), roughness: 0.5 });
   const linen = new THREE.MeshStandardMaterial({ color: '#d9cfb8', roughness: 0.9 });
   const parchment = new THREE.MeshStandardMaterial({ color: '#cdbb92', roughness: 0.85 });
   const bookCloth = [

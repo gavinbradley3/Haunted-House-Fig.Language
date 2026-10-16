@@ -49,6 +49,8 @@ function devices(correct: Device, choices: Device[], why: string, notes: Partial
 export const FINALE = {
   id: 'finale',
   device: 'Figurative Language',
+  // Writing checkpoint: the class writes its own sentence and checks it against every success criterion.
+  requireMastery: true,
   room: 'The Lady’s Letter',
   roleLabels: {
     subject: 'What is being described',

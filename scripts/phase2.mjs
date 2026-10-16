@@ -1,5 +1,5 @@
 // Phase 2 walkthrough: keys, doors, paintings, the Portrait Gallery lesson and strange events.
-// Usage: node scripts/phase2.mjs [url]   (needs `npm run preview` running). Screenshots go to scripts/out/p2-*.png
+// Usage: node scripts/phase2.mjs [url]   (needs `npm run build:test` then `npm run preview:test` running). Screenshots go to scripts/out/p2-*.png
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 

@@ -9,24 +9,17 @@ import '@fontsource/literata/600.css';
 import '@fontsource/literata/400-italic.css';
 import './index.css';
 import App from './App';
-import { CONTENT, useGame } from './state/store';
-import { evaluateBuild } from './lesson/lessonMachine';
-import { doorState } from './lesson/progression';
-import * as nav from './lesson/navigation';
-import * as director from './lesson/director';
-import { skipCinematic } from './scene/Player';
-import { liveCamera, world } from './systems/time';
-import { getInteractable } from './systems/interaction';
-import { triggerStrangeEvent } from './scene/HouseEvents';
-import { hungPaintings } from './scene/parts/Artwork';
-import { houseState } from './scene/parts/Lights';
-import { renderer } from './systems/renderer';
-import { audio } from './systems/audio';
-import { mats } from './systems/materials';
+import { TEST_BUILD } from './systems/testBuild';
+import { prewarmTextures } from './systems/materials';
+import { initialQuality, probeGpuName } from './systems/gpuTier';
+import { hasSavedQuality, useGame } from './state/store';
 
-// Test hook used by the automated browser checks (scripts/shots.mjs).
-(window as unknown as Record<string, unknown>).__hosl = { useGame, nav, director, skipCinematic, liveCamera, getInteractable, triggerStrangeEvent, hungPaintings, audio, houseState, world, mats, content: CONTENT, evaluateBuild, doorState,
-  programs: () => renderer.gl?.info.programs?.length ?? -1 };
+// First run on this computer: start at the graphics quality it can manage (decided before the
+// 3D view is created, because changing it later rebuilds the renderer).
+if (!hasSavedQuality()) useGame.getState().setQuality(initialQuality(probeGpuName()), true);
+
+// Test hook for the automated browser checks: dev and test builds only, never the classroom build.
+if (TEST_BUILD) void import('./testHook').then((t) => t.installTestHook());
 
 // Canvas textures (clock face, plaques, mirror text) use the display font, so wait for it.
 const fontsReady = Promise.all([
@@ -34,10 +27,20 @@ const fontsReady = Promise.all([
   document.fonts.load('italic 500 40px "Cormorant Garamond"'),
 ]).catch(() => undefined);
 
-void Promise.race([fontsReady, new Promise((r) => setTimeout(r, 2500))]).then(() => {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  );
-});
+// Make the house's textures before the game starts, one at a time, so the page never freezes and
+// the loading screen can show progress (this takes several seconds on school computers).
+const boot = document.getElementById('boot');
+void Promise.race([fontsReady, new Promise((r) => setTimeout(r, 2500))])
+  .then(() =>
+    prewarmTextures((done, total) => {
+      if (boot) boot.textContent = `The house is waking… ${Math.round((done / total) * 100)}%`;
+    }),
+  )
+  .then(() => {
+    if (boot) boot.textContent = 'The house is waking…';
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+  });

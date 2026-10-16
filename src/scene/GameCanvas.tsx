@@ -1,10 +1,11 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer, N8AO, Noise, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { BlendFunction, ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { game, useGame } from '../state/store';
+import { TEST_BUILD } from '../systems/testBuild';
 import { mats } from '../systems/materials';
 import { setMaxAnisotropy } from '../systems/textures';
 import { shadowClock } from '../systems/time';
@@ -38,13 +39,15 @@ import { renderer } from '../systems/renderer';
 
 /** Builds materials/textures once the GL context exists, then reports ready. */
 function Setup() {
-  const { gl, scene } = useThree();
+  const { gl, scene, camera } = useThree();
   const setPhase = useGame((s) => s.setPhase);
   useMemo(() => {
     renderer.gl = gl;
+    renderer.scene = scene;
+    renderer.camera = camera;
     setMaxAnisotropy(gl.capabilities.getMaxAnisotropy());
     mats();
-  }, [gl]);
+  }, [gl, scene, camera]);
   useEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -205,7 +208,7 @@ function Precompile() {
  */
 function FpsGuard() {
   const acc = useMemo(() => ({ t: 0, frames: 0, bad: 0 }), []);
-  const testing = useMemo(() => new URLSearchParams(location.search).has('testdt'), []);
+  const testing = useMemo(() => TEST_BUILD && new URLSearchParams(location.search).has('testdt'), []);
   useFrame((_, dt) => {
     const s = game();
     if (testing || !s.autoQuality || s.phase !== 'play' || s.quality === 'low' || document.hidden) return;
@@ -226,19 +229,37 @@ function FpsGuard() {
 }
 
 export const QUALITY = {
-  high: { dpr: [1, 1.5] as [number, number], msaa: 4, ao: 'medium' as const, reflect: 0.5 },
+  high: { dpr: [1, 1.5] as [number, number], msaa: 4, ao: 'performance' as const, reflect: 0.5, maxWidth: Infinity },
   // No ambient occlusion: on integrated graphics it re-draws the whole scene and costs as much as everything else.
-  balanced: { dpr: [1, 1] as [number, number], msaa: 2, ao: null, reflect: 0.35 },
-  low: { dpr: [0.8, 0.8] as [number, number], msaa: 0, ao: null, reflect: 0.25 },
+  balanced: { dpr: [1, 1] as [number, number], msaa: 2, ao: null, reflect: 0.35, maxWidth: 1600 },
+  // On a large projector screen, Low draws at most about 1280 pixels across and scales up.
+  low: { dpr: [0.8, 0.8] as [number, number], msaa: 0, ao: null, reflect: 0.25, maxWidth: 1280 },
 };
+
+/** The device-pixel-ratio range for a quality, capped so wide screens do not multiply the pixel count. */
+function dprFor(q: (typeof QUALITY)[keyof typeof QUALITY], width: number): [number, number] {
+  const cap = q.maxWidth / Math.max(1, width);
+  return [Math.min(q.dpr[0], cap), Math.min(q.dpr[1], cap)];
+}
+
+function useWindowWidth() {
+  const [w, setW] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const on = () => setW(window.innerWidth);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return w;
+}
 
 export function GameCanvas() {
   const quality = useGame((s) => s.quality);
   const q = QUALITY[quality];
+  const width = useWindowWidth();
   return (
     <Canvas
       shadows={{ type: THREE.PCFShadowMap }}
-      dpr={q.dpr}
+      dpr={dprFor(q, width)}
       gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
       camera={{ fov: 62, near: 0.05, far: 420, position: [0, 3, 30] }}
       onCreated={({ gl }) => {

@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:test": "tsc -b && vite build --mode test --outDir dist-test",
     "preview": "vite preview",
+    "preview:test": "vite preview --outDir dist-test",
     "test": "vitest run",
     "typecheck": "tsc -b"
   },

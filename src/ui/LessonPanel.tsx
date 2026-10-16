@@ -567,13 +567,16 @@ function Prove() {
           {content.proveButton ?? (room === 'gallery' ? 'Give the frame its title' : 'Show in the mirror')}
         </button>
       </form>
-      {content.requireMastery && !latest && <p className="mastery-note">To finish this room, add the class’s own sentence and tick every success criterion for it.</p>}
+      {content.requireMastery && !latest && <p className="mastery-note">To finish this room, add the class’s own sentence, then check it together against every success criterion.</p>}
       {latest && (
         <>
           <div className="response">
             <small>From the class</small>“{latest}”
           </div>
-          <div className="criteria">
+          <div className="criteria-head">
+            <strong>Class self-check</strong> Read the sentence together and tick each criterion the class agrees it meets. This is the class’s own judgement, not a mark from the game.
+          </div>
+          <div className="criteria" role="group" aria-label="Class self-check">
             {c.criteria.map((cr, i) => (
               <label key={cr}>
                 <input type="checkbox" checked={p.criteria[i]} onChange={() => dispatch({ type: 'TOGGLE_CRITERION', index: i })} />
@@ -581,7 +584,7 @@ function Prove() {
               </label>
             ))}
           </div>
-          {content.requireMastery && !p.criteria.every(Boolean) && <p className="mastery-note">To finish this room, tick every success criterion for the class’s sentence.</p>}
+          {content.requireMastery && !p.criteria.every(Boolean) && <p className="mastery-note">To finish this room, tick every criterion the class agrees its sentence meets. If one is not met yet, improve the sentence and add it again.</p>}
           {p.responses.slice(0, -1).reverse().slice(0, 3).map((r, i) => (
             <div className="earlier" key={i}>
               <span>“{r}”</span>
@@ -711,7 +714,7 @@ export function LessonPanel() {
           <button
             className="btn primary"
             disabled={!!C.requireMastery && !masteryMet(lesson)}
-            title={C.requireMastery && !masteryMet(lesson) ? 'Add a class sentence and tick every success criterion first.' : undefined}
+            title={C.requireMastery && !masteryMet(lesson) ? 'Add a class sentence and complete the class self-check first.' : undefined}
             onClick={() => dispatch({ type: 'COMPLETE' })}
           >
             Complete the challenge

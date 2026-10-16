@@ -146,7 +146,11 @@ const emptyItem = (): ItemState => ({
 
 const emptyChoice = (): ChoiceState => ({ ...emptyItem(), items: {}, activeItem: null, build: [], buildAttempts: [] });
 
-/** Has the class met the Prove stage's mastery checkpoint (a sentence of its own, every criterion ticked)? */
+/**
+ * Has the class passed the Prove stage's writing checkpoint: a sentence of its own, with every
+ * success criterion ticked in the class self-check? This records the class's own judgement; the
+ * game does not assess the writing.
+ */
 export function masteryMet(s: LessonState): boolean {
   return s.prove.responses.length > 0 && s.prove.criteria.length > 0 && s.prove.criteria.every(Boolean);
 }
@@ -177,6 +181,65 @@ export function initialLessonState(content: LessonContent = SIMILE): LessonState
     playB: emptyChoice(),
     prove: emptyProve(content),
     completed: false,
+  };
+}
+
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+const isStrArr = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string');
+function isItem(v: unknown): v is ItemState {
+  return isObj(v) && (v.selected === null || typeof v.selected === 'string') && typeof v.checked === 'boolean' && typeof v.solved === 'boolean' && isStrArr(v.wrongAttempts);
+}
+function restoreChoice(v: unknown): ChoiceState | null {
+  if (!isItem(v)) return null;
+  const c = v as unknown as Record<string, unknown>;
+  const items = isObj(c.items) ? c.items : {};
+  if (!Object.values(items).every(isItem)) return null;
+  return {
+    ...emptyChoice(),
+    selected: v.selected,
+    checked: v.checked,
+    solved: v.solved,
+    wrongAttempts: v.wrongAttempts,
+    revealedByTeacher: !!(v as ItemState).revealedByTeacher,
+    items: items as Record<string, ItemState>,
+    activeItem: typeof c.activeItem === 'string' ? c.activeItem : null,
+    build: Array.isArray(c.build) ? (c.build as unknown[]).map((x) => (typeof x === 'string' ? x : null)) : [],
+    buildAttempts: isStrArr(c.buildAttempts) ? c.buildAttempts : [],
+  };
+}
+
+/**
+ * Rebuild a lesson saved in the browser (so a class can carry on after a reload). Anything
+ * missing, malformed or from an older version of the lesson gives a fresh lesson instead.
+ */
+export function restoreLesson(saved: unknown, content: LessonContent): LessonState {
+  const fresh = initialLessonState(content);
+  if (!isObj(saved) || !STAGES.includes(saved.stage as Stage)) return fresh;
+  const d = saved.discover;
+  const p = saved.prove;
+  const playA = restoreChoice(saved.playA);
+  const playB = restoreChoice(saved.playB);
+  if (!isObj(d) || !isObj(p) || !playA || !playB) return fresh;
+  const criteria = Array.isArray(p.criteria) && p.criteria.length === content.prove.criteria.length && p.criteria.every((x) => typeof x === 'boolean') ? (p.criteria as boolean[]) : fresh.prove.criteria;
+  return {
+    stage: saved.stage as Stage,
+    discover: {
+      revealedA: d.revealedA === true,
+      revealedB: d.revealedB === true,
+      active: d.active === 'A' || d.active === 'B' ? d.active : null,
+      questionsShown: d.questionsShown === true,
+    },
+    learnStep: Math.max(0, Math.min(content.learn.steps.length - 1, Number(saved.learnStep) || 0)),
+    playA,
+    playB,
+    prove: {
+      draft: typeof p.draft === 'string' ? p.draft.slice(0, 220) : '',
+      responses: isStrArr(p.responses) ? p.responses.slice(-20).map((r) => r.slice(0, 220)) : [],
+      criteria,
+      questionsShown: p.questionsShown === true,
+      modelRevealed: p.modelRevealed === true,
+    },
+    completed: saved.completed === true,
   };
 }
 
@@ -364,7 +427,9 @@ export function lessonReducer(s: LessonState, a: LessonAction, content: LessonCo
     }
     case 'REMOVE_RESPONSE': {
       const responses = s.prove.responses.filter((_, i) => i !== a.index);
-      return { ...s, prove: { ...s.prove, responses } };
+      // The ticks belong to the latest sentence: removing it clears them.
+      const removedLatest = a.index === s.prove.responses.length - 1;
+      return { ...s, prove: { ...s.prove, responses, criteria: removedLatest ? s.prove.criteria.map(() => false) : s.prove.criteria } };
     }
     case 'TOGGLE_CRITERION': {
       const criteria = s.prove.criteria.map((v, i) => (i === a.index ? !v : v));
@@ -376,7 +441,7 @@ export function lessonReducer(s: LessonState, a: LessonAction, content: LessonCo
       return { ...s, prove: { ...s.prove, modelRevealed: true, questionsShown: true } };
     case 'COMPLETE':
       if (s.stage !== 'prove') return s;
-      // Mastery checkpoint: the teacher can still jump straight to "Complete" from the teacher panel.
+      // Writing checkpoint. The teacher can still jump straight to "Complete" from the teacher panel.
       if (content.requireMastery && !masteryMet(s)) return s;
       return { ...s, stage: 'complete', completed: true };
     case 'RESET_LESSON':

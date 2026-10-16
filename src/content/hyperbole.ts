@@ -29,6 +29,8 @@ function sortOptions(hyperbole: boolean, why: string, ifWrong: string): ChoiceOp
 export const HYPERBOLE = {
   id: 'dining',
   device: 'Hyperbole',
+  // Writing checkpoint: the class writes its own sentence and checks it against every success criterion.
+  requireMastery: true,
   room: "The Giant's Dining Room",
   roleLabels: {
     subject: 'What is being described',

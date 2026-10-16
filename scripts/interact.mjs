@@ -1,5 +1,5 @@
 // Input-driven checks: real mouse clicks and key presses, with assertions on game state.
-// Usage: node scripts/interact.mjs [url]   (needs `npm run preview` or `npm run dev` running)
+// Usage: node scripts/interact.mjs [url]   (needs `npm run preview:test` or `npm run dev` running)
 import { chromium } from 'playwright';
 
 const base = process.argv[2] ?? 'http://localhost:4173/?testdt=0.5';
