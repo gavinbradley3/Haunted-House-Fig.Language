@@ -35,10 +35,16 @@ const objs: THREE.Object3D[] = [];
 /** Ray-pick the closest interactable along `ray` that is within its max distance. */
 export function pickInteractable(raycaster: THREE.Raycaster): Interactable | null {
   objs.length = 0;
-  for (const i of registry.values()) objs.push(i.object);
+  // Reach as far as the farthest-reaching interactable (paintings high in the hall); each one still
+  // enforces its own maxDist below, so nothing else becomes usable from further away.
+  let far = 4;
+  for (const i of registry.values()) {
+    objs.push(i.object);
+    if (i.maxDist > far) far = i.maxDist;
+  }
   for (const o of occluders) objs.push(o);
   hits.length = 0;
-  raycaster.far = 4;
+  raycaster.far = far;
   raycaster.intersectObjects(objs, true, hits);
   for (const h of hits) {
     let o: THREE.Object3D | null = h.object;

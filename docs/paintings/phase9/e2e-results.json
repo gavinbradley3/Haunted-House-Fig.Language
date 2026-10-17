@@ -1,0 +1,1075 @@
+{
+  "viewport": [
+    1600,
+    900
+  ],
+  "failures": 0,
+  "results": [
+    {
+      "name": "fresh save: no rooms complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "arrival: in the entrance hall",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting houseBreath: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The House That Held Its Breath · 1448x1086 shown 1099x825 · fills 92%"
+    },
+    {
+      "name": "painting houseBreath: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting houseBreath: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting ladyOfHouse: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The Lady of the House · 1086x1448 shown 622x829 · fills 92%"
+    },
+    {
+      "name": "painting ladyOfHouse: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting ladyOfHouse: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D01: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "A Ship Becalmed at Dusk · 1470x1070 shown 1099x799 · fills 89%"
+    },
+    {
+      "name": "painting D01: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D01: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D02: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Portrait of the Builder of the House · 1115x1411 shown 654x829 · fills 92%"
+    },
+    {
+      "name": "painting D02: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D02: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D03: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "A Lane by Moonlight · 1435x1096 shown 1083x829 · fills 92%"
+    },
+    {
+      "name": "painting D03: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D03: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D04: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Still Life with Keys and a Snuffed Candle · 1135x1386 shown 680x829 · fills 92%"
+    },
+    {
+      "name": "painting D04: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D04: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D05: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Lighthouse in a Gale · 1448x1086 shown 1099x825 · fills 92%"
+    },
+    {
+      "name": "painting D05: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D05: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting whisperingWalls: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The Whispering Walls · 1086x1448 shown 622x829 · fills 92%"
+    },
+    {
+      "name": "painting whisperingWalls: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting whisperingWalls: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting coldFeet: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Cold Feet · 1086x1448 shown 622x829 · fills 92%"
+    },
+    {
+      "name": "painting coldFeet: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting coldFeet: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirror door opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: lesson opened from the speaking mirror",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "mirrors: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mirrors: mirrorKey taken with E",
+      "ok": true,
+      "detail": "Take the Mirror Key"
+    },
+    {
+      "name": "gallery-door: prompt offers the key",
+      "ok": true,
+      "detail": "Unlock the door with the Mirror Key"
+    },
+    {
+      "name": "gallery-door: opens with its key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting deafeningSilence: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "A Deafening Silence · 1086x1448 shown 622x829 · fills 92%"
+    },
+    {
+      "name": "painting deafeningSilence: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting deafeningSilence: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting oldManShadow: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Title missing · 1086x1448 shown 622x829 · fills 92%"
+    },
+    {
+      "name": "painting oldManShadow: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting oldManShadow: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting nervousSitter: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Portrait of a Lady, Waiting · 1086x1448 shown 622x829 · fills 92%"
+    },
+    {
+      "name": "painting nervousSitter: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting nervousSitter: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D06: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The Sea at Dawn, Like a Ploughed Field · 1455x1081 shown 1099x812 · fills 90%"
+    },
+    {
+      "name": "painting D06: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D06: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D07: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Still Life with a Pewter Jug · 1122x1402 shown 664x829 · fills 92%"
+    },
+    {
+      "name": "painting D07: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D07: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D08: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "A House by the Lake, Night · 1426x1103 shown 1072x829 · fills 92%"
+    },
+    {
+      "name": "painting D08: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D08: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D09: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Portrait of a Young Man in Mourning · 1111x1415 shown 651x829 · fills 92%"
+    },
+    {
+      "name": "painting D09: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D09: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting emptyFrame: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Untitled · 512x640 shown 664x829 · fills 92%"
+    },
+    {
+      "name": "painting emptyFrame: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting emptyFrame: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: caretaker viewer offers the lesson",
+      "ok": true,
+      "detail": "Look closer at the painting"
+    },
+    {
+      "name": "gallery: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "gallery: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: old man title restored after the lesson",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "gallery: galleryKey taken with E",
+      "ok": true,
+      "detail": "Take the Gallery Key"
+    },
+    {
+      "name": "painting caretaker: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The Caretaker Was a Storm · 1086x1448 shown 622x829 · fills 92%"
+    },
+    {
+      "name": "painting caretaker: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting caretaker: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting oldManShadow: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The Old Man Was a Shadow · 1086x1448 shown 622x829 · fills 92%"
+    },
+    {
+      "name": "painting oldManShadow: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting oldManShadow: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining-door: prompt offers the key",
+      "ok": true,
+      "detail": "Unlock the door with the Gallery Key"
+    },
+    {
+      "name": "dining-door: opens with its key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D10: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "A Feast Fit for a Giant · 1423x1105 shown 1067x829 · fills 92%"
+    },
+    {
+      "name": "painting D10: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D10: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D11: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The Sleeping Hill · 1478x1064 shown 1099x790 · fills 88%"
+    },
+    {
+      "name": "painting D11: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D11: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D12: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Portrait of a Host · 1122x1402 shown 664x829 · fills 92%"
+    },
+    {
+      "name": "painting D12: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D12: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D13: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "A Wave as High as a Mountain · 1424x1105 shown 1067x829 · fills 92%"
+    },
+    {
+      "name": "painting D13: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D13: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: lesson opened from the giant’s place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "dining: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dining: diningKey taken with E",
+      "ok": true,
+      "detail": "Take the Tiny Key"
+    },
+    {
+      "name": "jib-door: prompt offers the key",
+      "ok": true,
+      "detail": "A tiny keyhole in the panelling: use the Tiny Key"
+    },
+    {
+      "name": "jib-door: opens with its key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D14: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "Girl with a China Doll · 1112x1415 shown 651x829 · fills 92%"
+    },
+    {
+      "name": "painting D14: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D14: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D15: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The Willow Leaning to Listen · 1448x1086 shown 1099x825 · fills 92%"
+    },
+    {
+      "name": "painting D15: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D15: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D16: whole painting shown, uncropped, label beside it",
+      "ok": true,
+      "detail": "The Dolls’ House at Night · 1145x1374 shown 690x829 · fills 92%"
+    },
+    {
+      "name": "painting D16: zoom in and back to the whole painting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting D16: Esc closes and returns to the same place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: lesson opened from the music box",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "nursery: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nursery: nurseryKey taken with E",
+      "ok": true,
+      "detail": "Take the Music Box Key"
+    },
+    {
+      "name": "echoes-door: prompt offers the key",
+      "ok": true,
+      "detail": "Unlock the door with the Music Box Key"
+    },
+    {
+      "name": "echoes-door: opens with its key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: lesson opened from the piano",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "echoes: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "echoes: echoesKey taken with E",
+      "ok": true,
+      "detail": "Take the Bell Key"
+    },
+    {
+      "name": "press-door: prompt offers the key",
+      "ok": true,
+      "detail": "Unlock the door with the Bell Key"
+    },
+    {
+      "name": "press-door: opens with its key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: lesson opened from the press",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "press: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "press: pressKey taken with E",
+      "ok": true,
+      "detail": "Take the Type Key"
+    },
+    {
+      "name": "kitchen-door: prompt offers the key",
+      "ok": true,
+      "detail": "Unlock the door with the Type Key"
+    },
+    {
+      "name": "kitchen-door: opens with its key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: lesson opened from the table",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "kitchen: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kitchen: kitchenKey taken with E",
+      "ok": true,
+      "detail": "Take the Pantry Key"
+    },
+    {
+      "name": "ballroom-door: prompt offers the key",
+      "ok": true,
+      "detail": "Unlock the door with the Pantry Key"
+    },
+    {
+      "name": "ballroom-door: opens with its key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: lesson opened from the dancers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "ballroom: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ballroom: ballroomKey taken with E",
+      "ok": true,
+      "detail": "Take the Ballroom Key"
+    },
+    {
+      "name": "study-door: prompt offers the key",
+      "ok": true,
+      "detail": "Unlock the door with the Ballroom Key"
+    },
+    {
+      "name": "study-door: opens with its key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: lesson opened from the desk",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "study: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "study: studyKey taken with E",
+      "ok": true,
+      "detail": "Take the Scholar’s Key"
+    },
+    {
+      "name": "finale: writing box offers the Scholar’s Key",
+      "ok": true,
+      "detail": "Unlock the writing box with the Scholar’s Key"
+    },
+    {
+      "name": "finale: the letter opens the final lesson",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finale: reached playA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finale: playA solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finale: reached playB",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finale: playB solved by the class",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finale: reached prove",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finale: Complete is disabled before the class writes and self-checks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finale: self-check lists every criterion",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "finale: Complete enabled after sentence + self-check",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finale: lesson complete",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ending: shown after the final lesson",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "all nine rooms and the finale complete",
+      "ok": true,
+      "detail": "{\"mirrors\":true,\"gallery\":true,\"dining\":true,\"nursery\":true,\"echoes\":true,\"press\":true,\"kitchen\":true,\"ballroom\":true,\"study\":true,\"finale\":true}"
+    },
+    {
+      "name": "progress saved locally",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "all 25 paintings examined",
+      "ok": true,
+      "detail": "25 examined"
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "errors": []
+}

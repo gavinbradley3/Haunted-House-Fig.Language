@@ -15,7 +15,6 @@ import {
   CoatStand,
   ConsoleTable,
   GrandfatherClock,
-  Painting,
   Rug,
   SashWindow,
   Settle,
@@ -24,7 +23,7 @@ import {
 } from './parts/Furnishings';
 import { Fireplace } from './parts/Fireplace';
 import { Interactive } from './Interactive';
-import { ArtPainting } from './parts/Artwork';
+import { ArtPainting, Painting } from './parts/Artwork';
 
 const { x0, x1, zFront, zBack, height } = HALL;
 const L = HALL.landing;
@@ -265,7 +264,7 @@ export function EntranceHall() {
               <Architrave c={x} w={0.96} h={2.3} />
             </group>
           ))}
-          <Painting x={0} y={1.75} w={1.1} h={0.8} kind="sea" seed={5} />
+          <Painting x={0} y={1.75} w={1.1} art="D01" />
         </group>
       </OnWall>
       {/* Door voids behind the landing doors */}
@@ -283,8 +282,8 @@ export function EntranceHall() {
         </group>
         {/* Raking dado rail following the stair */}
         <StairDado />
-        <Painting x={wallLocal('z', 1, -3.4)} y={3.15} w={0.75} h={0.95} kind="portrait" seed={3} />
-        <Painting x={wallLocal('z', 1, -5.6)} y={4.1} w={0.85} h={0.65} kind="forest" seed={4} />
+        <Painting x={wallLocal('z', 1, -3.4)} y={3.15} w={0.75} art="D02" />
+        <Painting x={wallLocal('z', 1, -5.6)} y={4.1} w={0.85} art="D03" />
         <Run profile="pictureRail" x0={wallLocal('z', 1, zFront)} x1={wallLocal('z', 1, zBack)} y={5.95} material={m.walnut} />
       </OnWall>
 
@@ -297,8 +296,8 @@ export function EntranceHall() {
         <Sconce x={wallLocal('z', -1, -7.4)} y={2.2} seed={6} intensity={4.5} />
         <Run profile="dado" x0={wallLocal('z', -1, zFront)} x1={wallLocal('z', -1, zBack)} y={L.y - 0.1} material={m.walnut} />
         <Run profile="pictureRail" x0={wallLocal('z', -1, zFront)} x1={wallLocal('z', -1, zBack)} y={5.95} material={m.walnut} />
-        <Painting x={wallLocal('z', -1, -1.9)} y={4.4} w={0.9} h={1.1} kind="stilllife" seed={6} />
-        <Painting x={wallLocal('z', -1, -8.6)} y={4.6} w={0.8} h={0.6} kind="sea" seed={8} />
+        <Painting x={wallLocal('z', -1, -1.9)} y={4.4} w={0.9} art="D04" />
+        <Painting x={wallLocal('z', -1, -8.6)} y={4.6} w={0.8} art="D05" />
       </OnWall>
 
       {/* Room 9 (under the landing) and Room 7 (beyond the fireplace) */}

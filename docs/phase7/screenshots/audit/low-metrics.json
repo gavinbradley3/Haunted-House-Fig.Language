@@ -1,0 +1,58 @@
+{
+  "hall-entry": {
+    "meanMs": 55.27,
+    "p95Ms": 71.5,
+    "calls": 1,
+    "triangles": 1,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "console-and-painting": {
+    "meanMs": 49.99,
+    "p95Ms": 144.4,
+    "calls": 1,
+    "triangles": 1,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "console-close": {
+    "meanMs": 50.57,
+    "p95Ms": 188.2,
+    "calls": 1,
+    "triangles": 1,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "kitchen-door": {
+    "meanMs": 40.79,
+    "p95Ms": 130.4,
+    "calls": 1,
+    "triangles": 1,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "front-doors": {
+    "meanMs": 51.03,
+    "p95Ms": 155.9,
+    "calls": 1,
+    "triangles": 1,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "painting-close": {
+    "meanMs": 48.45,
+    "p95Ms": 130,
+    "calls": 1,
+    "triangles": 1,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "gpu": "ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00009BC8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "quality": "low"
+}

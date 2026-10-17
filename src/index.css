@@ -225,13 +225,44 @@ button { font: inherit; color: inherit; }
 .compare-row .annot { margin: 4px 0 2px; font-size: 38px; line-height: 1.7; }
 
 /* ---------------------------------------------------------------- painting inspection */
-.painting-card { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); width: min(760px, calc(100vw - 48px)); padding: 22px 30px 18px;
-  background: linear-gradient(180deg, rgba(24,20,15,0.94), rgba(12,10,8,0.94)); border: 1px solid var(--edge); box-shadow: 0 24px 70px rgba(0,0,0,0.6); animation: panelIn 0.5s; z-index: 12; }
-.pc-title { font-family: var(--display); font-weight: 600; font-size: 38px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.1; }
-.pc-medium { font-family: var(--display); font-style: italic; font-size: 20px; color: var(--brass); margin: 6px 0 10px; }
-.pc-note { font-size: 22px; line-height: 1.5; margin: 0; }
-.pc-teacher { margin-top: 10px; font-size: 15px; color: var(--ink-faint); }
-.pc-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+/* ---------------------------------------------------------------- painting viewer
+   The artwork comes first: it gets all the space the label does not need, contain-fitted (never cropped).
+   Wide screens put a narrow label beside it; tall or narrow screens put a short label beneath it. */
+.painting-viewer { position: fixed; inset: 0; z-index: 12; display: grid; grid-template-columns: minmax(0, 1fr) clamp(270px, 24vw, 380px);
+  gap: clamp(14px, 1.6vw, 28px); padding: clamp(14px, 2.2vh, 30px) clamp(16px, 2vw, 34px); background: rgba(6, 5, 4, 0.92); animation: pvIn 0.22s ease-out; }
+@keyframes pvIn { from { opacity: 0; } to { opacity: 1; } }
+.pv-stage { min-width: 0; min-height: 0; display: grid; place-items: center; }
+.pv-frame { box-sizing: content-box; position: relative;
+  background: linear-gradient(135deg, #5a3f17 0%, #c9a55e 18%, #8a6528 38%, #e0bf78 58%, #7a5822 80%, #b8914a 100%);
+  box-shadow: 0 0 0 1px #1d1408, inset 0 0 0 1px rgba(255, 235, 190, 0.25), 0 18px 60px rgba(0, 0, 0, 0.75); }
+.pv-canvas { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0d0b08; cursor: zoom-in;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(0, 0, 0, 0.5); }
+.pv-canvas.zoomed { cursor: grab; }
+.pv-canvas.zoomed:active { cursor: grabbing; }
+.pv-img { position: absolute; left: 0; top: 0; display: block; max-width: none; user-select: none; transform-origin: 50% 50%; transition: transform 0.12s ease-out, opacity 0.25s; }
+.pv-img.loading { opacity: 0; }
+.pv-label { min-height: 0; max-height: 100%; align-self: center; display: flex; flex-direction: column; padding: 16px 18px 14px;
+  background: linear-gradient(180deg, rgba(24, 20, 15, 0.94), rgba(12, 10, 8, 0.94)); border: 1px solid var(--edge-soft); }
+.pv-text { min-height: 0; overflow-y: auto; padding-right: 4px; }
+.pv-title { font-family: var(--display); font-weight: 600; font-size: clamp(20px, 1.5vw, 27px); letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.15; }
+.pv-medium { font-family: var(--display); font-style: italic; font-size: clamp(15px, 1vw, 17px); color: var(--brass); margin: 4px 0 10px; }
+.pv-note { font-size: clamp(15px, 1vw, 17px); line-height: 1.55; margin: 0; }
+.pv-ask { font-family: var(--display); font-style: italic; font-size: clamp(16px, 1.1vw, 19px); line-height: 1.35; color: var(--brass-hi); margin: 12px 0 0;
+  padding-left: 14px; border-left: 1px solid var(--brass); }
+.pv-teacher { margin-top: 10px; font-size: 13px; line-height: 1.4; color: var(--ink-faint); }
+.pv-lesson { margin-top: 12px; }
+.pv-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--edge-soft); flex-wrap: wrap; }
+.pv-zoom { display: flex; gap: 4px; }
+.pv-zbtn { min-width: 34px; height: 32px; padding: 0 10px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--edge-soft); color: var(--ink-dim); cursor: pointer; font-size: 15px; }
+.pv-zbtn.fit { font-family: var(--display); font-size: 14px; letter-spacing: 0.04em; }
+.pv-zbtn:hover:not(:disabled) { border-color: var(--brass); color: var(--ink); }
+.pv-zbtn:disabled { opacity: 0.35; cursor: default; }
+.pv-close { white-space: nowrap; }
+/* Tall or narrow screens: painting above, a short scrolling label below */
+@media (max-aspect-ratio: 5/4), (max-width: 900px) {
+  .painting-viewer { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .pv-label { align-self: stretch; max-height: 34vh; }
+}
 .keyring { position: fixed; right: 34px; bottom: 26px; display: flex; flex-wrap: wrap-reverse; justify-content: flex-end; gap: 10px 16px; max-width: min(640px, 60vw); pointer-events: none; }
 .keyglyph { display: flex; align-items: center; gap: 8px; font-family: var(--display); letter-spacing: 0.22em; text-transform: uppercase; font-size: 15px; color: var(--ink-dim); text-shadow: 0 1px 6px rgba(0,0,0,0.9); }
 

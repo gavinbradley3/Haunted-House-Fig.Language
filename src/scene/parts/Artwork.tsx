@@ -3,7 +3,7 @@
  * nameplate and picture light, close inspection with E or a click, and a
  * "living" material the lessons and the house's strange events can disturb.
  */
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { renderer } from '../../systems/renderer';
@@ -16,6 +16,7 @@ import { plaque } from '../../systems/textures';
 import { world } from '../../systems/time';
 import { Interactive } from '../Interactive';
 import { ProfileFrame } from './Furnishings';
+import { ART_IMAGES, DECOR_IMAGES, decorAspect, paintingTexture, type DecorId } from '../../systems/paintingImages';
 
 // ------------------------------------------------------------------ lazy painting textures
 
@@ -45,7 +46,12 @@ function pump() {
   window.setTimeout(step, 30);
 }
 
-export function artTexture(id: ArtId) {
+export function artTexture(id: ArtId): THREE.Texture {
+  // The final painting collection: load the artwork file (uploaded to the GPU as soon as it decodes).
+  const spec = ART_IMAGES[id];
+  const image = spec && paintingTexture(spec, (tex) => renderer.gl?.initTexture(tex));
+  if (image) return image;
+  // No file for this id (the students' blank canvas): paint it procedurally, as before.
   let t = texCache.get(id);
   if (!t) {
     const c = document.createElement('canvas');
@@ -108,7 +114,8 @@ const MOTHS_GLSL = /* glsl */ `
       // Trapped and panicking: tight loops round the sitter's head, with sudden darts
       float r = 0.1 + 0.05 * mod(fi, 4.0);
       float sp = 0.9 + fi * 0.07;
-      vec2 c = vec2(0.5, 0.62) + vec2(sin(t * sp + fi * 2.1) * r * 1.3, cos(t * sp * 1.23 + fi * 1.3) * r);
+      // Centred on the sitter's head in the final portrait: 48% across, 34% down (uv y 0.66).
+      vec2 c = vec2(0.48, 0.66) + vec2(sin(t * sp + fi * 2.1) * r * 1.3, cos(t * sp * 1.23 + fi * 1.3) * r);
       c += vec2(sin(t * 7.1 + fi * 4.0), cos(t * 6.3 + fi * 2.7)) * 0.018;
       c += vec2(sin(t * 2.3 + fi), cos(t * 1.9 + fi * 1.7)) * step(0.82, sin(t * 0.7 + fi * 1.9)) * 0.06;
       float flap = 0.25 + 0.75 * abs(sin(t * (24.0 + fi * 2.3) + fi));
@@ -124,60 +131,77 @@ const MOTHS_GLSL = /* glsl */ `
   }
 `;
 
+/**
+ * Picture fill: how much each painting is lit by its own colours, on top of the room's real lights.
+ * Rooms in the house are deliberately dark, and most of the artwork is dark too; multiplied together
+ * the canvases read as black rectangles. This acts like soft, even gallery light on the canvas only:
+ * proportional to the painting's own colour (dark passages stay dark, nothing glows), applied after the
+ * lesson effects (so fades, moths and painted words are lit the same way), no extra light or pass.
+ * One shared uniform for every painting in the house.
+ */
+export const PICTURE_FILL = { value: 0.42 };
+
+export type PaintingUniforms = ReturnType<typeof makePaintingUniforms>;
+export const makePaintingUniforms = () => ({
+  uTime: { value: 0 },
+  uMoths: { value: 0 },
+  uWarm: { value: 0 },
+  uShiver: { value: 0 },
+  uFlash: { value: 0 },
+  uFade: { value: 0 },
+  uText: { value: blankTex as THREE.Texture },
+  uTextAmt: { value: 0 },
+  uFill: PICTURE_FILL,
+});
+
+/**
+ * The material every painting in the house uses (one shader program for all 25): the artwork as its map,
+ * the living effects (all off unless a lesson turns them on) and the picture fill.
+ */
+export function makePaintingMaterial(map: THREE.Texture, uniforms: PaintingUniforms, roughness = 0.55) {
+  const m = new THREE.MeshStandardMaterial({ map, roughness, metalness: 0 });
+  m.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        uniform float uTime, uMoths, uWarm, uShiver, uFlash, uFade, uTextAmt, uFill;
+        uniform sampler2D uText;
+        ${MOTHS_GLSL}`,
+      )
+      .replace(
+        '#include <map_fragment>',
+        `vec2 puv = vMapUv + vec2(sin(uTime * 41.0 + vMapUv.y * 90.0), cos(uTime * 37.0 + vMapUv.x * 70.0)) * 0.0016 * uShiver;
+        vec4 sampledDiffuseColor = texture2D(map, puv);
+        diffuseColor *= sampledDiffuseColor;
+        float lumi = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(lumi) * vec3(0.32, 0.3, 0.28), uFade * 0.8);
+        diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.45, 1.2, 0.68) + vec3(0.06, 0.04, 0.0), uWarm);
+        // The moth loop is skipped entirely unless a lesson has called the moths (uniform branch).
+        vec3 mo = uMoths > 0.001 ? moths(puv, uTime) * uMoths : vec3(0.0);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.01, 0.008, 0.006), mo.z);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.05, 0.04, 0.03), mo.x);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.1, 0.085, 0.064), mo.y * 0.6);
+        vec4 tx = texture2D(uText, vMapUv);
+        diffuseColor.rgb = mix(diffuseColor.rgb, tx.rgb, tx.a * uTextAmt);`,
+      )
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        totalEmissiveRadiance += diffuseColor.rgb * uFill;
+        totalEmissiveRadiance += vec3(0.55, 0.62, 0.8) * uFlash * (0.25 + lumi * 2.5);
+        totalEmissiveRadiance += vec3(0.55, 0.38, 0.1) * uWarm * (0.15 + lumi * 1.2);`,
+      );
+  };
+  m.customProgramCacheKey = () => 'living-painting';
+  return m;
+}
+
 export function useLivingMaterial(art: ArtId, fx?: LivingFx) {
   const textTex = useRef<THREE.Texture | null>(null);
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uMoths: { value: 0 },
-      uWarm: { value: 0 },
-      uShiver: { value: 0 },
-      uFlash: { value: 0 },
-      uFade: { value: 0 },
-      uText: { value: blankTex as THREE.Texture },
-      uTextAmt: { value: 0 },
-    }),
-    [],
-  );
-  const mat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({ map: artTexture(art), roughness: 0.55, metalness: 0 });
-    if (fx) {
-      m.onBeforeCompile = (shader) => {
-        Object.assign(shader.uniforms, uniforms);
-        shader.fragmentShader = shader.fragmentShader
-          .replace(
-            '#include <common>',
-            `#include <common>
-            uniform float uTime, uMoths, uWarm, uShiver, uFlash, uFade, uTextAmt;
-            uniform sampler2D uText;
-            ${MOTHS_GLSL}`,
-          )
-          .replace(
-            '#include <map_fragment>',
-            `vec2 puv = vMapUv + vec2(sin(uTime * 41.0 + vMapUv.y * 90.0), cos(uTime * 37.0 + vMapUv.x * 70.0)) * 0.0016 * uShiver;
-            vec4 sampledDiffuseColor = texture2D(map, puv);
-            diffuseColor *= sampledDiffuseColor;
-            float lumi = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
-            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(lumi) * vec3(0.32, 0.3, 0.28), uFade * 0.8);
-            diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.45, 1.2, 0.68) + vec3(0.06, 0.04, 0.0), uWarm);
-            vec3 mo = moths(puv, uTime) * uMoths;
-            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.01, 0.008, 0.006), mo.z);
-            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.05, 0.04, 0.03), mo.x);
-            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.1, 0.085, 0.064), mo.y * 0.6);
-            vec4 tx = texture2D(uText, vMapUv);
-            diffuseColor.rgb = mix(diffuseColor.rgb, tx.rgb, tx.a * uTextAmt);`,
-          )
-          .replace(
-            '#include <emissivemap_fragment>',
-            `#include <emissivemap_fragment>
-            totalEmissiveRadiance += vec3(0.55, 0.62, 0.8) * uFlash * (0.25 + lumi * 2.5);
-            totalEmissiveRadiance += vec3(0.55, 0.38, 0.1) * uWarm * (0.15 + lumi * 1.2);`,
-          );
-      };
-      m.customProgramCacheKey = () => 'living-painting';
-    }
-    return m;
-  }, [art, fx, uniforms]);
+  const uniforms = useMemo(makePaintingUniforms, []);
+  const mat = useMemo(() => makePaintingMaterial(artTexture(art), uniforms), [art, uniforms]);
 
   useFrame(() => {
     if (!fx) return;
@@ -252,8 +276,23 @@ export interface HungPainting {
   /** Small rotation about the hanging point, radians. */
   tilt: number;
   swapArt?: (art: ArtId) => void;
+  /** The artwork showing right now (the Lady's portrait changes; the viewer shows the same state). */
+  art?: ArtId;
+  /** Living effects on this canvas (so the viewer can show a faded or written-on painting as it is). */
+  fx?: LivingFx;
 }
 export const hungPaintings = new Map<string, HungPainting>();
+
+/**
+ * Open the painting viewer: the whole artwork in a museum-style panel, with the camera left exactly
+ * where the student is standing (closing the viewer returns them to the same view).
+ */
+export function openPaintingViewer(id: string) {
+  const s = useGame.getState();
+  if (document.pointerLockElement) document.exitPointerLock();
+  s.setHover(null);
+  s.setInspecting(id);
+}
 
 // ------------------------------------------------------------------ the painting
 
@@ -290,15 +329,18 @@ export function ArtPainting({ id, art, x, y, width, frame = 'frame', nameplate, 
       id,
       group: group.current,
       tilt: 0,
+      art: artId,
+      fx,
       swapArt: (a) => {
         mat.map = artTexture(a);
         mat.needsUpdate = true;
+        entry.art = a;
       },
     };
     tiltRef.current = entry;
     hungPaintings.set(id, entry);
     return () => void hungPaintings.delete(id);
-  }, [id, mat]);
+  }, [id, mat, artId, fx]);
 
   useFrame(() => {
     const e = tiltRef.current;
@@ -307,20 +349,7 @@ export function ArtPainting({ id, art, x, y, width, frame = 'frame', nameplate, 
     group.current.rotation.z += (e.tilt - group.current.rotation.z) * Math.min(1, world.dt * 6);
   });
 
-  const inspect = () => {
-    const s = useGame.getState();
-    const o = new THREE.Vector3();
-    const n = new THREE.Vector3();
-    group.current.getWorldPosition(o);
-    group.current.getWorldDirection(n);
-    o.y -= h / 2; // group origin is the nail above the frame
-    const dist = Math.max(1.3, (h + 0.5) / 0.95);
-    const pos: [number, number, number] = [o.x + n.x * dist, o.y + 0.05, o.z + n.z * dist];
-    if (document.pointerLockElement) document.exitPointerLock();
-    s.setHover(null);
-    // Aim a little below centre so the painting sits above the caption card.
-    s.setInspecting(id, { position: pos, target: [o.x, o.y - (h + 0.4) * 0.3, o.z] });
-  };
+  const inspect = () => openPaintingViewer(id);
 
   const body = (
     <group>
@@ -356,6 +385,46 @@ export function ArtPainting({ id, art, x, y, width, frame = 'frame', nameplate, 
       </mesh>
       {nameplate && <Nameplate text={nameplate} y={-h - (frame === 'ornateFrame' ? 0.24 : 0.17)} />}
       {pictureLight > 0 && <PictureLight width={width} h={h} intensity={pictureLight} frame={frame} />}
+    </group>
+  );
+}
+
+/**
+ * A decorative painting (local wall frame). `art` is its id in the painting manifest; the height follows
+ * the artwork file's own aspect ratio, so the image is never stretched or cropped. Examining it is optional:
+ * E (or a click) opens the same viewer as the lesson paintings, with its museum label.
+ */
+export function Painting({ x, y, w, art }: { x: number; y: number; w: number; art: DecorId }) {
+  const h = w / decorAspect(art);
+  const uniforms = useMemo(makePaintingUniforms, []);
+  const mat = useMemo(() => makePaintingMaterial(paintingTexture(DECOR_IMAGES[art], (t) => renderer.gl?.initTexture(t))!, uniforms, 0.5), [art, uniforms]);
+  const root = useRef<THREE.Group>(null!);
+  // Paintings hung high in the two-storey hall can only be reached by looking up from the floor.
+  const [reach, setReach] = useState(4.2);
+  useEffect(() => {
+    const p = new THREE.Vector3();
+    root.current.getWorldPosition(p);
+    if (p.y > 3) setReach(12);
+  }, []);
+  const m = mats();
+  return (
+    <group ref={root} position={[x, y, 0.02]} rotation={[-0.04, 0, 0]} name={`decor-${art}`} userData={{ decorPainting: art }}>
+      <Interactive
+        id={`painting-${art}`}
+        maxDist={reach}
+        label={() => (game().lessonActive || game().inspecting ? null : 'Look closer at the painting')}
+        onUse={() => openPaintingViewer(art)}
+      >
+        <mesh material={mat} position={[0, 0, 0.012]}>
+          <planeGeometry args={[w, h]} />
+        </mesh>
+        <mesh geometry={boxGeo(w + 0.02, h + 0.02, 0.02)} material={m.blackPaint} position={[0, 0, 0]} />
+        <ProfileFrame w={w} h={h} profile="frame" material={m.gilt} />
+      </Interactive>
+      {/* Hanging cord to the picture rail */}
+      <mesh material={m.brass} position={[0, h / 2 + 0.5, -0.01]}>
+        <cylinderGeometry args={[0.002, 0.002, 1.0, 4]} />
+      </mesh>
     </group>
   );
 }

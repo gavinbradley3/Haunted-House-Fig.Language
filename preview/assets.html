@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%23100c08%22/%3E%3Ccircle cx=%2212%22 cy=%2216%22 r=%225%22 fill=%22none%22 stroke=%22%23cfa95f%22 stroke-width=%222%22/%3E%3Cpath d=%22M17 16h11M24 16v5%22 stroke=%22%23cfa95f%22 stroke-width=%222%22/%3E%3C/svg%3E" />
+    <title>Phase 7 Asset Preview</title>
+    <style>
+      html, body, #root { margin: 0; height: 100%; background: #05070a; overflow: hidden; }
+      #hud { position: fixed; left: 12px; top: 10px; font: 12px/1.45 ui-monospace, Consolas, monospace; color: #d9cfb8; background: rgba(5, 7, 10, 0.72); padding: 8px 10px; border: 1px solid #3a3226; white-space: pre; pointer-events: none; z-index: 2; }
+      #hud b { color: #f0c27a; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="hud">loading…</div>
+    <!-- Dev-only page (not part of `npm run build`): compares the Phase 7 pilot models with the procedural originals. -->
+    <script type="module" src="/src/preview/assets.tsx"></script>
+  </body>
+</html>

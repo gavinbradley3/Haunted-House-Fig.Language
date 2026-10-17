@@ -13,8 +13,8 @@ import { mats } from '../systems/materials';
 import { world } from '../systems/time';
 import { GALLERY, WALL_T } from '../world/layout';
 import { Cornice, OnWall, PanelField, Run, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
-import { ArtPainting } from './parts/Artwork';
-import { Painting, Stanchions } from './parts/Furnishings';
+import { ArtPainting, Painting } from './parts/Artwork';
+import { Stanchions } from './parts/Furnishings';
 import { Sconce } from './parts/Lights';
 import { CollectibleKey } from './parts/Key';
 import { RoundedBox } from '@react-three/drei';
@@ -196,8 +196,8 @@ export function PortraitGallery() {
         <Wainscot x0={x0} x1={x1} height={1.3} />
         <Run profile="pictureRail" x0={x0} x1={x1} y={4.3} material={m.gilt} />
         <ArtPainting id="oldManShadow" x={GALLERY.oldMan.x} y={GALLERY.oldMan.y} width={GALLERY.oldMan.width} fx={gfx.oldMan} pictureLight={4} nameplate={oldManTitle} />
-        <Painting x={-6.3} y={2.4} w={1.15} h={0.85} kind="sea" seed={21} />
-        <Painting x={-3.3} y={2.0} w={0.6} h={0.75} kind="stilllife" seed={22} />
+        <Painting x={-6.3} y={2.4} w={1.15} art="D06" />
+        <Painting x={-3.3} y={2.0} w={0.6} art="D07" />
         <Sconce x={-12.4} y={2.3} seed={71} light={false} />
       </OnWall>
 
@@ -206,8 +206,8 @@ export function PortraitGallery() {
         <Wainscot x0={wallLocal('x', -1, x1)} x1={wallLocal('x', -1, x0)} height={1.3} />
         <Run profile="pictureRail" x0={wallLocal('x', -1, x1)} x1={wallLocal('x', -1, x0)} y={4.3} material={m.gilt} />
         <ArtPainting id="nervousSitter" x={wallLocal('x', -1, GALLERY.sitter.x)} y={GALLERY.sitter.y} width={GALLERY.sitter.width} fx={gfx.sitter} pictureLight={4} nameplate={() => PAINTINGS.nervousSitter.title} />
-        <Painting x={wallLocal('x', -1, -6.3)} y={2.4} w={1.1} h={0.85} kind="moonhouse" seed={23} />
-        <Painting x={wallLocal('x', -1, -3.3)} y={2.0} w={0.55} h={0.7} kind="portrait" seed={24} />
+        <Painting x={wallLocal('x', -1, -6.3)} y={2.4} w={1.1} art="D08" />
+        <Painting x={wallLocal('x', -1, -3.3)} y={2.0} w={0.55} art="D09" />
         <Sconce x={wallLocal('x', -1, -12.4)} y={2.3} seed={72} light={false} />
       </OnWall>
 

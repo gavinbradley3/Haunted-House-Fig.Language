@@ -17,7 +17,8 @@ import { world } from '../systems/time';
 import { ECHOES, MIRRORS, NURSERY, WALL_T } from '../world/layout';
 import { KeyedDoor } from './parts/KeyedDoor';
 import { Architrave, Cornice, OnWall, Run, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
-import { Painting, Rug, SashWindow } from './parts/Furnishings';
+import { Rug, SashWindow } from './parts/Furnishings';
+import { Painting } from './parts/Artwork';
 import { CollectibleKey } from './parts/Key';
 import { Interactive } from './Interactive';
 
@@ -336,15 +337,15 @@ export function Nursery() {
         <Wainscot x0={x0} x1={x1} height={0.9} gaps={[[ECHOES.doorX, 0.96 + 0.3]]} />
         <Architrave c={ECHOES.doorX} w={0.96} h={2.3} material={m.paintTrim} />
         <Run profile="pictureRail" x0={x0} x1={x1} y={2.5} material={m.paintTrim} />
-        <Painting x={-7.0} y={1.75} w={0.55} h={0.7} kind="portrait" seed={61} />
+        <Painting x={-7.0} y={1.75} w={0.55} art="D14" />
       </OnWall>
       {/* East wall (the nursery side of the mirror room's wall), around the hidden door */}
       <OnWall axis="z" face={x1} normal={-1}>
         <Wainscot x0={wallLocal('z', -1, zN)} x1={wallLocal('z', -1, zS)} height={0.9} gaps={[[wallLocal('z', -1, jib.z), jib.width + 0.3]]} />
         <Architrave c={wallLocal('z', -1, jib.z)} w={jib.width} h={jib.height} material={m.paintTrim} />
         <Run profile="pictureRail" x0={wallLocal('z', -1, zN)} x1={wallLocal('z', -1, zS)} y={2.5} material={m.paintTrim} />
-        <Painting x={wallLocal('z', -1, -20.6)} y={1.7} w={0.6} h={0.45} kind="forest" seed={62} />
-        <Painting x={wallLocal('z', -1, -25.9)} y={1.7} w={0.5} h={0.6} kind="moonhouse" seed={63} />
+        <Painting x={wallLocal('z', -1, -20.6)} y={1.7} w={0.6} art="D15" />
+        <Painting x={wallLocal('z', -1, -25.9)} y={1.7} w={0.5} art="D16" />
       </OnWall>
 
       {/* Room 5, the music room, through the south wall */}

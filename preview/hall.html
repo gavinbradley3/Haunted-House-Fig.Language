@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%23100c08%22/%3E%3Ccircle cx=%2212%22 cy=%2216%22 r=%225%22 fill=%22none%22 stroke=%22%23cfa95f%22 stroke-width=%222%22/%3E%3Cpath d=%22M17 16h11M24 16v5%22 stroke=%22%23cfa95f%22 stroke-width=%222%22/%3E%3C/svg%3E" />
+    <title>Phase 7 Hall Pilot</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #07080a; overflow: hidden; }
+      #boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+        color: #c9b48a; font-family: Georgia, serif; letter-spacing: 0.3em; font-size: 14px; text-transform: uppercase; }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only page (not part of `npm run build`): the real game with the Phase 7 pilots
+         substituted into the entrance hall. ?pilot=0 runs the identical page without them. -->
+    <div id="boot">The house is waking&hellip;</div>
+    <div id="root"></div>
+    <script type="module" src="/src/preview/hall.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,239 @@
+{
+  "hall-entry": {
+    "meanMs": 54.94,
+    "p95Ms": 68.7,
+    "calls": 1240,
+    "triangles": 158653,
+    "geometries": 576,
+    "textures": 174,
+    "programs": 36
+  },
+  "console-and-painting": {
+    "meanMs": 47.01,
+    "p95Ms": 149.8,
+    "calls": 780,
+    "triangles": 99740,
+    "geometries": 576,
+    "textures": 174,
+    "programs": 36
+  },
+  "console-close": {
+    "meanMs": 50.97,
+    "p95Ms": 104.9,
+    "calls": 748,
+    "triangles": 99922,
+    "geometries": 576,
+    "textures": 174,
+    "programs": 36
+  },
+  "kitchen-door": {
+    "meanMs": 37.92,
+    "p95Ms": 113.5,
+    "calls": 484,
+    "triangles": 66437,
+    "geometries": 576,
+    "textures": 174,
+    "programs": 36
+  },
+  "front-doors": {
+    "meanMs": 45.45,
+    "p95Ms": 136.6,
+    "calls": 875,
+    "triangles": 107234,
+    "geometries": 576,
+    "textures": 174,
+    "programs": 36
+  },
+  "painting-close": {
+    "meanMs": 44.46,
+    "p95Ms": 119.6,
+    "calls": 686,
+    "triangles": 86793,
+    "geometries": 576,
+    "textures": 174,
+    "programs": 36
+  },
+  "pilot": {
+    "pilot": true,
+    "loadMs": 8567,
+    "candelabrumRaisedTo": 0.945,
+    "console": {
+      "retiredMeshes": 7,
+      "top": 0.949
+    },
+    "door": {
+      "retiredArchitraveMeshes": 9
+    },
+    "compileMs": 1160,
+    "installMs": 9754,
+    "added": {
+      "console": {
+        "tris": 7566,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 12582911
+      },
+      "doorLeaf": {
+        "tris": 1928,
+        "draws": 3,
+        "materials": 3,
+        "textures": 4,
+        "texBytes": 6640980
+      },
+      "architrave": {
+        "tris": 1766,
+        "draws": 1,
+        "materials": 1,
+        "textures": 1,
+        "texBytes": 5592405
+      },
+      "frame": {
+        "tris": 8012,
+        "draws": 2,
+        "materials": 2,
+        "textures": 4,
+        "texBytes": 4893354
+      }
+    },
+    "retired": [
+      {
+        "tris": 12,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 12,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 528,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 528,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 528,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 528,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 12,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 1024,
+        "draws": 18,
+        "materials": 3,
+        "textures": 6,
+        "texBytes": 5242878
+      },
+      {
+        "tris": 36,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 36,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 36,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 12,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 288,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 12,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 12,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 288,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 12,
+        "draws": 1,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 4194303
+      },
+      {
+        "tris": 12,
+        "draws": 1,
+        "materials": 1,
+        "textures": 0,
+        "texBytes": 0
+      },
+      {
+        "tris": 128,
+        "draws": 4,
+        "materials": 1,
+        "textures": 3,
+        "texBytes": 1048575
+      }
+    ],
+    "showing": "pilot",
+    "ready": true
+  },
+  "gpu": "ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00009BC8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "quality": "low"
+}

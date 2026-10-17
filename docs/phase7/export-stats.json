@@ -1,0 +1,40 @@
+{
+ "console_table_walnut": {
+  "triangles": 7566,
+  "materials": [
+   "M_ConsoleTable_Walnut"
+  ],
+  "textures": [
+   "ClassicConsole_01_nor_gl.png 1024x1024",
+   "ClassicConsole_01_roughness.png@512 512x512",
+   "T_ConsoleTable_diff 1024x1024"
+  ],
+  "glb_bytes": 601584
+ },
+ "door_kit_victorian": {
+  "triangles": 2832,
+  "materials": [
+   "M_BlackPaint",
+   "M_Brass",
+   "M_DoorWalnut"
+  ],
+  "textures": [
+   "T_DoorWalnut_diff 1024x1024"
+  ],
+  "glb_bytes": 174660
+ },
+ "frame_kit_ornate": {
+  "triangles": 2115,
+  "materials": [
+   "M_FrameOrnate_Corner",
+   "M_FrameOrnate_Rail"
+  ],
+  "textures": [
+   "T_FrameOrnate_Corner_diff 512x512",
+   "T_FrameOrnate_Corner_nrm 512x512",
+   "T_FrameOrnate_Corner_rough 512x512",
+   "T_FrameOrnate_Rail_diff 512x256"
+  ],
+  "glb_bytes": 199656
+ }
+}

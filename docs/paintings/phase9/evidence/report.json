@@ -1,0 +1,34 @@
+{
+  "mothShots": 3,
+  "before": {
+    "heapMB": 273.6,
+    "textures": 132,
+    "geometries": 632,
+    "programs": 31,
+    "imgs": 0,
+    "frameMs": 22.7
+  },
+  "whileOpenFrameMs": 24.1,
+  "after": {
+    "heapMB": 273.9,
+    "textures": 132,
+    "geometries": 632,
+    "programs": 31,
+    "imgs": 0,
+    "frameMs": 22.6
+  },
+  "openMs": {
+    "first8": [
+      19,
+      30,
+      30,
+      30,
+      29,
+      27,
+      20,
+      19
+    ],
+    "repeatMedian": 12
+  },
+  "errors": []
+}
