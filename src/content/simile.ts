@@ -92,7 +92,7 @@ export const SIMILE = {
     kicker: 'Play  ·  Challenge A',
     title: 'Find the Genuine Simile',
     prompt: 'Only one of these sentences is a simile. Which one?',
-    discussion: 'Talk with a partner. Be ready to explain why the other two are not similes.',
+    discussion: 'Before you check, can you explain why the other two are not similes?',
     options: [
       {
         id: 'a',
@@ -184,7 +184,7 @@ export const SIMILE = {
     kicker: 'Prove',
     title: "The Mirror's Final Request",
     baseSentence: 'The old clock ticked loudly.',
-    task: 'With a partner, rewrite this sentence using a simile that makes the room feel unsettling.',
+    task: 'Rewrite this sentence using a simile that makes the room feel unsettling.',
     starters: ['The old clock ticked like…', 'Each tick was as … as …', 'The ticking sounded like…'],
     criteria: [
       'Compares two different things',

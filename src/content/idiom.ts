@@ -182,7 +182,7 @@ export const IDIOM = {
     kicker: 'Prove',
     title: 'The Kitchen Slate',
     baseSentence: 'Everyone was nervous about opening the locked door.',
-    task: 'With a partner, write a sentence about the house that uses ONE of the kitchen’s idioms correctly. The rest of the sentence should make its real meaning clear.',
+    task: 'Write a sentence about the house that uses ONE of the kitchen’s idioms correctly. The rest of the sentence should make its real meaning clear.',
     starters: ['Opening the door was not…', 'If we get caught, we will be…', 'Somebody has to…'],
     criteria: ['Uses one of the kitchen’s idioms', 'Uses it with its real (not literal) meaning', 'The context makes the meaning clear'],
     questions: ['Which idiom did you use?', 'What does it really mean?', 'Which words in your sentence are the clue?'],

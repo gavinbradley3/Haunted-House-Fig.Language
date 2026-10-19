@@ -60,7 +60,7 @@ export const ONOMATOPOEIA = {
     labelB: 'Description B',
     descriptionA: 'The pipe made a noise in the dark.',
     descriptionB: 'Drip. Drip. Drip. The pipe would not stop.',
-    askB: 'Which words in this description sound like the noise itself? Say them aloud.',
+    askB: 'Which words in this description sound like the noise itself? Say them quietly to yourself.',
     questions: [
       'Which description lets you hear the room?',
       'Say “drip” slowly. How is the word like the sound?',
@@ -124,8 +124,8 @@ export const ONOMATOPOEIA = {
     kicker: 'Play  ·  Challenge A',
     title: 'Name That Sound',
     prompt: 'Objects in the room are making sounds. Play each one, listen, and choose the word that imitates it. Each sound also has a written caption, and its object glows while it plays.',
-    discussion: 'Listen first, then say each word aloud. Which one sounds like what you heard?',
-    retryHint: 'Play the sound again and say the words aloud.',
+    discussion: 'Listen first, then say each word quietly to yourself. Which one sounds like what you heard?',
+    retryHint: 'Play the sound again (or read its caption) and say the words quietly to yourself.',
     options: [],
     items: [
       {
@@ -177,8 +177,8 @@ export const ONOMATOPOEIA = {
     kicker: 'Play  ·  Challenge B',
     title: 'Find the Sound Word',
     prompt: 'These lines were found on the music stand. In each one, choose the word that imitates a sound. One line has no sound word at all.',
-    discussion: 'Read each line aloud. Which word sounds like the noise it names?',
-    retryHint: 'Say each word aloud. Does it sound like a noise?',
+    discussion: 'Say each line quietly to yourself. Which word sounds like the noise it names?',
+    retryHint: 'Say each word quietly to yourself. Does it sound like a noise?',
     options: [],
     items: [
       {
@@ -258,7 +258,7 @@ export const ONOMATOPOEIA = {
     kicker: 'Prove',
     title: 'The Midnight Score',
     baseSentence: 'The music room was noisy at midnight.',
-    task: 'With a partner, rewrite this sentence so the reader can HEAR the room. Use at least one onomatopoeia that fits the thing making the sound, and keep the room eerie.',
+    task: 'Rewrite this sentence so the reader can HEAR the room. Use at least one onomatopoeia that fits the thing making the sound, and keep the room eerie.',
     starters: ['At midnight the piano went…', 'Drip … drip …', 'Somewhere in the dark, a …'],
     criteria: ['Uses at least one word that imitates a sound', 'Each sound word fits the thing making the sound', 'The sounds make the room feel eerie'],
     questions: ['Which words imitate sounds?', 'What is making each sound?', 'How do the sounds change the mood?'],

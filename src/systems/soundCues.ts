@@ -36,3 +36,19 @@ export function onCaption(fn: (caption: string) => void) {
   listeners.add(fn);
   return () => void listeners.delete(fn);
 }
+
+const houseListeners = new Set<(caption: string) => void>();
+
+/**
+ * Caption one of the house's own noises (a creak, a knock, steps somewhere else). Shown according to
+ * the student's caption setting: by default only when their sound is off, so a student playing
+ * muted in a busy classroom still notices that something happened.
+ */
+export function showHouseCaption(caption: string) {
+  for (const l of houseListeners) l(caption);
+}
+
+export function onHouseCaption(fn: (caption: string) => void) {
+  houseListeners.add(fn);
+  return () => void houseListeners.delete(fn);
+}

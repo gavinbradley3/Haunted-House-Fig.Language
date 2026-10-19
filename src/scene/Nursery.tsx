@@ -17,7 +17,8 @@ import { world } from '../systems/time';
 import { ECHOES, MIRRORS, NURSERY, WALL_T } from '../world/layout';
 import { KeyedDoor } from './parts/KeyedDoor';
 import { Architrave, Cornice, OnWall, Run, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
-import { Painting, Rug, SashWindow } from './parts/Furnishings';
+import { Rug, SashWindow } from './parts/Furnishings';
+import { Painting } from './parts/Artwork';
 import { CollectibleKey } from './parts/Key';
 import { Interactive } from './Interactive';
 
@@ -37,12 +38,111 @@ function AwakeTicker() {
 
 const shiver = (seed: number) => (nfx.shiver > 0 ? Math.sin(world.t * 53 + seed) * 0.02 * Math.min(1, nfx.shiver) : 0);
 
-/** A rocking horse on bow rockers. Sulking, it rocks slowly and turns its head away. */
+/** Dapple-grey paint, as on a Victorian carved horse: pale grey with darker rings around lighter spots. */
+function dappleTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#9d998f';
+  g.fillRect(0, 0, 256, 256);
+  let seed = 7;
+  const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 260; i++) {
+    const x = r() * 256;
+    const y = r() * 256;
+    const rad = 3 + r() * 5;
+    const grad = g.createRadialGradient(x, y, rad * 0.3, x, y, rad);
+    grad.addColorStop(0, 'rgba(196,192,183,0.7)');
+    grad.addColorStop(0.75, 'rgba(128,124,116,0.35)');
+    grad.addColorStop(1, 'rgba(128,124,116,0)');
+    g.fillStyle = grad;
+    g.beginPath();
+    g.arc(x, y, rad, 0, Math.PI * 2);
+    g.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+/** A tapered limb from a to b (a cylinder rotated into place). */
+function Limb({ a, b, r0, r1, material }: { a: [number, number, number]; b: [number, number, number]; r0: number; r1: number; material: THREE.Material }) {
+  const { pos, quat, len } = useMemo(() => {
+    const va = new THREE.Vector3(...a);
+    const vb = new THREE.Vector3(...b);
+    const dir = vb.clone().sub(va);
+    return { pos: va.clone().add(vb).multiplyScalar(0.5), quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()), len: dir.length() };
+  }, [a, b]);
+  return (
+    <mesh material={material} position={pos} quaternion={quat} castShadow>
+      <cylinderGeometry args={[r1, r0, len, 10]} />
+    </mesh>
+  );
+}
+
+const HORSE = (() => {
+  // Body: a barrel, deeper at the chest than the rump, lying along +x (the chest end).
+  const body = new THREE.LatheGeometry(
+    [
+      [0.0, -0.37],
+      [0.08, -0.35],
+      [0.13, -0.26],
+      [0.145, -0.08],
+      [0.145, 0.1],
+      [0.135, 0.24],
+      [0.09, 0.33],
+      [0.0, 0.36],
+    ].map(([r, y]) => new THREE.Vector2(r, y)),
+    20,
+  );
+  body.rotateZ(-Math.PI / 2);
+  body.scale(1, 1.05, 0.82);
+  // Head: a carved side profile, from the poll to the muzzle, bevelled like carved wood.
+  const hs = new THREE.Shape();
+  hs.moveTo(-0.03, 0.05);
+  hs.quadraticCurveTo(0.06, 0.08, 0.12, 0.035);
+  hs.lineTo(0.215, -0.01);
+  hs.quadraticCurveTo(0.255, -0.03, 0.24, -0.07);
+  hs.quadraticCurveTo(0.2, -0.1, 0.13, -0.085);
+  hs.quadraticCurveTo(0.05, -0.1, 0.0, -0.06);
+  hs.quadraticCurveTo(-0.05, -0.02, -0.03, 0.05);
+  const head = new THREE.ExtrudeGeometry(hs, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.02, bevelSegments: 3, curveSegments: 10 });
+  head.translate(0, 0, -0.025);
+  // Mane: a ragged strip of horsehair along the crest of the neck.
+  const ms = new THREE.Shape();
+  ms.moveTo(0, 0);
+  for (let i = 0; i <= 8; i++) ms.lineTo(0.03 + i * 0.03, (i % 2 ? 0.05 : 0.07) - i * 0.003);
+  ms.lineTo(0.27, 0.0);
+  ms.lineTo(0, -0.02);
+  const mane = new THREE.ExtrudeGeometry(ms, { depth: 0.03, bevelEnabled: false });
+  mane.translate(0, 0, -0.015);
+  return { body, head, mane };
+})();
+
+const LEGS: { a: [number, number, number]; b: [number, number, number] }[] = [
+  { a: [0.2, 0.52, 0.07], b: [0.42, 0.13, 0.1] },
+  { a: [0.2, 0.52, -0.07], b: [0.42, 0.13, -0.1] },
+  { a: [-0.22, 0.52, 0.07], b: [-0.45, 0.13, 0.1] },
+  { a: [-0.22, 0.52, -0.07], b: [-0.45, 0.13, -0.1] },
+];
+const NECK_A: [number, number, number] = [0, 0, 0];
+const NECK_B: [number, number, number] = [0.13, 0.27, 0];
+
+/** A Victorian carved rocking horse on bow rockers. Sulking, it rocks slowly and turns its head away. */
 function RockingHorse() {
   const m = mats();
   const rocker = useRef<THREE.Group>(null!);
   const head = useRef<THREE.Group>(null!);
-  const bow = useMemo(() => new THREE.TorusGeometry(1.1, 0.025, 6, 32, 0.95), []);
+  const bow = useMemo(() => new THREE.TorusGeometry(1.1, 0.026, 8, 40, 0.95), []);
+  const mat = useMemo(
+    () => ({
+      grey: new THREE.MeshStandardMaterial({ map: dappleTexture(), roughness: 0.5, metalness: 0 }),
+      hair: new THREE.MeshStandardMaterial({ color: '#2a1f17', roughness: 0.95 }),
+      leather: new THREE.MeshStandardMaterial({ color: '#5a1612', roughness: 0.55 }),
+    }),
+    [],
+  );
   useFrame(() => {
     const a = nfx.awake.horse;
     const amp = Math.max(nfx.rock * 0.1, a * 0.07);
@@ -53,44 +153,64 @@ function RockingHorse() {
   return (
     <group position={[NURSERY.horse.x, 0, NURSERY.horse.z]} rotation={[0, -0.6, 0]}>
       <group ref={rocker}>
-        {[-0.17, 0.17].map((z) => (
-          <mesh key={z} geometry={bow} material={m.toyRed} position={[0, 1.1 + 0.02, z]} rotation={[0, 0, -Math.PI / 2 - 0.475]} castShadow />
+        {/* Bow rockers with their stretchers */}
+        {[-0.13, 0.13].map((z) => (
+          <mesh key={z} geometry={bow} material={m.toyRed} position={[0, 1.12, z]} rotation={[0, 0, -Math.PI / 2 - 0.475]} castShadow />
         ))}
-        {[-0.3, 0.3].map((x) => (
-          <mesh key={x} geometry={boxGeo(0.04, 0.03, 0.4)} material={m.toyRed} position={[x, 0.06, 0]} />
+        {[-0.32, 0, 0.32].map((x) => (
+          <mesh key={x} geometry={boxGeo(0.035, 0.03, 0.29)} material={m.toyRed} position={[x, x ? 0.065 : 0.03, 0]} />
         ))}
-        {[
-          [-0.22, -0.11],
-          [-0.22, 0.11],
-          [0.22, -0.11],
-          [0.22, 0.11],
-        ].map(([x, z], i) => (
-          <mesh key={i} material={m.toyCream} position={[x, 0.3, z]} rotation={[0, 0, x * -0.6]}>
-            <cylinderGeometry args={[0.025, 0.02, 0.48, 8]} />
-          </mesh>
-        ))}
-        {/* Body, saddle */}
-        <mesh material={m.toyCream} position={[0, 0.6, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-          <capsuleGeometry args={[0.13, 0.42, 6, 14]} />
-        </mesh>
-        <mesh geometry={boxGeo(0.26, 0.04, 0.3)} material={m.toyRed} position={[-0.02, 0.74, 0]} />
-        {/* Neck and head */}
-        <group ref={head} position={[0.28, 0.72, 0]}>
-          <mesh material={m.toyCream} position={[0.06, 0.13, 0]} rotation={[0, 0, -0.5]} castShadow>
-            <capsuleGeometry args={[0.07, 0.22, 6, 12]} />
-          </mesh>
-          <mesh material={m.toyCream} position={[0.2, 0.26, 0]} rotation={[0, 0, -1.25]} castShadow>
-            <capsuleGeometry args={[0.065, 0.16, 6, 12]} />
-          </mesh>
-          <mesh geometry={boxGeo(0.2, 0.06, 0.03)} material={m.toyRed} position={[0.02, 0.24, 0]} rotation={[0, 0, -0.6]} />
-          {[-0.045, 0.045].map((z) => (
-            <mesh key={z} material={m.blackPaint} position={[0.2, 0.31, z]}>
-              <sphereGeometry args={[0.013, 8, 6]} />
+        {/* Legs in a gallop, hooves fixed to the bows */}
+        {LEGS.map((l, i) => (
+          <group key={i}>
+            <Limb a={l.a} b={l.b} r0={0.034} r1={0.022} material={mat.grey} />
+            <mesh material={m.blackPaint} position={l.b}>
+              <cylinderGeometry args={[0.027, 0.03, 0.04, 10]} />
             </mesh>
-          ))}
+          </group>
+        ))}
+        {/* Body, saddle cloth, saddle and stirrups */}
+        <mesh geometry={HORSE.body} material={mat.grey} position={[0, 0.62, 0]} castShadow />
+        <mesh geometry={boxGeo(0.24, 0.012, 0.3, 'x')} material={m.velvetOx} position={[-0.02, 0.745, 0]} rotation={[0, 0, 0.02]} />
+        <mesh geometry={boxGeo(0.2, 0.05, 0.2, 'x')} material={mat.leather} position={[-0.02, 0.77, 0]} castShadow />
+        {[-1, 1].map((s) => (
+          <group key={s}>
+            <mesh geometry={boxGeo(0.012, 0.18, 0.006)} material={mat.leather} position={[-0.02, 0.67, s * 0.13]} />
+            <mesh material={m.brass} position={[-0.02, 0.57, s * 0.13]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.025, 0.005, 6, 12]} />
+            </mesh>
+          </group>
+        ))}
+        {/* Tail of real horsehair */}
+        <mesh material={mat.hair} position={[-0.43, 0.56, 0]} rotation={[0, 0, -0.5]} castShadow>
+          <coneGeometry args={[0.045, 0.34, 8, 1, true]} />
+        </mesh>
+        {/* Neck and head (turned away when it sulks) */}
+        <group ref={head} position={[0.24, 0.7, 0]}>
+          <Limb a={NECK_A} b={NECK_B} r0={0.085} r1={0.06} material={mat.grey} />
+          <group position={[0.11, 0.3, 0]} rotation={[0, 0, -0.35]}>
+            <mesh geometry={HORSE.head} material={mat.grey} castShadow />
+            {/* Ears, eyes, bridle */}
+            {[-0.025, 0.025].map((z) => (
+              <mesh key={z} material={mat.grey} position={[-0.01, 0.085, z]} rotation={[0, 0, 0.3]}>
+                <coneGeometry args={[0.018, 0.06, 6]} />
+              </mesh>
+            ))}
+            {[-0.052, 0.052].map((z) => (
+              <mesh key={z} material={m.blackPaint} position={[0.07, 0.02, z]}>
+                <sphereGeometry args={[0.012, 8, 6]} />
+              </mesh>
+            ))}
+            <mesh material={mat.leather} position={[0.19, -0.035, 0]} rotation={[0, Math.PI / 2, 0]} scale={[1, 1.2, 1]}>
+              <torusGeometry args={[0.055, 0.007, 6, 16]} />
+            </mesh>
+            <mesh material={mat.leather} position={[0.06, -0.01, 0]} rotation={[0, Math.PI / 2, 0.2]} scale={[1, 1.5, 1]}>
+              <torusGeometry args={[0.06, 0.006, 6, 16]} />
+            </mesh>
+          </group>
+          {/* Mane along the crest of the neck */}
+          <mesh geometry={HORSE.mane} material={mat.hair} position={[-0.05, 0.03, 0]} rotation={[0, 0, 1.12]} />
         </group>
-        {/* Tail */}
-        <mesh geometry={boxGeo(0.04, 0.22, 0.04)} material={m.toyRed} position={[-0.36, 0.55, 0]} rotation={[0, 0, 0.5]} />
       </group>
     </group>
   );
@@ -142,6 +262,30 @@ function MusicBox() {
 }
 
 /** A dollhouse that is a miniature of this very house. Watching, its windows light and blink. */
+/** The dollhouse's slate roof (a hipped ridge) and its portico pediment. */
+const DOLL_ROOF = (() => {
+  const s = new THREE.Shape();
+  s.moveTo(-0.26, 0);
+  s.lineTo(0.26, 0);
+  s.lineTo(0.05, 0.22);
+  s.lineTo(-0.05, 0.22);
+  s.closePath();
+  const g = new THREE.ExtrudeGeometry(s, { depth: 1.14, bevelEnabled: false });
+  g.translate(0, 0, -0.57);
+  g.rotateY(Math.PI / 2);
+  return g;
+})();
+const DOLL_PEDIMENT = (() => {
+  const s = new THREE.Shape();
+  s.moveTo(-0.12, 0);
+  s.lineTo(0.12, 0);
+  s.lineTo(0, 0.07);
+  s.closePath();
+  const g = new THREE.ExtrudeGeometry(s, { depth: 0.1, bevelEnabled: false });
+  g.translate(0, 0, -0.05);
+  return g;
+})();
+
 function Dollhouse() {
   const m = mats();
   const winMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#1a1814', emissive: new THREE.Color('#ffc277'), emissiveIntensity: 0, roughness: 0.6 }), []);
@@ -159,12 +303,25 @@ function Dollhouse() {
       <mesh geometry={boxGeo(1.3, 0.6, 0.6, 'x')} material={m.walnut} position={[0, 0.3, 0]} castShadow receiveShadow />
       <group position={[0, 0.6, 0]}>
         <mesh geometry={boxGeo(W, Hh, D, 'x')} material={m.toyRed} position={[0, Hh / 2, 0]} castShadow />
-        <mesh material={m.slate} position={[0, Hh + 0.12, 0]} rotation={[0, Math.PI / 4, 0]} scale={[W * 0.78, 1, D * 0.78]} castShadow>
-          <coneGeometry args={[0.72, 0.25, 4]} />
-        </mesh>
-        {/* Porch and door, like the real house */}
-        <mesh geometry={boxGeo(0.2, 0.26, 0.04)} material={m.paintCream} position={[0, 0.13, D / 2 + 0.02]} />
-        <mesh geometry={boxGeo(0.1, 0.18, 0.01)} material={m.mahogany} position={[0, 0.09, D / 2 + 0.045]} />
+        {/* Slate roof, cornice, a string course between the floors and a chimney at each end, like the real house */}
+        <mesh geometry={DOLL_ROOF} material={m.slate} position={[0, Hh + 0.02, 0]} castShadow />
+        <mesh geometry={boxGeo(W + 0.06, 0.035, D + 0.06, 'x')} material={m.paintCream} position={[0, Hh + 0.005, 0]} />
+        <mesh geometry={boxGeo(W + 0.01, 0.02, D + 0.01, 'x')} material={m.paintCream} position={[0, 0.37, 0]} />
+        {[-1, 1].map((sx) => (
+          <group key={sx} position={[sx * (W / 2 - 0.12), Hh + 0.2, 0]}>
+            <mesh geometry={boxGeo(0.09, 0.22, 0.12)} material={m.toyRed} castShadow />
+            <mesh geometry={boxGeo(0.11, 0.025, 0.14)} material={m.paintCream} position={[0, 0.12, 0]} />
+          </group>
+        ))}
+        {/* Portico with columns and a pediment, and the front door */}
+        {[-0.085, 0.085].map((x) => (
+          <mesh key={x} material={m.paintCream} position={[x, 0.13, D / 2 + 0.06]}>
+            <cylinderGeometry args={[0.012, 0.014, 0.26, 8]} />
+          </mesh>
+        ))}
+        <mesh geometry={boxGeo(0.22, 0.03, 0.1)} material={m.paintCream} position={[0, 0.275, D / 2 + 0.05]} />
+        <mesh geometry={DOLL_PEDIMENT} material={m.paintCream} position={[0, 0.29, D / 2 + 0.05]} />
+        <mesh geometry={boxGeo(0.1, 0.18, 0.01)} material={m.mahogany} position={[0, 0.09, D / 2 + 0.006]} />
         {[0.2, 0.5].flatMap((y) =>
           [-0.4, -0.2, 0.2, 0.4].map((x) => (
             <group key={`${x}${y}`} position={[x, y + 0.05, D / 2 + 0.003]}>
@@ -172,6 +329,9 @@ function Dollhouse() {
               <mesh material={winMat} position={[0, 0, 0.006]}>
                 <planeGeometry args={[0.08, 0.11]} />
               </mesh>
+              {/* Glazing bars */}
+              <mesh geometry={boxGeo(0.006, 0.11, 0.004)} material={m.paintTrim} position={[0, 0, 0.009]} />
+              <mesh geometry={boxGeo(0.08, 0.006, 0.004)} material={m.paintTrim} position={[0, 0.01, 0.009]} />
             </group>
           )),
         )}
@@ -336,15 +496,15 @@ export function Nursery() {
         <Wainscot x0={x0} x1={x1} height={0.9} gaps={[[ECHOES.doorX, 0.96 + 0.3]]} />
         <Architrave c={ECHOES.doorX} w={0.96} h={2.3} material={m.paintTrim} />
         <Run profile="pictureRail" x0={x0} x1={x1} y={2.5} material={m.paintTrim} />
-        <Painting x={-7.0} y={1.75} w={0.55} h={0.7} kind="portrait" seed={61} />
+        <Painting x={-7.0} y={1.75} w={0.55} art="D14" />
       </OnWall>
       {/* East wall (the nursery side of the mirror room's wall), around the hidden door */}
       <OnWall axis="z" face={x1} normal={-1}>
         <Wainscot x0={wallLocal('z', -1, zN)} x1={wallLocal('z', -1, zS)} height={0.9} gaps={[[wallLocal('z', -1, jib.z), jib.width + 0.3]]} />
         <Architrave c={wallLocal('z', -1, jib.z)} w={jib.width} h={jib.height} material={m.paintTrim} />
         <Run profile="pictureRail" x0={wallLocal('z', -1, zN)} x1={wallLocal('z', -1, zS)} y={2.5} material={m.paintTrim} />
-        <Painting x={wallLocal('z', -1, -20.6)} y={1.7} w={0.6} h={0.45} kind="forest" seed={62} />
-        <Painting x={wallLocal('z', -1, -25.9)} y={1.7} w={0.5} h={0.6} kind="moonhouse" seed={63} />
+        <Painting x={wallLocal('z', -1, -20.6)} y={1.7} w={0.6} art="D15" />
+        <Painting x={wallLocal('z', -1, -25.9)} y={1.7} w={0.5} art="D16" />
       </OnWall>
 
       {/* Room 5, the music room, through the south wall */}

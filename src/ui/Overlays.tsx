@@ -1,24 +1,37 @@
 import { useEffect, useState } from 'react';
 import { startIntro } from '../lesson/navigation';
+import { resumeGame } from '../lesson/resume';
+import { nextStep } from '../lesson/guide';
+import { DEVICE_ROOMS } from '../content/types';
 import type { Zone } from '../world/layout';
 import { useGame } from '../state/store';
 import { audio } from '../systems/audio';
+import { TEACHER_BUILD } from '../systems/testBuild';
 import { skipCinematic } from '../scene/Player';
+import { saveLine } from './Menu';
+import { panelSide } from '../lesson/director';
 
 export function TitleScreen() {
   const phase = useGame((s) => s.phase);
   const muted = useGame((s) => s.muted);
   const toggleMute = useGame((s) => s.toggleMute);
+  const canContinue = useGame((s) => s.canContinue);
+  const progress = useGame((s) => s.progress);
+  const saveStatus = useGame((s) => s.saveStatus);
+  const loadStatus = useGame((s) => s.loadStatus);
+  const lastSaved = useGame((s) => s.lastSaved);
   const [skip, setSkip] = useState(false);
   const [leaving, setLeaving] = useState(false);
   if (phase !== 'title' && !leaving) return null;
-  const enter = () => {
+  const go = (fn: () => void) => {
     if (leaving) return;
     audio.unlock();
     setLeaving(true);
-    startIntro(skip);
+    fn();
     window.setTimeout(() => setLeaving(false), 1200);
   };
+  const enter = () => go(() => startIntro(skip));
+  const done = DEVICE_ROOMS.filter((r) => progress.completed[r]).length;
   return (
     <div className={`title-screen ${leaving ? 'leaving' : ''}`}>
       <div className="title-kicker">A figurative language mystery</div>
@@ -29,19 +42,37 @@ export function TitleScreen() {
       <div className="title-tagline">Some doors are opened with keys. Others are opened with words.</div>
       <div className="title-rule" />
       <div className="title-actions">
-        <button className="btn primary title-enter" onClick={enter} autoFocus>
-          Enter the House
-        </button>
+        {canContinue ? (
+          <>
+            <button className="btn primary title-enter" onClick={() => go(resumeGame)} autoFocus>
+              Continue
+            </button>
+            <div className="title-progress">
+              {progress.completed.finale ? 'You have finished the house.' : `${done} of 9 rooms complete. Next: ${nextStep(progress, useGame.getState().lessons).text}`}
+            </div>
+          </>
+        ) : (
+          <button className="btn primary title-enter" onClick={enter} autoFocus>
+            Enter the House
+          </button>
+        )}
         <div className="title-options">
           <label>
             <input type="checkbox" checked={!muted} onChange={toggleMute} /> Sound on
           </label>
-          <label>
-            <input type="checkbox" checked={skip} onChange={(e) => setSkip(e.target.checked)} /> Skip the arrival
-          </label>
+          {!canContinue && (
+            <label>
+              <input type="checkbox" checked={skip} onChange={(e) => setSkip(e.target.checked)} /> Skip the arrival
+            </label>
+          )}
         </div>
+        {loadStatus === 'recovered' && <div className="title-warn">Your saved game was damaged, so the house has carried on from its backup copy.</div>}
+        {saveStatus !== 'ok' && <div className="title-warn">{saveLine(saveStatus, lastSaved)}</div>}
       </div>
-      <div className="title-hint">Best on a large screen with sound. Press T at any time for teacher controls.</div>
+      <div className="title-hint">
+        {saveStatus === 'ok' ? 'Your progress saves automatically on this Chromebook, for your school account, at this web address. Headphones help.' : 'Headphones help.'}
+        {TEACHER_BUILD ? ' Teacher edition: press T for teacher controls.' : ''}
+      </div>
     </div>
   );
 }
@@ -76,6 +107,11 @@ export function HUD() {
   const fading = useGame((s) => s.fading);
   const paused = useGame((s) => s.paused);
   const setTeacherOpen = useGame((s) => s.setTeacherOpen);
+  const setHelpOpen = useGame((s) => s.setHelpOpen);
+  const upstairs = useGame((s) => s.upstairs);
+  const step = useGame((s) => nextStep(s.progress, s.lessons).text);
+  // During a lesson the corner buttons sit on the side away from the panel, so they never cover it.
+  const buttonsLeft = useGame((s) => s.lessonActive && panelSide(s.shot) === 'right');
 
   useEffect(() => {
     if (!notice) return;
@@ -105,11 +141,11 @@ export function HUD() {
               <span className="key">E</span> use
             </span>
             <span>
-              <span className="key">Esc</span> free the mouse
+              <span className="key">Esc</span> menu
             </span>
-            <span>
-              <span className="key">T</span> teacher
-            </span>
+          </div>
+          <div className="row" style={{ marginTop: 8 }}>
+            <span>Trackpad: slide two fingers to turn</span>
           </div>
         </div>
       )}
@@ -124,48 +160,31 @@ export function HUD() {
           Skip <span className="key" style={{ marginLeft: 8 }}>Space</span>
         </button>
       )}
-      {phase === 'play' && !lessonActive && !inspecting && <div className="location">{ZONE_NAMES[zone]}</div>}
+      {phase === 'play' && !lessonActive && !inspecting && (
+        <div className="location">
+          {upstairs && zone === 'hall' ? 'The Upper Landing' : ZONE_NAMES[zone]}
+          {!cinematic && !notice && <div className="objective">{step}</div>}
+        </div>
+      )}
       {phase !== 'title' && phase !== 'loading' && (
-        <button className="teacher-key" title="Teacher controls (T)" onClick={() => setTeacherOpen(!teacherOpen)}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cfa95f" strokeWidth="1.5">
-            <circle cx="7" cy="12" r="4" />
-            <path d="M11 12h11M18 12v4M21 12v3" />
-          </svg>
-        </button>
+        <div className={`corner-buttons ${buttonsLeft ? 'left' : ''}`}>
+          <button className="menu-key" title="Menu (Esc)" aria-label="Menu" onClick={() => { if (document.pointerLockElement) document.exitPointerLock(); setHelpOpen(true); }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cfa95f" strokeWidth="1.6" aria-hidden="true">
+              <path d="M5 7h14M5 12h14M5 17h14" />
+            </svg>
+          </button>
+          {TEACHER_BUILD && (
+            <button className="teacher-key" title="Teacher controls (T)" aria-label="Teacher controls" onClick={() => setTeacherOpen(!teacherOpen)}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cfa95f" strokeWidth="1.5" aria-hidden="true">
+                <circle cx="7" cy="12" r="4" />
+                <path d="M11 12h11M18 12v4M21 12v3" />
+              </svg>
+            </button>
+          )}
+        </div>
       )}
       {paused && <div className="paused-banner">Paused</div>}
       <div className={`fade ${fading ? 'on' : ''}`} />
     </>
-  );
-}
-
-export function HelpOverlay() {
-  const helpOpen = useGame((s) => s.helpOpen);
-  const setHelpOpen = useGame((s) => s.setHelpOpen);
-  if (!helpOpen) return null;
-  return (
-    <div className="help" onClick={() => setHelpOpen(false)}>
-      <div className="box" onClick={(e) => e.stopPropagation()}>
-        <h2>Controls</h2>
-        <table>
-          <tbody>
-            <tr><td><span className="key">Click</span></td><td>Capture the mouse to look around (or drag to look)</td></tr>
-            <tr><td><span className="key">W A S D</span></td><td>Walk (hold Shift to walk faster). Arrow keys also work.</td></tr>
-            <tr><td><span className="key">E</span> / click</td><td>Open doors, look into mirrors, use objects</td></tr>
-            <tr><td><span className="key">Esc</span></td><td>Free the mouse / open this menu</td></tr>
-            <tr><td><span className="key">T</span></td><td>Teacher controls</td></tr>
-            <tr><td><span className="key">Space</span></td><td>Skip a cinematic</td></tr>
-            <tr><td><span className="key">F</span></td><td>Fullscreen</td></tr>
-            <tr><td><span className="key">M</span></td><td>Mute</td></tr>
-            <tr><td><span className="key">P</span></td><td>Pause the house</td></tr>
-          </tbody>
-        </table>
-        <div style={{ marginTop: 22, display: 'flex', justifyContent: 'flex-end' }}>
-          <button className="btn primary" onClick={() => setHelpOpen(false)}>
-            Continue
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }

@@ -117,7 +117,7 @@ export const FINALE = {
     kicker: 'Play  ·  Challenge A',
     title: 'Decode the Lady’s Letter',
     prompt: 'Nine phrases in the Lady’s letter are written in strange language, one of each kind the house has taught you. Label each one. Every phrase you decode brings light back into the hall.',
-    discussion: 'Use the nine questions from the Learn card. Read each phrase aloud: some devices are heard, not seen.',
+    discussion: 'Use the nine questions from the Learn card. Say each phrase quietly to yourself: some devices are heard, not seen.',
     retryHint: 'Look again and ask the questions in order.',
     options: [],
     items: [
@@ -222,7 +222,7 @@ export const FINALE = {
       {
         id: 'c',
         letter: 'C',
-        text: 'The house is dangerous, and the class should leave as fast as possible.',
+        text: 'The house is dangerous, and visitors should leave as fast as possible.',
         correct: false,
         verdict: 'Only half the picture',
         explanation: 'A sleeping giant can sound threatening, but the Lady also says it “dreams of company” and asks you to leave the door open. That is an invitation, not a warning.',
@@ -245,9 +245,9 @@ export const FINALE = {
     kicker: 'Prove',
     title: 'Answer the Letter',
     baseSentence: 'The house was old.',
-    task: 'With a partner, write one sentence about this house using at least TWO kinds of figurative language. Be ready to name each one.',
+    task: 'Write one sentence about this house using at least TWO kinds of figurative language. Make sure you can name each one.',
     starters: ['The old house was…', 'Its windows…', 'The house was as … as …, and…'],
-    criteria: ['Uses at least two kinds of figurative language', 'The class can name each kind correctly', 'Leaves the reader with a strong feeling about the house'],
+    criteria: ['Uses at least two kinds of figurative language', 'I can name each kind correctly', 'Leaves the reader with a strong feeling about the house'],
     questions: ['Which kinds of figurative language did you use?', 'Point to the words that make each one work.', 'What feeling does your sentence leave the reader with?'],
     model: 'The old house was a sleeping giant, and its windows blinked like tired eyes as we said goodbye.',
     modelParts: [

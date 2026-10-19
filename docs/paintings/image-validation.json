@@ -1,0 +1,249 @@
+{
+  "results": [
+    {
+      "file": "decor-D01-hall-landing.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 372,
+      "mean": 76,
+      "std": 25.8,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D02-hall-stair-portrait.webp",
+      "decoded": true,
+      "w": 404,
+      "h": 512,
+      "mean": 34.9,
+      "std": 34,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D03-hall-stair-landscape.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 392,
+      "mean": 50.4,
+      "std": 31.1,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D04-hall-east-stilllife.webp",
+      "decoded": true,
+      "w": 420,
+      "h": 512,
+      "mean": 31.6,
+      "std": 37.8,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D05-hall-east-sea.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 384,
+      "mean": 60.4,
+      "std": 33,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D06-gallery-south-sea.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 378,
+      "mean": 105.5,
+      "std": 35,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D07-gallery-south-stilllife.webp",
+      "decoded": true,
+      "w": 410,
+      "h": 512,
+      "mean": 38.9,
+      "std": 44.9,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D08-gallery-north-landscape.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 396,
+      "mean": 36,
+      "std": 17.8,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D09-gallery-north-portrait.webp",
+      "decoded": true,
+      "w": 402,
+      "h": 512,
+      "mean": 32.3,
+      "std": 32,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D10-dining-west-stilllife.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 398,
+      "mean": 54.8,
+      "std": 43.4,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D11-dining-north-landscape.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 368,
+      "mean": 49.7,
+      "std": 23.4,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D12-dining-south-portrait.webp",
+      "decoded": true,
+      "w": 410,
+      "h": 512,
+      "mean": 70.4,
+      "std": 57,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D13-dining-south-sea.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 398,
+      "mean": 55.4,
+      "std": 38.3,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D14-nursery-south-portrait.webp",
+      "decoded": true,
+      "w": 402,
+      "h": 512,
+      "mean": 76.8,
+      "std": 55.9,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D15-nursery-east-landscape.webp",
+      "decoded": true,
+      "w": 512,
+      "h": 384,
+      "mean": 68.1,
+      "std": 29.6,
+      "opaquePct": 100
+    },
+    {
+      "file": "decor-D16-nursery-east-house.webp",
+      "decoded": true,
+      "w": 426,
+      "h": 512,
+      "mean": 50.7,
+      "std": 35.7,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-caretaker.webp",
+      "decoded": true,
+      "w": 768,
+      "h": 1024,
+      "mean": 46.6,
+      "std": 37.8,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-coldFeet.webp",
+      "decoded": true,
+      "w": 768,
+      "h": 1024,
+      "mean": 38.7,
+      "std": 40.2,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-deafeningSilence.webp",
+      "decoded": true,
+      "w": 768,
+      "h": 1024,
+      "mean": 99.4,
+      "std": 35.5,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-houseBreath.webp",
+      "decoded": true,
+      "w": 1024,
+      "h": 768,
+      "mean": 59.3,
+      "std": 35.2,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-ladyOfHouse-turned.webp",
+      "decoded": true,
+      "w": 768,
+      "h": 1024,
+      "mean": 37,
+      "std": 39.8,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-ladyOfHouse.webp",
+      "decoded": true,
+      "w": 768,
+      "h": 1024,
+      "mean": 37.3,
+      "std": 40.3,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-nervousSitter.webp",
+      "decoded": true,
+      "w": 768,
+      "h": 1024,
+      "mean": 24.5,
+      "std": 26.6,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-oldManShadow.webp",
+      "decoded": true,
+      "w": 768,
+      "h": 1024,
+      "mean": 25.9,
+      "std": 21.7,
+      "opaquePct": 100
+    },
+    {
+      "file": "painting-whisperingWalls.webp",
+      "decoded": true,
+      "w": 768,
+      "h": 1024,
+      "mean": 47.5,
+      "std": 23,
+      "opaquePct": 100
+    }
+  ],
+  "lady": {
+    "sameSize": true,
+    "w": 768,
+    "h": 1024,
+    "changedPct": 5.41,
+    "maxDiff": 174,
+    "bbox": {
+      "x0": 220,
+      "y0": 20,
+      "x1": 488,
+      "y1": 341
+    },
+    "core": {
+      "x0": 255,
+      "x1": 452,
+      "y0": 70,
+      "y1": 312
+    },
+    "strayPixels": 29
+  }
+}

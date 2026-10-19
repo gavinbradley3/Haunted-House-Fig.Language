@@ -1,0 +1,26 @@
+{
+  "cpuThrottle": 4,
+  "models": {
+    "console": {
+      "bytes": 601584,
+      "textures": 3,
+      "fetchMs": 34,
+      "parseMs": 90,
+      "uploadMs": 28
+    },
+    "door": {
+      "bytes": 174660,
+      "textures": 1,
+      "fetchMs": 24,
+      "parseMs": 36,
+      "uploadMs": 8
+    },
+    "frame": {
+      "bytes": 196296,
+      "textures": 4,
+      "fetchMs": 23,
+      "parseMs": 50,
+      "uploadMs": 8
+    }
+  }
+}

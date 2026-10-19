@@ -79,6 +79,13 @@ function RaisedPanel({ w, h, material }: { w: number; h: number; material: THREE
   return <mesh geometry={g} material={material} position={[0, 0, -0.006]} castShadow={false} receiveShadow />;
 }
 
+/**
+ * Doors the haunting director may nudge: a slow drift a little way open (or, if open, a little way closed).
+ * Cleared the moment the student uses the door. Locked doors are never nudged.
+ */
+export const doorNudge = new Map<string, number>();
+export const doorRegistry = new Map<string, { hinge: THREE.Vector3; open: () => boolean; locked: () => boolean }>();
+
 interface DoorProps {
   id: string;
   /** World position of the hinge at floor level. */
@@ -96,10 +103,23 @@ interface DoorProps {
   handleSide?: 1 | -1;
   plaqueText?: [string, string];
   material?: THREE.Material;
+  /** True while the door is locked (it is then never nudged by the house). */
+  locked?: () => boolean;
 }
 
 /** Animated, collidable, interactive door. */
-export function Door({ id, hinge, rotationY, width, height, open, swing = 1, maxAngle = 1.65, label, onUse, handleSide = 1, plaqueText, material }: DoorProps) {
+export function Door({ id, hinge, rotationY, width, height, open, swing = 1, maxAngle = 1.65, label, onUse, handleSide = 1, plaqueText, material, locked }: DoorProps) {
+  const openRef = useRef(open);
+  openRef.current = open;
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
+  useEffect(() => {
+    doorRegistry.set(id, { hinge: new THREE.Vector3(...hinge), open: () => openRef.current, locked: () => !!lockedRef.current?.() });
+    return () => {
+      doorRegistry.delete(id);
+      doorNudge.delete(id);
+    };
+  }, [id, hinge[0], hinge[1], hinge[2]]); // eslint-disable-line react-hooks/exhaustive-deps
   const leaf = useRef<THREE.Group>(null!);
   const angle = useRef(0);
   const angVel = useRef(0);
@@ -122,10 +142,11 @@ export function Door({ id, hinge, rotationY, width, height, open, swing = 1, max
   useFrame(() => {
     const dt = world.dt;
     if (dt === 0) return;
-    const target = open ? maxAngle : 0;
-    // Damped spring: heavy door with a little settle.
-    const k = 9;
-    const c = 5.2;
+    const nudge = doorNudge.get(id) ?? 0;
+    const target = (open ? maxAngle : 0) + (open ? -nudge : nudge);
+    // Damped spring: heavy door with a little settle. A nudge from the house drifts slowly instead.
+    const k = nudge ? 1.6 : 9;
+    const c = nudge ? 2.4 : 5.2;
     const acc = (target - angle.current) * k - angVel.current * c;
     angVel.current += acc * dt;
     angle.current += angVel.current * dt;
@@ -137,7 +158,15 @@ export function Door({ id, hinge, rotationY, width, height, open, swing = 1, max
   return (
     <group position={hinge} rotation={[0, rotationY, 0]}>
       <group ref={leaf}>
-        <Interactive id={id} label={label} onUse={onUse} maxDist={3}>
+        <Interactive
+          id={id}
+          label={label}
+          onUse={() => {
+            doorNudge.delete(id);
+            onUse();
+          }}
+          maxDist={3}
+        >
           <DoorLeaf width={width} height={height} handleSide={handleSide} material={material} />
           {plaqueText && (
             <mesh position={[width / 2, 1.62, 0.04]}>

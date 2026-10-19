@@ -752,6 +752,7 @@ class AudioEngine {
    */
   footstep(speed = 1, surface: StepSurface = 'wood') {
     if (!this.footstepsOn) return;
+    this.onStep?.(surface);
     let k = Math.floor(Math.random() * 8);
     if (k === this.stepIndex) k = (k + 3) % 8;
     this.stepIndex = k;
@@ -846,8 +847,8 @@ class AudioEngine {
     this.play('creakDoor', { gain: 0.3, rate: 0.45, reverb: 1.0 });
   }
   /** A door closing quietly somewhere else in the house. */
-  distantDoor(at: V3) {
-    if (this.playClip('door-close', { at, gain: CLIP_LEVEL.doorClose * 0.35, rate: 0.92, reverb: 0.8 })) return;
+  distantDoor(at: V3, gain = 1) {
+    if (this.playClip('door-close', { at, gain: CLIP_LEVEL.doorClose * 0.35 * gain, rate: 0.92, reverb: 0.8 })) return;
     this.play('creakShort', { at, gain: 0.12, rate: 0.75 });
     this.play('thud', { at, gain: 0.22, delay: 0.5 });
     this.play('latch', { at, gain: 0.18, delay: 0.53 });
@@ -865,8 +866,8 @@ class AudioEngine {
     if (!this.playClip('book', { at, gain: CLIP_LEVEL.book * vary().gain, rate: vary(0.03).rate })) this.whisperS(at);
   }
   /** Slow steps crossing the floor above (heard through the ceiling). Returns false if there is no recording. */
-  footstepsAbove(at: V3) {
-    return this.playClip('footsteps-above', { at, gain: CLIP_LEVEL.above });
+  footstepsAbove(at: V3, boost = 1) {
+    return this.playClip('footsteps-above', { at, gain: CLIP_LEVEL.above * boost });
   }
   /** A page turning (the Lady's letter). Silent until a page recording is supplied. */
   page(at: V3) {
@@ -998,6 +999,48 @@ class AudioEngine {
   whisperS(at: V3) {
     this.play('whisperS', { at, gain: 0.45, rate: 0.9 + Math.random() * 0.2 });
   }
+  // ------------------------------------------------------------ the house's own noises (haunting director)
+
+  /** Called on each of the player's own footfalls (the haunting director listens for the echoing steps). */
+  onStep: ((surface: StepSurface) => void) | null = null;
+
+  /** Someone else's footstep at a point in the house: the recorded wood step when there is one. */
+  otherStep(at: V3, gain = 1, heavy = false) {
+    const v = vary(0.05);
+    const rate = (heavy ? 0.86 : 0.95) * v.rate;
+    if (this.hasClip('step-wood')) {
+      this.playClip('step-wood', { at, gain: CLIP_LEVEL.step * 1.5 * gain * v.gain, rate, reverb: 0.75 });
+      return;
+    }
+    this.play(`step${Math.floor(Math.random() * 4)}`, { at, gain: 0.32 * gain, rate, reverb: 0.75 });
+  }
+  /** Knocks from inside a wall: n of them, a little uneven. */
+  knocks(at: V3, n = 3, gap = 0.42, gain = 1) {
+    for (let i = 0; i < n; i++) this.play('knock', { at, gain: 0.4 * gain * (1 - 0.06 * i), rate: 0.93 + Math.random() * 0.08, delay: i * gap * (0.9 + Math.random() * 0.2) });
+  }
+  /** Something heavy dragged a short way across the floor above. */
+  dragAbove(at: V3) {
+    this.play('creakDoor', { at, gain: 0.3, rate: 0.42 + Math.random() * 0.06, reverb: 0.8 });
+    this.play('thud', { at, gain: 0.28, rate: 0.7, delay: 1.0 });
+  }
+  /** A whisper so faint it might be the wind. */
+  whisperAt(at: V3, gain = 1) {
+    this.play('whisperS', { at, gain: 0.32 * gain, rate: 0.75 + Math.random() * 0.15, reverb: 0.9 });
+    this.play('whisperS', { at, gain: 0.22 * gain, rate: 0.68 + Math.random() * 0.1, delay: 0.55, reverb: 0.9 });
+  }
+
+  private meter: AnalyserNode | null = null;
+  /** Test builds: an analyser on the final mix, to measure how loud the house's events are. */
+  tap(): AnalyserNode | null {
+    if (!this.ctx) return null;
+    if (!this.meter) {
+      this.meter = this.ctx.createAnalyser();
+      this.meter.fftSize = 2048;
+      this.master.connect(this.meter);
+    }
+    return this.meter;
+  }
+
   /** Footsteps somewhere in an empty hall: used after the model simile is revealed. */
   distantSteps() {
     for (let i = 0; i < 5; i++) this.play(`step${i % 4}`, { gain: 0.35 - i * 0.03, rate: 0.85, delay: i * 1.1, reverb: 1.2 });

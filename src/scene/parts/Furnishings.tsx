@@ -4,7 +4,6 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { boxGeo, latheGeo, LATHES, profileGeo, PROFILES, runTransform } from '../../systems/geometry';
 import { mats } from '../../systems/materials';
-import { painting, type PaintingKind } from '../../systems/textures';
 import { world } from '../../systems/time';
 import { CandleLight, Flame, houseState } from './Lights';
 import { RoundedBox } from '@react-three/drei';
@@ -30,24 +29,6 @@ export function ProfileFrame({ w, h, profile = 'frame', material }: { w: number;
       {runs.map((r, i) => (
         <mesh key={i} geometry={profileGeo(profile, PROFILES[profile], r.length)} material={material} matrix={r.matrix} matrixAutoUpdate={false} castShadow />
       ))}
-    </group>
-  );
-}
-
-/** Framed oil painting, local wall frame. */
-export function Painting({ x, y, w, h, kind, seed = 1 }: { x: number; y: number; w: number; h: number; kind: PaintingKind; seed?: number }) {
-  const mat = useMemo(() => new THREE.MeshStandardMaterial({ map: painting(kind, seed), roughness: 0.5, emissiveMap: painting(kind, seed), emissive: new THREE.Color(0.06, 0.05, 0.04) }), [kind, seed]);
-  return (
-    <group position={[x, y, 0.02]} rotation={[-0.04, 0, 0]}>
-      <mesh material={mat} position={[0, 0, 0.012]}>
-        <planeGeometry args={[w, h]} />
-      </mesh>
-      <mesh geometry={boxGeo(w + 0.02, h + 0.02, 0.02)} material={mats().blackPaint} position={[0, 0, 0]} />
-      <ProfileFrame w={w} h={h} profile="frame" material={mats().gilt} />
-      {/* Hanging cord to the picture rail */}
-      <mesh material={mats().brass} position={[0, h / 2 + 0.5, -0.01]}>
-        <cylinderGeometry args={[0.002, 0.002, 1.0, 4]} />
-      </mesh>
     </group>
   );
 }

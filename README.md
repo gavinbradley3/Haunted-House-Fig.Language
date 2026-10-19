@@ -2,7 +2,9 @@
 
 *Some doors are opened with keys. Others are opened with words.*
 
-A first-person 3D mystery for teaching figurative language to Grade 7–9 classes. You drive it on the classroom screen while students discuss, vote and create. It has ten lessons joined by a trail of keys: **the Hall of Mirrors** (simile), **the Portrait Gallery** (metaphor), **the Giant's Dining Room** (hyperbole), **the Nursery** (personification), **the Chamber of Echoes** (onomatopoeia), **the Whispering Press** (alliteration), **the Crooked Kitchen** (idiom), **the Ballroom of Contradictions** (oxymoron), **the Forgotten Scholar's Study** (allusion) and **the Lady's Letter** (all nine together), which ends the game.
+A first-person 3D mystery for teaching figurative language to Grade 7–9 students. Each student plays it on their own Chromebook, at their own pace, and can come back to an unfinished game later; a teacher edition can also be projected and used to help a student who is stuck. It has ten lessons joined by a trail of keys: **the Hall of Mirrors** (simile), **the Portrait Gallery** (metaphor), **the Giant's Dining Room** (hyperbole), **the Nursery** (personification), **the Chamber of Echoes** (onomatopoeia), **the Whispering Press** (alliteration), **the Crooked Kitchen** (idiom), **the Ballroom of Contradictions** (oxymoron), **the Forgotten Scholar's Study** (allusion) and **the Lady's Letter** (all nine together), which ends the game.
+
+> **Students on their own Chromebooks (Phase 10).** Publish the **student build** (`npm run build`) for students and keep the **teacher edition** (`npm run build:teacher`) for yourself. Progress saves automatically on each student's Chromebook profile. How to publish both, how saving works and its limits, and how to help a stuck student: [docs/phase10/TEACHER_GUIDE.md](docs/phase10/TEACHER_GUIDE.md). Before the first class, run [the Chromebook checklist](docs/phase10/CHROMEBOOK_CHECKLIST.md) on one real school Chromebook.
 
 ---
 
@@ -44,12 +46,13 @@ The `dist/` folder is a self-contained website. It needs no internet connection 
 | Look around | **Click** the scene to capture the mouse, then move it. You can also click-and-drag without capturing. |
 | Walk | **W A S D** or the arrow keys. Hold **Shift** to walk faster. |
 | Use a door, mirror or object | Aim at it and press **E**, or click it |
-| Free the mouse / open the controls card | **Esc** |
+| Free the mouse / open the Menu | **Esc** (or the ≡ button, top right) |
+| Turn the view with a trackpad, without clicking | Slide **two fingers** across the trackpad |
 | Skip a cinematic | **Space**, or the Skip button |
 | Fullscreen | **F** |
 | Mute | **M** |
 | Pause the whole house | **P** |
-| Teacher controls | **T**, or the small key icon in the top-right corner |
+| Teacher controls | **T** (teacher edition only; the student build has none) |
 
 **Route:**
 1. Enter the House → walk through the entrance hall → go under the landing into the corridor → open the door at the end (*The Hall of Mirrors*) → look into the large mirror above the marble console. That starts the simile lesson.
@@ -66,13 +69,15 @@ The `dist/` folder is a self-contained website. It needs no internet connection 
 12. Back in the entrance hall, the door on the left under the landing (*The Scholar's Study*) opens with the Ballroom Key. Sit at the scholar's desk to start the allusion lesson. In Challenge A the answers stay hidden until the class opens the book of evidence for each card, so nobody needs to know the story beforehand. Take **the Scholar's Key** from the desk.
 13. The Scholar's Key opens **the Lady's writing box** on the centre table. Her letter begins the final lesson, which uses all nine devices. It cannot be finished until all nine rooms are complete. When it is, press **Finish the night** for the ending.
 
-**Writing checkpoint (every lesson):** each room ends with the same sequence: the class writes its own sentence, then checks it together against the room's success criteria (the **Class self-check**). *Complete the challenge* stays greyed out until a sentence is added and every criterion is ticked. The ticks record the class's own judgement; the game does not mark student writing. If a sentence does not meet a criterion yet, improve it and add it again (a new sentence clears the ticks). As teacher you can still jump past the checkpoint with **Jump to lesson stage → Complete** in the teacher controls.
+**Writing checkpoint (every lesson):** each room ends with the same sequence: the student writes their own sentence, then checks it against the room's success criteria (**My writing check**). The model answer unlocks only after they have written a sentence of their own. *Complete the challenge* stays greyed out until a sentence is added and every criterion is ticked. The ticks record the class's own judgement; the game does not mark student writing. If a sentence does not meet a criterion yet, improve it and add it again (a new sentence clears the ticks). As teacher you can still jump past the checkpoint with **Jump to lesson stage → Complete** in the teacher controls.
 
 **Paintings:** many paintings can be inspected. Aim at one and press **E** (or click it) to step closer and read its museum label and a question for the class. Press **E** or **Esc** to step back. Their titles hint at devices the class will meet later.
 
-**Progress is saved** in the browser: keys, unlocked doors, completed rooms, and where each lesson is up to (including the class's sentences and ticks). If the page is reloaded or the computer restarts mid-lesson, open the lesson again and it carries on where it stopped. Progress belongs to the browser on that computer. Use **Reset all progress** in the teacher controls to start a fresh class.
+**Progress is saved** automatically on the Chromebook profile: keys, unlocked doors, completed rooms, where each lesson is up to (sentences and ticks included), where the student was standing, and the lesson they had open. **Continue** on the title screen puts them back there. It is one versioned save with a backup, damaged-save recovery and protection against the game being open in two tabs. Progress belongs to that Chromebook profile at that web address (see the teacher guide). Use **Reset all progress** in the teacher edition to start again (it can be undone).
 
-## 4. Teacher controls (press T)
+**The upper landing:** the entrance hall stairs can now be climbed. The landing is optional: the Lady's locked door, a door that closes by itself, and a page from her diary. Finding the diary is mentioned at the end.
+
+## 4. Teacher controls (teacher edition: press T)
 
 - **Pause / Resume** freezes the clock, the curtains and the sound while the class talks.
 - **Skip animation** jumps to the end of any camera move.
@@ -88,7 +93,7 @@ The `dist/` folder is a self-contained website. It needs no internet connection 
 - **Walk to / Jump to the Mirrors or the Hall**: *Walk* plays a guided camera walk and opens doors automatically. *Jump* fades to black and moves you instantly.
 - **Open the lesson / Leave lesson view** opens or closes the lesson panel. Your place in the lesson is kept.
 - **Sound** has mute and a volume slider.
-- **Graphics**: High, Balanced or Low. The first time the game runs on a computer it picks a setting from the graphics chip (Low on built-in Intel, AMD and mobile graphics) and can lower itself further if the house runs slowly; your own choice is remembered and always wins. **Use Low on typical school computers** (measured on an Intel UHD 630: Low 24–42 fps, Balanced 14–24 fps, High 8–14 fps at 1600×900). On a large projector, Low draws at most about 1280 pixels across and scales up, so it stays smooth at 1920×1080.
+- **Graphics** (development and test builds only; **students always play on Low**, and the student build ignores any older saved setting. On a slow computer Low lowers its own 3D resolution in steps; menus and text stay sharp): High, Balanced or Low. The first time the game runs on a computer it picks a setting from the graphics chip (Low on built-in Intel, AMD and mobile graphics) and can lower itself further if the house runs slowly; your own choice is remembered and always wins. **Use Low on typical school computers** (measured on an Intel UHD 630: Low 24–42 fps, Balanced 14–24 fps, High 8–14 fps at 1600×900). On a large projector, Low draws at most about 1280 pixels across and scales up, so it stays smooth at 1920×1080.
 
 Nothing in the lesson advances on a timer. Every step waits for you.
 
@@ -137,7 +142,8 @@ The full design is in `docs/MANSION_BLUEPRINT.md`.
 ```bash
 npm run typecheck   # TypeScript
 npm test            # unit tests (lesson logic, content checks, collision)
-npm run build       # classroom build (dist/): no test hook, answers not exposed on window
+npm run build       # student build (dist/): no test hook, no teacher panel, graphics locked to Low
+npm run build:teacher  # teacher edition (dist-teacher/): adds the teacher panel (T); no test hook
 npm run build:test  # test build (dist-test/): adds window.__hosl for the automated browser checks
 npm run preview:test   # serves dist-test/ for the scripts below
 node scripts/shots.mjs "http://localhost:4173/?testdt=0.5"     # phase 1 walkthrough + screenshots (needs npm run preview running)

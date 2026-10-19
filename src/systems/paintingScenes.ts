@@ -3,6 +3,7 @@
  * Each is an original image composed in code.
  */
 import { bareTree, clouds, glow, lightning, linear, makeCanvas, paint, perspectiveRoom, poly, portraitHead, radial, rain, type SceneSpec } from './painterly';
+import { ART_IMAGES } from './paintingImages';
 
 export type ArtId =
   | 'houseBreath'
@@ -628,6 +629,8 @@ export function artCanvas(id: ArtId): HTMLCanvasElement {
   }
   return c;
 }
+/** Width / height of a painting: the artwork file's own pixels when there is one, so nothing is stretched. */
 export function artAspect(id: ArtId) {
-  return SPECS[id].w / SPECS[id].h;
+  const img = ART_IMAGES[id];
+  return img ? img.w / img.h : SPECS[id].w / SPECS[id].h;
 }

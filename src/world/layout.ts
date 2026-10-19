@@ -327,8 +327,22 @@ export function groundAt(x: number, z: number): number {
   return -0.48;
 }
 
+/** Is (x, z) on the entrance hall staircase? */
+export function inStair(x: number, z: number) {
+  const S = HALL.stair;
+  return x >= S.x0 && x <= S.x1 && z <= S.zStart && z >= S.zEnd;
+}
+
+/** Height of the stair tread under (x, z), rising from the hall floor to the landing. */
+export function stairHeight(z: number) {
+  const S = HALL.stair;
+  return S.rise * Math.min(1, Math.max(0, (S.zStart - z) / (S.zStart - S.zEnd)));
+}
+
 /** What the floor is made of here, for footstep sounds. */
 export function surfaceAt(x: number, z: number): 'wood' | 'carpet' | 'gravel' | 'stone' {
+  // The staircase has a runner.
+  if (inStair(x, z)) return 'carpet';
   // The porch and its steps are stone flags (the same stone as the kitchen floor).
   const fz = EXTERIOR.facadeZ;
   if (Math.abs(x) < 2.3 && z > fz && z <= fz + 3.36) return 'stone';

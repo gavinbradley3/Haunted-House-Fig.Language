@@ -258,7 +258,7 @@ export const ALLUSION = {
         evidence: EVIDENCE.beauty,
         options: opts(
           'The house has stayed unchanged for a very long time, as if waiting for someone to arrive and wake it.',
-          'In the fairy tale, everything stops until someone comes. The house has been frozen in time, waiting, and now the class has arrived.',
+          'In the fairy tale, everything stops until someone comes. The house has been frozen in time, waiting, and now you have arrived.',
           [
             ['princess', 'There is a princess in the house.', 'That reads the allusion too literally. The house is compared to the castle.'],
             ['asleep', 'Everyone in the house is asleep right now.', 'The point is time standing still while the house waits, not people sleeping.'],
@@ -288,9 +288,9 @@ export const ALLUSION = {
     kicker: 'Prove',
     title: 'The Scholar’s Index',
     baseSentence: 'The locked attic was dangerous.',
-    task: 'With a partner, rewrite this sentence (or describe something else in the house) using one of the study’s allusions. Be ready to say what it refers to and why it fits.',
+    task: 'Rewrite this sentence (or describe something else in the house) using one of the study’s allusions. Make sure you could explain what it refers to and why it fits.',
     starters: ['The attic was the house’s…', '…was a real Houdini.', 'Like Sleeping Beauty’s castle, …'],
-    criteria: ['Refers to a well-known person, story, place or event', 'The part of the story it uses fits what is described', 'The class can explain why the writer chose it'],
+    criteria: ['Refers to a well-known person, story, place or event', 'The part of the story it uses fits what is described', 'I can explain why I chose it'],
     questions: ['What does your allusion refer to?', 'Which part of that story fits?', 'What does it add that plain words would not?'],
     model: 'The locked attic was the house’s Pandora’s box: once opened, its troubles would never go back inside.',
     modelParts: [

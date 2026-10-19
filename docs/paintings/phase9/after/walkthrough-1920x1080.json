@@ -1,0 +1,934 @@
+{
+  "viewport": [
+    1920,
+    1080
+  ],
+  "results": [
+    {
+      "name": "decor-D01-hall-landing",
+      "id": "D01",
+      "zone": "hall",
+      "maxFree": 4.4,
+      "size": [
+        1.1,
+        0.8
+      ],
+      "heightY": 5.15,
+      "walk": {
+        "box": {
+          "x0": 908,
+          "y0": 506,
+          "x1": 1012,
+          "y1": 575
+        },
+        "canvas": {
+          "mean": 98.3,
+          "std": 38.2,
+          "px": 1148
+        },
+        "wall": {
+          "mean": 55,
+          "std": 32.1,
+          "px": 4541
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D01",
+        "label": "Look closer at the painting",
+        "maxDist": 12
+      },
+      "inspecting": "D01",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D02-hall-stair-portrait",
+      "id": "D02",
+      "zone": "hall",
+      "maxFree": 0.5,
+      "size": [
+        0.75,
+        0.95
+      ],
+      "heightY": 3.15,
+      "walk": {
+        "box": {
+          "x0": 921,
+          "y0": 492,
+          "x1": 999,
+          "y1": 589
+        },
+        "canvas": {
+          "mean": 48,
+          "std": 31.6,
+          "px": 1209
+        },
+        "wall": {
+          "mean": 18.6,
+          "std": 7,
+          "px": 3896
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D02",
+        "label": "Look closer at the painting",
+        "maxDist": 12
+      },
+      "inspecting": "D02",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D03-hall-stair-landscape",
+      "id": "D03",
+      "zone": "hall",
+      "maxFree": 0.5,
+      "size": [
+        0.85,
+        0.65
+      ],
+      "heightY": 4.1,
+      "walk": {
+        "box": {
+          "x0": 917,
+          "y0": 509,
+          "x1": 1003,
+          "y1": 572
+        },
+        "canvas": {
+          "mean": 55.4,
+          "std": 25.6,
+          "px": 875
+        },
+        "wall": {
+          "mean": 19,
+          "std": 6.7,
+          "px": 3209
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D03",
+        "label": "Look closer at the painting",
+        "maxDist": 12
+      },
+      "inspecting": "D03",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D04-hall-east-stilllife",
+      "id": "D04",
+      "zone": "hall",
+      "maxFree": 0.5,
+      "size": [
+        0.9,
+        1.1
+      ],
+      "heightY": 4.4,
+      "walk": {
+        "box": {
+          "x0": 914,
+          "y0": 489,
+          "x1": 1006,
+          "y1": 593
+        },
+        "canvas": {
+          "mean": 32.6,
+          "std": 35,
+          "px": 1554
+        },
+        "wall": {
+          "mean": 18,
+          "std": 5.1,
+          "px": 4490
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D04",
+        "label": "Look closer at the painting",
+        "maxDist": 12
+      },
+      "inspecting": "D04",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D05-hall-east-sea",
+      "id": "D05",
+      "zone": "hall",
+      "maxFree": 10,
+      "size": [
+        0.8,
+        0.6
+      ],
+      "heightY": 4.6,
+      "walk": {
+        "box": {
+          "x0": 923,
+          "y0": 505,
+          "x1": 998,
+          "y1": 575
+        },
+        "canvas": {
+          "mean": 28.6,
+          "std": 13.5,
+          "px": 840
+        },
+        "wall": {
+          "mean": 20.6,
+          "std": 8.2,
+          "px": 2282
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D05",
+        "label": "Look closer at the painting",
+        "maxDist": 12
+      },
+      "inspecting": "D05",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D06-gallery-south-sea",
+      "id": "D06",
+      "zone": "gallery",
+      "maxFree": 6.6,
+      "size": [
+        1.15,
+        0.85
+      ],
+      "heightY": 2.4,
+      "walk": {
+        "box": {
+          "x0": 816,
+          "y0": 441,
+          "x1": 1104,
+          "y1": 644
+        },
+        "canvas": {
+          "mean": 128.8,
+          "std": 31.8,
+          "px": 9315
+        },
+        "wall": {
+          "mean": 23.6,
+          "std": 12,
+          "px": 34521
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D06",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D06",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D07-gallery-south-stilllife",
+      "id": "D07",
+      "zone": "gallery",
+      "maxFree": 6.6,
+      "size": [
+        0.6,
+        0.75
+      ],
+      "heightY": 2,
+      "walk": {
+        "box": {
+          "x0": 885,
+          "y0": 448,
+          "x1": 1035,
+          "y1": 634
+        },
+        "canvas": {
+          "mean": 68,
+          "std": 39,
+          "px": 4514
+        },
+        "wall": {
+          "mean": 16.5,
+          "std": 8.7,
+          "px": 14334
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D07",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D07",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D08-gallery-north-landscape",
+      "id": "D08",
+      "zone": "gallery",
+      "maxFree": 6.6,
+      "size": [
+        1.1,
+        0.85
+      ],
+      "heightY": 2.4,
+      "walk": {
+        "box": {
+          "x0": 822,
+          "y0": 441,
+          "x1": 1098,
+          "y1": 644
+        },
+        "canvas": {
+          "mean": 31.5,
+          "std": 18.1,
+          "px": 8991
+        },
+        "wall": {
+          "mean": 11,
+          "std": 7,
+          "px": 31387
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D08",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D08",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D09-gallery-north-portrait",
+      "id": "D09",
+      "zone": "gallery",
+      "maxFree": 6.6,
+      "size": [
+        0.55,
+        0.7
+      ],
+      "heightY": 2,
+      "walk": {
+        "box": {
+          "x0": 891,
+          "y0": 454,
+          "x1": 1029,
+          "y1": 628
+        },
+        "canvas": {
+          "mean": 20.6,
+          "std": 32.2,
+          "px": 3850
+        },
+        "wall": {
+          "mean": 6.1,
+          "std": 7.6,
+          "px": 12274
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D09",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D09",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D10-dining-west-stilllife",
+      "id": "D10",
+      "zone": "dining",
+      "maxFree": 10,
+      "size": [
+        0.9,
+        0.7
+      ],
+      "heightY": 2.3,
+      "walk": {
+        "box": {
+          "x0": 848,
+          "y0": 457,
+          "x1": 1072,
+          "y1": 626
+        },
+        "canvas": {
+          "mean": 52.7,
+          "std": 36.8,
+          "px": 6052
+        },
+        "wall": {
+          "mean": 5.6,
+          "std": 3.8,
+          "px": 21092
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D10",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D10",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D11-dining-north-landscape",
+      "id": "D11",
+      "zone": "dining",
+      "maxFree": 2.3,
+      "size": [
+        1.25,
+        0.9
+      ],
+      "heightY": 2.55,
+      "walk": {
+        "box": {
+          "x0": 883,
+          "y0": 390,
+          "x1": 1061,
+          "y1": 661
+        },
+        "canvas": {
+          "mean": 30.9,
+          "std": 21,
+          "px": 7739
+        },
+        "wall": {
+          "mean": 14.9,
+          "std": 21.6,
+          "px": 30602
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D11",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D11",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D12-dining-south-portrait",
+      "id": "D12",
+      "zone": "dining",
+      "maxFree": 2.3,
+      "size": [
+        0.8,
+        1
+      ],
+      "heightY": 2.4,
+      "walk": {
+        "box": {
+          "x0": 908,
+          "y0": 397,
+          "x1": 1022,
+          "y1": 667
+        },
+        "canvas": {
+          "mean": 62.7,
+          "std": 57.4,
+          "px": 4922
+        },
+        "wall": {
+          "mean": 14.6,
+          "std": 10.8,
+          "px": 30626
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D12",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D12",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D13-dining-south-sea",
+      "id": "D13",
+      "zone": "dining",
+      "maxFree": 2.5,
+      "size": [
+        0.9,
+        0.7
+      ],
+      "heightY": 2.4,
+      "walk": {
+        "box": {
+          "x0": 984,
+          "y0": 372,
+          "x1": 1199,
+          "y1": 604
+        },
+        "canvas": {
+          "mean": 44.8,
+          "std": 39.5,
+          "px": 7998
+        },
+        "wall": {
+          "mean": 9.1,
+          "std": 2.5,
+          "px": 22402
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D13",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D13",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D14-nursery-south-portrait",
+      "id": "D14",
+      "zone": "nursery",
+      "maxFree": 6.8,
+      "size": [
+        0.55,
+        0.7
+      ],
+      "heightY": 1.75,
+      "walk": {
+        "box": {
+          "x0": 891,
+          "y0": 453,
+          "x1": 1029,
+          "y1": 628
+        },
+        "canvas": {
+          "mean": 104,
+          "std": 51.4,
+          "px": 3850
+        },
+        "wall": {
+          "mean": 94.9,
+          "std": 31.6,
+          "px": 12471
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D14",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D14",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D15-nursery-east-landscape",
+      "id": "D15",
+      "zone": "nursery",
+      "maxFree": 5.2,
+      "size": [
+        0.6,
+        0.45
+      ],
+      "heightY": 1.7,
+      "walk": {
+        "box": {
+          "x0": 885,
+          "y0": 484,
+          "x1": 1035,
+          "y1": 596
+        },
+        "canvas": {
+          "mean": 37.8,
+          "std": 25.2,
+          "px": 2655
+        },
+        "wall": {
+          "mean": 24.3,
+          "std": 1.5,
+          "px": 9294
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D15",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D15",
+      "closedByEsc": true
+    },
+    {
+      "name": "decor-D16-nursery-east-house",
+      "id": "D16",
+      "zone": "nursery",
+      "maxFree": 3.3,
+      "size": [
+        0.5,
+        0.6
+      ],
+      "heightY": 1.7,
+      "walk": {
+        "box": {
+          "x0": 892,
+          "y0": 458,
+          "x1": 1028,
+          "y1": 622
+        },
+        "canvas": {
+          "mean": 47.6,
+          "std": 30.5,
+          "px": 3575
+        },
+        "wall": {
+          "mean": 36.2,
+          "std": 1.8,
+          "px": 10930
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-D16",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "D16",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-caretaker",
+      "id": "caretaker",
+      "zone": "gallery",
+      "maxFree": 0.6,
+      "size": [
+        1.35,
+        1.8
+      ],
+      "heightY": 2.5,
+      "walk": {
+        "box": {
+          "x0": 860,
+          "y0": 98,
+          "x1": 1016,
+          "y1": 899
+        },
+        "canvas": {
+          "mean": 57,
+          "std": 52,
+          "px": 20160
+        },
+        "wall": {
+          "mean": 18,
+          "std": 18.2,
+          "px": 179290
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-caretaker",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "caretaker",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-coldFeet",
+      "id": "coldFeet",
+      "zone": "corridor",
+      "maxFree": 0.5,
+      "size": [
+        0.62,
+        0.83
+      ],
+      "heightY": 1.95,
+      "walk": {
+        "box": {
+          "x0": 940,
+          "y0": 399,
+          "x1": 976,
+          "y1": 666
+        },
+        "canvas": {
+          "mean": 97.4,
+          "std": 25.4,
+          "px": 1605
+        },
+        "wall": {
+          "mean": 37.4,
+          "std": 29.8,
+          "px": 30239
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-coldFeet",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "coldFeet",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-deafeningSilence",
+      "id": "deafeningSilence",
+      "zone": "gallery",
+      "maxFree": 10,
+      "size": [
+        0.72,
+        0.96
+      ],
+      "heightY": 2.15,
+      "walk": {
+        "box": {
+          "x0": 869,
+          "y0": 425,
+          "x1": 1051,
+          "y1": 660
+        },
+        "canvas": {
+          "mean": 83.1,
+          "std": 35.9,
+          "px": 6862
+        },
+        "wall": {
+          "mean": 7.3,
+          "std": 5.4,
+          "px": 22976
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-deafeningSilence",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "deafeningSilence",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-emptyFrame",
+      "id": "emptyFrame",
+      "zone": "gallery",
+      "maxFree": 10,
+      "size": [
+        0.72,
+        0.9
+      ],
+      "heightY": 2.15,
+      "walk": {
+        "box": {
+          "x0": 869,
+          "y0": 432,
+          "x1": 1051,
+          "y1": 652
+        },
+        "canvas": {
+          "mean": 8.2,
+          "std": 6.5,
+          "px": 6497
+        },
+        "wall": {
+          "mean": 8.5,
+          "std": 10.4,
+          "px": 19816
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-emptyFrame",
+        "label": "Look at the empty frame",
+        "maxDist": 4.2
+      },
+      "inspecting": "emptyFrame",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-houseBreath",
+      "id": "houseBreath",
+      "zone": "hall",
+      "maxFree": 9.6,
+      "size": [
+        1,
+        0.75
+      ],
+      "heightY": 2.15,
+      "walk": {
+        "box": {
+          "x0": 835,
+          "y0": 449,
+          "x1": 1085,
+          "y1": 633
+        },
+        "canvas": {
+          "mean": 76.6,
+          "std": 33.7,
+          "px": 7474
+        },
+        "wall": {
+          "mean": 44.9,
+          "std": 30.7,
+          "px": 26595
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-houseBreath",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "houseBreath",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-ladyOfHouse",
+      "id": "ladyOfHouse",
+      "zone": "hall",
+      "maxFree": 0.5,
+      "size": [
+        0.95,
+        1.27
+      ],
+      "heightY": 2.6,
+      "walk": {
+        "box": {
+          "x0": 936,
+          "y0": 313,
+          "x1": 993,
+          "y1": 733
+        },
+        "canvas": {
+          "mean": 72.5,
+          "std": 44.3,
+          "px": 3864
+        },
+        "wall": {
+          "mean": 41,
+          "std": 29.2,
+          "px": 74900
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-ladyOfHouse",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "ladyOfHouse",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-nervousSitter",
+      "id": "nervousSitter",
+      "zone": "gallery",
+      "maxFree": 6.6,
+      "size": [
+        0.9,
+        1.2
+      ],
+      "heightY": 2.2,
+      "walk": {
+        "box": {
+          "x0": 846,
+          "y0": 397,
+          "x1": 1074,
+          "y1": 690
+        },
+        "canvas": {
+          "mean": 38.2,
+          "std": 38.3,
+          "px": 10647
+        },
+        "wall": {
+          "mean": 11.6,
+          "std": 14.2,
+          "px": 35515
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-nervousSitter",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "nervousSitter",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-oldManShadow",
+      "id": "oldManShadow",
+      "zone": "gallery",
+      "maxFree": 6.6,
+      "size": [
+        0.9,
+        1.2
+      ],
+      "heightY": 2.2,
+      "walk": {
+        "box": {
+          "x0": 846,
+          "y0": 397,
+          "x1": 1074,
+          "y1": 690
+        },
+        "canvas": {
+          "mean": 57.8,
+          "std": 33.5,
+          "px": 10647
+        },
+        "wall": {
+          "mean": 23.8,
+          "std": 14.3,
+          "px": 35515
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-oldManShadow",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "oldManShadow",
+      "closedByEsc": true
+    },
+    {
+      "name": "painting-whisperingWalls",
+      "id": "whisperingWalls",
+      "zone": "corridor",
+      "maxFree": 1.9,
+      "size": [
+        0.62,
+        0.83
+      ],
+      "heightY": 1.95,
+      "walk": {
+        "box": {
+          "x0": 923,
+          "y0": 419,
+          "x1": 1004,
+          "y1": 650
+        },
+        "canvas": {
+          "mean": 35.5,
+          "std": 16.2,
+          "px": 2944
+        },
+        "wall": {
+          "mean": 21,
+          "std": 20.1,
+          "px": 22608
+        }
+      },
+      "prompt": null,
+      "interactable": {
+        "id": "painting-whisperingWalls",
+        "label": "Look closer at the painting",
+        "maxDist": 4.2
+      },
+      "inspecting": "whisperingWalls",
+      "closedByEsc": true
+    }
+  ],
+  "logs": []
+}

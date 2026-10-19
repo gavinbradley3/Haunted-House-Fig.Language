@@ -17,7 +17,7 @@ interface Props {
 /** Can the player interact right now (not in a cutscene, not paused, game running)? */
 export function canInteract() {
   const s = game();
-  return s.phase === 'play' && !s.cinematic && !s.paused && !s.inspecting;
+  return s.phase === 'play' && !s.cinematic && !s.paused && !s.inspecting && !s.note;
 }
 
 /**

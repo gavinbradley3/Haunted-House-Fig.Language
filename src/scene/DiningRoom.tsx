@@ -19,7 +19,8 @@ import { world } from '../systems/time';
 import { BALLROOM, CORRIDOR, DINING, WALL_T } from '../world/layout';
 import { KeyedDoor } from './parts/KeyedDoor';
 import { Architrave, Cornice, OnWall, Run, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
-import { Candelabrum, Painting, Rug, SashWindow, SideChair } from './parts/Furnishings';
+import { Candelabrum, Rug, SashWindow, SideChair } from './parts/Furnishings';
+import { Painting } from './parts/Artwork';
 import { Chandelier } from './parts/Lights';
 import { CollectibleKey } from './parts/Key';
 import { Interactive } from './Interactive';
@@ -302,21 +303,21 @@ export function DiningRoom() {
         <Wainscot x0={wallLocal('z', 1, zN)} x1={wallLocal('z', 1, zS)} gaps={[[doorLocal, DOOR_W + 0.36]]} />
         <Architrave c={doorLocal} w={DOOR_W} h={2.3} />
         <Run profile="pictureRail" x0={wallLocal('z', 1, zN)} x1={wallLocal('z', 1, zS)} y={3.5} material={m.walnut} />
-        <Painting x={wallLocal('z', 1, -12.4)} y={2.3} w={0.9} h={0.7} kind="stilllife" seed={51} />
+        <Painting x={wallLocal('z', 1, -12.4)} y={2.3} w={0.9} art="D10" />
       </OnWall>
       {/* North wall */}
       <OnWall axis="x" face={zN} normal={-1}>
         <Wainscot x0={wallLocal('x', -1, x1)} x1={wallLocal('x', -1, x0)} />
         <Run profile="pictureRail" x0={wallLocal('x', -1, x1)} x1={wallLocal('x', -1, x0)} y={3.5} material={m.walnut} />
-        <Painting x={wallLocal('x', -1, 5.9)} y={2.55} w={1.25} h={0.9} kind="moonhouse" seed={52} />
+        <Painting x={wallLocal('x', -1, 5.9)} y={2.55} w={1.25} art="D11" />
       </OnWall>
       {/* South wall */}
       <OnWall axis="x" face={zS} normal={1}>
         <Wainscot x0={x0} x1={x1} gaps={[[BALLROOM.doorX, 0.96 + 0.36]]} />
         <Architrave c={BALLROOM.doorX} w={0.96} h={2.3} />
         <Run profile="pictureRail" x0={x0} x1={x1} y={3.5} material={m.walnut} />
-        <Painting x={3.6} y={2.4} w={0.8} h={1.0} kind="portrait" seed={53} />
-        <Painting x={11.3} y={2.4} w={0.9} h={0.7} kind="sea" seed={54} />
+        <Painting x={3.6} y={2.4} w={0.8} art="D12" />
+        <Painting x={11.3} y={2.4} w={0.9} art="D13" />
       </OnWall>
       {/* East wall: tall windows behind the giant's chair */}
       <OnWall axis="z" face={x1} normal={-1}>

@@ -33,7 +33,7 @@ export const ALLITERATION = {
     labelB: 'Description B',
     descriptionA: 'The printer worked at night.',
     descriptionB: 'The patient printer pressed pages past midnight.',
-    askB: 'Read it aloud. Which sound keeps coming back?',
+    askB: 'Say it quietly to yourself. Which sound keeps coming back?',
     questions: [
       'Which beginning sound repeats in description B?',
       'How does the repeated sound make the sentence feel?',
@@ -97,9 +97,9 @@ export const ALLITERATION = {
     id: 'playA',
     kicker: 'Play  ·  Challenge A',
     title: 'Sound or Spelling?',
-    prompt: 'The press has set six pairs of words. For each pair, decide: alliteration or not? Say the words aloud. Sounds, not letters, decide.',
-    discussion: 'Say both words aloud. Do they BEGIN with the same sound?',
-    retryHint: 'Say the two words aloud and listen to the very first sound of each.',
+    prompt: 'The press has set six pairs of words. For each pair, decide: alliteration or not? Say the words quietly to yourself. Sounds, not letters, decide.',
+    discussion: 'Say both words quietly to yourself. Do they BEGIN with the same sound?',
+    retryHint: 'Say the two words quietly to yourself and listen to the very first sound of each.',
     options: [],
     items: [
       {
@@ -192,7 +192,7 @@ export const ALLITERATION = {
     kicker: 'Prove',
     title: 'The Last Edition',
     baseSentence: 'The press worked all night.',
-    task: 'With a partner, rewrite this sentence using alliteration that sounds like the press at night. The repeated sound should fit the mood, and the sentence must still make sense.',
+    task: 'Rewrite this sentence using alliteration that sounds like the press at night. The repeated sound should fit the mood, and the sentence must still make sense.',
     starters: ['The patient press…', 'Silent sheets…', 'Through the dark, the…'],
     criteria: ['At least two nearby words begin with the same consonant SOUND', 'The sentence makes sense (not a list of random words)', 'The repeated sound fits the mood of the press at night'],
     questions: ['Which sound repeats? Say it.', 'Is it the same sound, or only the same letter?', 'How does that sound match the press?'],

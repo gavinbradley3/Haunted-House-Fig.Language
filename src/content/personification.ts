@@ -185,7 +185,7 @@ export const PERSONIFICATION = {
     kicker: 'Prove',
     title: 'The Slate’s Last Lesson',
     baseSentence: 'The wind blew through the nursery window.',
-    task: 'With a partner, rewrite this sentence using personification. Give the wind (or the window) a human action or feeling that makes the nursery feel lonely or unsettling.',
+    task: 'Rewrite this sentence using personification. Give the wind (or the window) a human action or feeling that makes the nursery feel lonely or unsettling.',
     starters: ['The wind crept…', 'The window shivered as…', 'The wind searched…'],
     criteria: ['Gives something that is not human a human action, feeling or quality', 'It is clear which thing is being personified', 'Creates a lonely or unsettling mood'],
     questions: ['What is being personified?', 'Which word gives it a human action or feeling?', 'How does that change the mood of the nursery?'],

@@ -1,0 +1,286 @@
+{
+  "summary": {
+    "titleMs": {
+      "original": 17402,
+      "final": 16042
+    },
+    "views": {
+      "hall-lady": {
+        "original": {
+          "meanMs": 28.7,
+          "p95Ms": 76.2,
+          "calls": 733,
+          "tris": 72489,
+          "textures": 115,
+          "programs": 30
+        },
+        "final": {
+          "meanMs": 28.7,
+          "p95Ms": 62,
+          "calls": 748,
+          "tris": 74436,
+          "textures": 126,
+          "programs": 30
+        }
+      },
+      "hall-entry": {
+        "original": {
+          "meanMs": 29.9,
+          "p95Ms": 58,
+          "calls": 1081,
+          "tris": 111541,
+          "textures": 115,
+          "programs": 30
+        },
+        "final": {
+          "meanMs": 30,
+          "p95Ms": 58.5,
+          "calls": 1081,
+          "tris": 111541,
+          "textures": 126,
+          "programs": 30
+        }
+      },
+      "gallery-caretaker": {
+        "original": {
+          "meanMs": 27.6,
+          "p95Ms": 105.9,
+          "calls": 385,
+          "tris": 42963,
+          "textures": 126,
+          "programs": 32
+        },
+        "final": {
+          "meanMs": 27.1,
+          "p95Ms": 106,
+          "calls": 379,
+          "tris": 42144,
+          "textures": 137,
+          "programs": 32
+        }
+      },
+      "gallery-north": {
+        "original": {
+          "meanMs": 22.5,
+          "p95Ms": 37.9,
+          "calls": 293,
+          "tris": 30004,
+          "textures": 128,
+          "programs": 32
+        },
+        "final": {
+          "meanMs": 22.4,
+          "p95Ms": 35.3,
+          "calls": 293,
+          "tris": 30004,
+          "textures": 137,
+          "programs": 32
+        }
+      },
+      "dining": {
+        "original": {
+          "meanMs": 28.4,
+          "p95Ms": 112.4,
+          "calls": 514,
+          "tris": 56338,
+          "textures": 136,
+          "programs": 32
+        },
+        "final": {
+          "meanMs": 28.4,
+          "p95Ms": 113.4,
+          "calls": 514,
+          "tris": 56338,
+          "textures": 144,
+          "programs": 32
+        }
+      }
+    }
+  },
+  "raw": {
+    "original": [
+      {
+        "titleMs": 17752,
+        "views": {
+          "hall-lady": {
+            "meanMs": 28.714285714285715,
+            "p95Ms": 80,
+            "calls": 733.2266666666667,
+            "tris": 72488.98666666666,
+            "textures": 115,
+            "programs": 30
+          },
+          "hall-entry": {
+            "meanMs": 29.864285714285714,
+            "p95Ms": 57.70000001788139,
+            "calls": 1080.5533333333333,
+            "tris": 111541.17333333334,
+            "textures": 115,
+            "programs": 30
+          },
+          "gallery-caretaker": {
+            "meanMs": 27.639285714285716,
+            "p95Ms": 106.19999998807907,
+            "calls": 385.2266666666667,
+            "tris": 42962.973333333335,
+            "textures": 126,
+            "programs": 32
+          },
+          "gallery-north": {
+            "meanMs": 22.473571428656577,
+            "p95Ms": 46,
+            "calls": 292.74666666666667,
+            "tris": 30003.853333333333,
+            "textures": 128,
+            "programs": 32
+          },
+          "dining": {
+            "meanMs": 28.411428571385997,
+            "p95Ms": 112.59999999403954,
+            "calls": 514.3466666666667,
+            "tris": 56338.17333333333,
+            "textures": 136,
+            "programs": 32
+          }
+        }
+      },
+      {
+        "titleMs": 17051,
+        "views": {
+          "hall-lady": {
+            "meanMs": 28.691428571513722,
+            "p95Ms": 72.40000000596046,
+            "calls": 733.2266666666667,
+            "tris": 72488.98666666666,
+            "textures": 115,
+            "programs": 30
+          },
+          "hall-entry": {
+            "meanMs": 29.991428571300847,
+            "p95Ms": 58.30000001192093,
+            "calls": 1080.5533333333333,
+            "tris": 111541.17333333334,
+            "textures": 115,
+            "programs": 30
+          },
+          "gallery-caretaker": {
+            "meanMs": 27.487857142942293,
+            "p95Ms": 105.59999999403954,
+            "calls": 385.2266666666667,
+            "tris": 42962.973333333335,
+            "textures": 126,
+            "programs": 32
+          },
+          "gallery-north": {
+            "meanMs": 22.592142857185433,
+            "p95Ms": 29.700000017881393,
+            "calls": 292.74666666666667,
+            "tris": 30003.853333333333,
+            "textures": 128,
+            "programs": 32
+          },
+          "dining": {
+            "meanMs": 28.43428571415799,
+            "p95Ms": 112.2999999821186,
+            "calls": 514.3466666666667,
+            "tris": 56338.17333333333,
+            "textures": 136,
+            "programs": 32
+          }
+        }
+      }
+    ],
+    "final": [
+      {
+        "titleMs": 15753,
+        "views": {
+          "hall-lady": {
+            "meanMs": 28.65428571424314,
+            "p95Ms": 70.40000000596046,
+            "calls": 747.5533333333333,
+            "tris": 74436.17333333334,
+            "textures": 126,
+            "programs": 30
+          },
+          "hall-entry": {
+            "meanMs": 29.875714285884584,
+            "p95Ms": 58,
+            "calls": 1080.5533333333333,
+            "tris": 111541.17333333334,
+            "textures": 126,
+            "programs": 30
+          },
+          "gallery-caretaker": {
+            "meanMs": 27.12071428575686,
+            "p95Ms": 106.5,
+            "calls": 372.4,
+            "tris": 41324.6,
+            "textures": 137,
+            "programs": 32
+          },
+          "gallery-north": {
+            "meanMs": 22.477857142686844,
+            "p95Ms": 29.099999994039536,
+            "calls": 292.74666666666667,
+            "tris": 30003.853333333333,
+            "textures": 137,
+            "programs": 32
+          },
+          "dining": {
+            "meanMs": 28.42571428567171,
+            "p95Ms": 112.59999999403954,
+            "calls": 514.3466666666667,
+            "tris": 56338.17333333333,
+            "textures": 144,
+            "programs": 32
+          }
+        }
+      },
+      {
+        "titleMs": 16331,
+        "views": {
+          "hall-lady": {
+            "meanMs": 28.75928571415799,
+            "p95Ms": 53.5,
+            "calls": 747.5533333333333,
+            "tris": 74436.17333333334,
+            "textures": 126,
+            "programs": 30
+          },
+          "hall-entry": {
+            "meanMs": 30.047857142984867,
+            "p95Ms": 59.099999994039536,
+            "calls": 1080.5533333333333,
+            "tris": 111541.17333333334,
+            "textures": 126,
+            "programs": 30
+          },
+          "gallery-caretaker": {
+            "meanMs": 27.13428571415799,
+            "p95Ms": 105.40000000596046,
+            "calls": 385.2266666666667,
+            "tris": 42962.973333333335,
+            "textures": 137,
+            "programs": 32
+          },
+          "gallery-north": {
+            "meanMs": 22.40428571424314,
+            "p95Ms": 41.5,
+            "calls": 292.74666666666667,
+            "tris": 30003.853333333333,
+            "textures": 137,
+            "programs": 32
+          },
+          "dining": {
+            "meanMs": 28.47142857142857,
+            "p95Ms": 114.10000002384186,
+            "calls": 514.3466666666667,
+            "tris": 56338.17333333333,
+            "textures": 144,
+            "programs": 32
+          }
+        }
+      }
+    ]
+  }
+}

@@ -40,6 +40,7 @@ export function KeyedDoor({ id, door, lock, room, inside, hinge, rotationY, widt
       height={height}
       open={open}
       plaqueText={[room, '']}
+      locked={() => doorState(game().progress, lock) !== 'open'}
       label={() => {
         if (state === 'open' || game().zone === inside) return open ? 'Close the door' : `Open ${room.replace(/^The /, 'the ')}`;
         const name = keyName.charAt(0).toUpperCase() + keyName.slice(1);

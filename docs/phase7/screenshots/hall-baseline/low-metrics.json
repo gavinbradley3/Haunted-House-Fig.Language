@@ -1,0 +1,61 @@
+{
+  "hall-entry": {
+    "meanMs": 50.72,
+    "p95Ms": 64.1,
+    "calls": 1281,
+    "triangles": 138162,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "console-and-painting": {
+    "meanMs": 45.93,
+    "p95Ms": 141.3,
+    "calls": 761,
+    "triangles": 76769,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "console-close": {
+    "meanMs": 47.73,
+    "p95Ms": 168.2,
+    "calls": 728,
+    "triangles": 76501,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "kitchen-door": {
+    "meanMs": 38.55,
+    "p95Ms": 184.1,
+    "calls": 478,
+    "triangles": 55425,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "front-doors": {
+    "meanMs": 43.62,
+    "p95Ms": 126.7,
+    "calls": 882,
+    "triangles": 103060,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "painting-close": {
+    "meanMs": 44.24,
+    "p95Ms": 122.9,
+    "calls": 697,
+    "triangles": 66948,
+    "geometries": 570,
+    "textures": 166,
+    "programs": 35
+  },
+  "pilot": {
+    "pilot": false
+  },
+  "gpu": "ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00009BC8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "quality": "low"
+}

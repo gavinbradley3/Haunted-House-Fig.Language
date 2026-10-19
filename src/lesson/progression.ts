@@ -179,19 +179,24 @@ export function progressReducer(p: Progress, a: ProgressAction): Progress {
 
 /** Read saved progress defensively: anything malformed falls back to a fresh start. */
 export function parseProgress(raw: string | null): Progress {
-  const base = initialProgress();
-  if (!raw) return base;
+  if (!raw) return initialProgress();
   try {
-    const d = JSON.parse(raw) as Partial<Progress>;
-    const keys = Object.fromEntries(KEYS.map((k) => [k, !!d.keys?.[k]])) as Record<KeyId, boolean>;
-    return {
-      completed: Object.fromEntries(ROOMS.map((r) => [r, !!d.completed?.[r]])) as Record<RoomId, boolean>,
-      keys,
-      // An unlocked door without the key that opens it is impossible (or from an older version): ignore it.
-      galleryUnlocked: !!d.galleryUnlocked && keys.mirrorKey,
-      unlocked: Object.fromEntries(LOCKS.map((l) => [l, !!d.unlocked?.[l] && keys[LOCK_KEY[l]]])) as Record<LockId, boolean>,
-    };
+    return restoreProgress(JSON.parse(raw));
   } catch {
-    return base;
+    return initialProgress();
   }
+}
+
+/** Rebuild progress from parsed save data, keeping only what is valid. */
+export function restoreProgress(v: unknown): Progress {
+  if (!v || typeof v !== 'object') return initialProgress();
+  const d = v as Partial<Progress>;
+  const keys = Object.fromEntries(KEYS.map((k) => [k, !!d.keys?.[k]])) as Record<KeyId, boolean>;
+  return {
+    completed: Object.fromEntries(ROOMS.map((r) => [r, !!d.completed?.[r]])) as Record<RoomId, boolean>,
+    keys,
+    // An unlocked door without the key that opens it is impossible (or from an older version): ignore it.
+    galleryUnlocked: !!d.galleryUnlocked && keys.mirrorKey,
+    unlocked: Object.fromEntries(LOCKS.map((l) => [l, !!d.unlocked?.[l] && keys[LOCK_KEY[l]]])) as Record<LockId, boolean>,
+  };
 }

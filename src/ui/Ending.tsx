@@ -1,12 +1,14 @@
 /**
- * The end card, shown when the teacher presses "Finish the night" after the final lesson.
- * It reminds the class what each room taught, with the sentences the class itself wrote.
+ * The end card, shown after "Finish the night" at the end of the final lesson.
+ * It reminds the student what each room taught, with the sentences they wrote themselves.
+ * Starting again (which wipes the save) is only offered in the teacher edition.
  */
 import { useEffect, useState } from 'react';
 import type { RoomId } from '../content/types';
 import { closeLesson } from '../lesson/director';
 import { jumpToHall } from '../lesson/navigation';
 import { CONTENT, useGame } from '../state/store';
+import { TEACHER_BUILD } from '../systems/testBuild';
 
 const ROOMS_TAUGHT: { room: RoomId; where: string; example: string }[] = [
   { room: 'mirrors', where: 'The Hall of Mirrors', example: 'The curtains trembled like frightened hands.' },
@@ -23,6 +25,8 @@ const ROOMS_TAUGHT: { room: RoomId; where: string; example: string }[] = [
 export function Ending() {
   const open = useGame((s) => s.endingOpen);
   const lessons = useGame((s) => s.lessons);
+  const writing = useGame((s) => s.writing);
+  const found = useGame((s) => s.found);
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     if (!armed) return;
@@ -34,14 +38,14 @@ export function Ending() {
     useGame.getState().setEndingOpen(false);
     closeLesson();
   };
-  // The last sentence the class wrote in each room, if they wrote one.
-  const yours = (r: RoomId) => lessons[r].prove.responses[lessons[r].prove.responses.length - 1];
+  // The sentence that passed each room's writing check (or the latest one written there).
+  const yours = (r: RoomId) => writing[r] ?? lessons[r].prove.responses[lessons[r].prove.responses.length - 1];
   return (
     <div className="ending" role="dialog" aria-label="The end">
       <div className="ending-card">
         <div className="kicker">The End</div>
         <h1>The House Can Rest</h1>
-        <p className="ending-lead">Morning has come to the House of Strange Language. Your class learned to read it.</p>
+        <p className="ending-lead">Morning has come to the House of Strange Language. You learned to read it.</p>
         <div className="ending-grid">
           {ROOMS_TAUGHT.map((t) => (
             <div key={t.room} className="ending-room">
@@ -50,7 +54,7 @@ export function Ending() {
               <p>“{t.example}”</p>
               {yours(t.room) && (
                 <p className="ending-yours">
-                  <span>Your class wrote</span>“{yours(t.room)}”
+                  <span>You wrote</span>“{yours(t.room)}”
                 </p>
               )}
             </div>
@@ -61,11 +65,12 @@ export function Ending() {
             <span>And your answer to the Lady</span>“{yours('finale')}”
           </p>
         )}
+        {found.diary && <p className="ending-lead" style={{ marginTop: 18, fontSize: 21 }}>You also found the page from the Lady’s diary on the upper landing. Not every visitor climbs the stairs.</p>}
         <div className="ending-actions">
           <button className="btn" onClick={close}>
             Keep exploring
           </button>
-          <button
+          {TEACHER_BUILD && <button
             className={`btn ${armed ? 'now' : ''}`}
             onClick={() => {
               if (!armed) return setArmed(true);
@@ -77,8 +82,8 @@ export function Ending() {
               jumpToHall();
             }}
           >
-            {armed ? 'Press again: start a new class' : 'Start again with a new class'}
-          </button>
+            {armed ? 'Press again: wipe this game and start again' : 'Teacher: start again from the beginning'}
+          </button>}
         </div>
       </div>
     </div>

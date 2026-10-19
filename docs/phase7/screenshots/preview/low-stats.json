@@ -1,0 +1,215 @@
+{
+  "quality": "low",
+  "readyMs": 19618,
+  "views": {
+    "overview": {
+      "frame": {
+        "mean": 18.49,
+        "p95": 47.1
+      },
+      "gl": {
+        "calls": 210,
+        "triangles": 64321,
+        "geometries": 92,
+        "textures": 58,
+        "programs": 17
+      }
+    },
+    "consoles": {
+      "frame": {
+        "mean": 35.84,
+        "p95": 135.7
+      },
+      "gl": {
+        "calls": 79,
+        "triangles": 14852,
+        "geometries": 92,
+        "textures": 58,
+        "programs": 17
+      }
+    },
+    "doors": {
+      "frame": {
+        "mean": 48.19,
+        "p95": 209.2
+      },
+      "gl": {
+        "calls": 138,
+        "triangles": 32269,
+        "geometries": 92,
+        "textures": 58,
+        "programs": 17
+      }
+    },
+    "frames": {
+      "frame": {
+        "mean": 24.39,
+        "p95": 81.8
+      },
+      "gl": {
+        "calls": 79,
+        "triangles": 26965,
+        "geometries": 92,
+        "textures": 58,
+        "programs": 17
+      }
+    },
+    "variants": {
+      "frame": {
+        "mean": 15.79,
+        "p95": 41.8
+      },
+      "gl": {
+        "calls": 90,
+        "triangles": 42236,
+        "geometries": 102,
+        "textures": 58,
+        "programs": 17
+      }
+    },
+    "stretched": {
+      "frame": {
+        "mean": 13.46,
+        "p95": 32
+      },
+      "gl": {
+        "calls": 104,
+        "triangles": 35096,
+        "geometries": 110,
+        "textures": 58,
+        "programs": 17
+      }
+    },
+    "console-close": {
+      "frame": {
+        "mean": 15.59,
+        "p95": 37.9
+      },
+      "gl": {
+        "calls": 47,
+        "triangles": 11588,
+        "geometries": 110,
+        "textures": 58,
+        "programs": 17
+      }
+    },
+    "door-close": {
+      "frame": {
+        "mean": 18.26,
+        "p95": 43.8
+      },
+      "gl": {
+        "calls": 82,
+        "triangles": 16223,
+        "geometries": 110,
+        "textures": 58,
+        "programs": 17
+      }
+    },
+    "frame-close": {
+      "frame": {
+        "mean": 17.12,
+        "p95": 38
+      },
+      "gl": {
+        "calls": 74,
+        "triangles": 17310,
+        "geometries": 110,
+        "textures": 58,
+        "programs": 17
+      }
+    }
+  },
+  "assets": {
+    "console:old": {
+      "tris": 2148,
+      "draws": 7,
+      "materials": 2,
+      "textures": 6,
+      "texBytes": 8388606
+    },
+    "console:new": {
+      "tris": 7566,
+      "draws": 1,
+      "materials": 1,
+      "textures": 3,
+      "texBytes": 12582911
+    },
+    "door:old": {
+      "tris": 1756,
+      "draws": 27,
+      "materials": 3,
+      "textures": 6,
+      "texBytes": 5242878
+    },
+    "frame:old": {
+      "tris": 142,
+      "draws": 6,
+      "materials": 3,
+      "textures": 4,
+      "texBytes": 5242879
+    },
+    "door:new": {
+      "tris": 3694,
+      "draws": 4,
+      "materials": 3,
+      "textures": 4,
+      "texBytes": 6640980
+    },
+    "door:front-size": {
+      "tris": 3694,
+      "draws": 4,
+      "materials": 3,
+      "textures": 4,
+      "texBytes": 6640980
+    },
+    "door:mirror-size": {
+      "tris": 3694,
+      "draws": 4,
+      "materials": 3,
+      "textures": 4,
+      "texBytes": 6640980
+    },
+    "frame:new": {
+      "tris": 8014,
+      "draws": 3,
+      "materials": 3,
+      "textures": 5,
+      "texBytes": 9087658
+    },
+    "frame:portrait": {
+      "tris": 8014,
+      "draws": 3,
+      "materials": 3,
+      "textures": 5,
+      "texBytes": 9087658
+    },
+    "frame:landscape": {
+      "tris": 8014,
+      "draws": 3,
+      "materials": 3,
+      "textures": 5,
+      "texBytes": 9087658
+    },
+    "frame:plain-narrow": {
+      "tris": 498,
+      "draws": 2,
+      "materials": 3,
+      "textures": 5,
+      "texBytes": 9087658
+    },
+    "frame:plain": {
+      "tris": 498,
+      "draws": 2,
+      "materials": 3,
+      "textures": 5,
+      "texBytes": 9087658
+    }
+  },
+  "loadTimes": {
+    "frame_kit_ornate.glb": 7334,
+    "console_table_walnut.glb": 7348,
+    "door_kit_victorian.glb": 7350
+  },
+  "gpu": "ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00009BC8) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+}

@@ -99,7 +99,7 @@ export const METAPHOR = {
     kicker: 'Play  ·  Challenge A',
     title: 'Restore the Missing Title',
     prompt: 'This painting’s brass nameplate has been rubbed blank. Only one of these was its real title: the metaphor. Which one?',
-    discussion: 'Talk with a partner. Name what each of the other two is instead.',
+    discussion: 'Before you check, name what each of the other two is instead.',
     options: [
       {
         id: 'a',
@@ -183,7 +183,7 @@ export const METAPHOR = {
     kicker: 'Prove',
     title: 'The Portrait’s Final Request',
     baseSentence: 'The house was quiet.',
-    task: 'With a partner, rewrite this sentence as a metaphor that makes the house feel strange, unsettling or mysterious. The empty frame is waiting for a title.',
+    task: 'Rewrite this sentence as a metaphor that makes the house feel strange, unsettling or mysterious. The empty frame is waiting for a title.',
     starters: ['The house was…', 'The silence was…', 'Its hallways were…'],
     criteria: ['Compares two different things', 'Says one thing IS the other (no like or as)', 'Makes the house feel strange or unsettling'],
     questions: [
