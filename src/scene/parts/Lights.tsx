@@ -33,6 +33,8 @@ export const houseState = {
   gust: { start: -1, until: -1 },
   /** Every lamp in the house sinks almost to nothing, then recovers. */
   dim: { start: -1, until: -1 },
+  /** The hall side chair has been moved while nobody was looking (0 or 1; it eases between). */
+  chairMoved: 0,
 };
 
 /** 0..1: how hard the current gust is blowing (a smooth swell and fall). */

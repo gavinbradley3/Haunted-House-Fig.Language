@@ -28,6 +28,7 @@ import { NurseryDirector } from '../lesson/nurseryDirector';
 import { Finale } from './Finale';
 import { FinaleDirector } from '../lesson/finaleDirector';
 import { HouseEvents } from './HouseEvents';
+import { HauntFigure } from './HauntFigure';
 import { ChamberOfEchoes } from './ChamberOfEchoes';
 import { WhisperingPress } from './WhisperingPress';
 import { CrookedKitchen } from './CrookedKitchen';
@@ -202,29 +203,72 @@ function Precompile() {
   return null;
 }
 
+/** Steps the 3D view's resolution can drop to on Low, as a fraction of Low's own resolution. */
+export const RENDER_SCALES = [1, 0.85, 0.72];
+
 /**
- * Watches the frame rate during play; if the computer is struggling, step quality
- * down one level (at most once every few seconds). Manual choices switch this off.
+ * Watches the frame rate during play. In development builds above Low it steps the preset down.
+ * On Low (the only setting students have) it lowers the 3D view's resolution instead, one step at
+ * a time, if the computer struggles, and raises it again once there is plenty of headroom. Menus
+ * and text are HTML on top of the 3D view, so they stay sharp whatever the 3D resolution.
  */
 function FpsGuard() {
-  const acc = useMemo(() => ({ t: 0, frames: 0, bad: 0 }), []);
+  const acc = useMemo(() => ({ t: 0, frames: 0, bad: 0, good: 0 }), []);
   const testing = useMemo(() => TEST_BUILD && new URLSearchParams(location.search).has('testdt'), []);
   useFrame((_, dt) => {
     const s = game();
-    if (testing || !s.autoQuality || s.phase !== 'play' || s.quality === 'low' || document.hidden) return;
+    if (testing || s.phase !== 'play' || document.hidden || s.paused || s.helpOpen) {
+      acc.t = 0;
+      acc.frames = 0;
+      return;
+    }
     acc.t += dt;
     acc.frames++;
-    if (acc.t < 4) return;
+    if (acc.t < 3) return;
     const fps = acc.frames / acc.t;
     acc.t = 0;
     acc.frames = 0;
-    acc.bad = fps < 34 ? acc.bad + 1 : 0;
-    if (acc.bad >= 2) {
+    if (s.quality !== 'low') {
+      if (!s.autoQuality) return;
+      acc.bad = fps < 34 ? acc.bad + 1 : 0;
+      if (acc.bad >= 2) {
+        acc.bad = 0;
+        useGame.getState().setQuality(s.quality === 'high' ? 'balanced' : 'low', true);
+        console.info(`[quality] average ${fps.toFixed(0)} fps, lowering graphics quality`);
+      }
+      return;
+    }
+    const i = RENDER_SCALES.indexOf(s.renderScale);
+    acc.bad = fps < 24 ? acc.bad + 1 : 0;
+    acc.good = fps > 50 ? acc.good + 1 : 0;
+    if (acc.bad >= 2 && i < RENDER_SCALES.length - 1) {
       acc.bad = 0;
-      useGame.getState().setQuality(s.quality === 'high' ? 'balanced' : 'low', true);
-      console.info(`[quality] average ${fps.toFixed(0)} fps, lowering graphics quality`);
+      useGame.getState().setRenderScale(RENDER_SCALES[Math.max(0, i) + 1]);
+      console.info(`[quality] average ${fps.toFixed(0)} fps, lowering the 3D resolution`);
+    } else if (acc.good >= 4 && i > 0) {
+      acc.good = 0;
+      useGame.getState().setRenderScale(RENDER_SCALES[i - 1]);
+      console.info(`[quality] average ${fps.toFixed(0)} fps, raising the 3D resolution`);
     }
   });
+  return null;
+}
+
+/**
+ * The graphics context can be lost on a Chromebook (low memory, a GPU reset, waking from sleep).
+ * Show the recovery card instead of a frozen picture; progress is already saved.
+ */
+function ContextWatch() {
+  const { gl } = useThree();
+  useEffect(() => {
+    const el = gl.domElement;
+    const lost = (e: Event) => {
+      e.preventDefault();
+      useGame.getState().setGraphicsLost(true);
+    };
+    el.addEventListener('webglcontextlost', lost);
+    return () => el.removeEventListener('webglcontextlost', lost);
+  }, [gl]);
   return null;
 }
 
@@ -254,12 +298,14 @@ function useWindowWidth() {
 
 export function GameCanvas() {
   const quality = useGame((s) => s.quality);
+  const renderScale = useGame((s) => (s.quality === 'low' ? s.renderScale : 1));
   const q = QUALITY[quality];
   const width = useWindowWidth();
+  const [lo, hi] = dprFor(q, width);
   return (
     <Canvas
       shadows={{ type: THREE.PCFShadowMap }}
-      dpr={dprFor(q, width)}
+      dpr={[lo * renderScale, hi * renderScale]}
       gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
       camera={{ fov: 62, near: 0.05, far: 420, position: [0, 3, 30] }}
       onCreated={({ gl }) => {
@@ -316,7 +362,9 @@ export function GameCanvas() {
         <LaterDirectors />
         <LessonCamera />
         <HouseEvents />
+        <HauntFigure />
         <FpsGuard />
+        <ContextWatch />
         <Precompile />
         <EffectComposer multisampling={q.msaa} enableNormalPass={false} key={quality}>
           {q.ao ? <N8AO aoRadius={0.7} intensity={2.2} distanceFalloff={0.6} halfRes quality={q.ao} color="#050302" /> : <></>}

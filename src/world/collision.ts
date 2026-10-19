@@ -55,8 +55,10 @@ export const STATIC_BOXES: Box[] = [
   ...wallX(HALL.x0, HALL.x1, HALL.zBack - h, [[0, HALL.corridorOpening.width]]),
   ...wallZ(HALL.zFront, HALL.zBack, HALL.x0 - h, [[STUDY.doorZ, 0.96]]),
   ...wallZ(HALL.zFront, HALL.zBack, HALL.x1 + h, [[KITCHEN.doorZ, 0.96]]),
-  // Staircase footprint (upstairs is roped off).
-  box(HALL.stair.x0, HALL.stair.x1 + 0.05, HALL.stair.zStart + 0.35, HALL.stair.zEnd),
+  // The staircase: climbed from the bottom only (its open side and its back are closed).
+  // While on the stairs or the landing, other boxes apply (see boxesFor).
+  box(HALL.stair.x1, HALL.stair.x1 + 0.06, HALL.stair.zEnd, HALL.stair.zStart - 0.25),
+  box(HALL.stair.x0, HALL.stair.x1 + 0.06, HALL.stair.zEnd - 0.06, HALL.stair.zEnd),
   // Fireplace hearth and surround
   boxAt(HALL.x1 - 0.35, HALL.fireplace.z, 0.75, 2.5),
   // Centre table and rug furniture
@@ -137,7 +139,7 @@ export const STATIC_BOXES: Box[] = [
   ...wallX(PRESS.x0 - WALL_T, PRESS.x1, PRESS.zN + h),
   ...wallX(PRESS.x0 - WALL_T, PRESS.x1, PRESS.zS - h),
   ...wallZ(PRESS.zN, PRESS.zS, PRESS.x0 - h),
-  boxAt(PRESS.press.x, PRESS.press.z, 1.3, 1.7),
+  boxAt(PRESS.press.x + 0.2, PRESS.press.z, 1.75, 1.7),
   boxAt(PRESS.cases.x, PRESS.cases.z, 2.6, 0.7),
   boxAt(PRESS.board.x, PRESS.board.z, 1.0, 0.6),
   boxAt(-19.5, -35.2, 1.5, 1.0),
@@ -157,7 +159,7 @@ export const STATIC_BOXES: Box[] = [
   ...wallZ(BALLROOM.zN, BALLROOM.zS, BALLROOM.x0 - h),
   ...wallZ(BALLROOM.zN, BALLROOM.zS, BALLROOM.x1 + h),
   ...wallX(BALLROOM.x0 - WALL_T, BALLROOM.x1 + WALL_T, BALLROOM.zS - h),
-  boxAt(BALLROOM.dancers.x, BALLROOM.dancers.z, 1.5, 1.5),
+  boxAt(BALLROOM.dancers.x, BALLROOM.dancers.z, 2.0, 2.0),
   ...BALLROOM.candles.map(([x, z]) => boxAt(x, z, 0.5, 0.5)),
   boxAt(BALLROOM.secret.x, BALLROOM.secret.z, 1.1, 0.8),
   boxAt(BALLROOM.board.x, BALLROOM.board.z, 0.6, 1.0),
@@ -178,6 +180,20 @@ export const STATIC_BOXES: Box[] = [
   box(11.5, 12, 0, 14.5),
 ];
 
+/** Which level the player is on: the ground floor, the staircase, or the upper landing. */
+export type Floor = 'ground' | 'stair' | 'upper';
+
+const { stair: ST, landing: LD } = HALL;
+/** On the stairs: the hall wall on one side, the balustrade on the other. */
+const STAIR_BOXES: Box[] = [box(HALL.x0 - WALL_T, HALL.x0, LD.zEdge - 0.5, HALL.zFront), box(ST.x1, ST.x1 + 0.06, ST.zEnd - 0.1, ST.zStart - 0.25)];
+/** The upper landing: walls on three sides, the balustrade along its open edge (except where the stairs arrive). */
+export const UPPER_BOXES: Box[] = [
+  box(HALL.x0 - WALL_T, HALL.x0, HALL.zBack, LD.zEdge + 0.3),
+  box(HALL.x1, HALL.x1 + WALL_T, HALL.zBack, LD.zEdge + 0.3),
+  box(HALL.x0, HALL.x1, HALL.zBack - WALL_T, HALL.zBack),
+  box(ST.x1, HALL.x1, LD.zEdge, LD.zEdge + 0.12),
+];
+
 /** Dynamic colliders keyed by id (doors). */
 const dynamic = new Map<string, { box: Box; active: boolean }>();
 
@@ -196,6 +212,21 @@ function activeBoxes(): Box[] {
   const out = STATIC_BOXES.slice();
   for (const d of dynamic.values()) if (d.active) out.push(d.box);
   return out;
+}
+
+/** The boxes that apply on each level (the ground floor's doors do not reach the landing). */
+export function boxesFor(floor: Floor): Box[] {
+  if (floor === 'stair') return STAIR_BOXES;
+  if (floor === 'upper') return UPPER_BOXES;
+  return activeBoxes();
+}
+
+/** Which level the player is on after moving to (x, z), given the level they were on. */
+export function floorAfter(prev: Floor, x: number, z: number): Floor {
+  const onStair = x >= ST.x0 && x <= ST.x1 && z <= ST.zStart && z >= ST.zEnd;
+  if (onStair) return 'stair';
+  if (prev === 'stair') return z < ST.zEnd ? 'upper' : 'ground';
+  return prev;
 }
 
 /**

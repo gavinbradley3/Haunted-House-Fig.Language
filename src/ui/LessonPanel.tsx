@@ -120,11 +120,11 @@ function Discover() {
         <>
           {!d.questionsShown ? (
             <button className="btn quiet" onClick={() => dispatch({ type: 'SHOW_DISCOVER_QUESTIONS' })}>
-              Show discussion questions
+              Show questions to think about
             </button>
           ) : (
             <>
-              <div className="discuss">Talk with a partner</div>
+              <div className="discuss">Think it through</div>
               <ol className="questions">
                 {c.questions.map((q) => (
                   <li key={q}>{q}</li>
@@ -244,7 +244,7 @@ function Choice({ ch }: { ch: ChoiceChallenge }) {
       {!c.solved && (
         <div className="row-actions">
           <button className="btn primary" disabled={!c.selected || c.checked} onClick={() => dispatch({ type: 'CHECK_ANSWER', challenge: ch.id })}>
-            Check the class’s answer
+            Check my answer
           </button>
         </div>
       )}
@@ -399,7 +399,7 @@ function Items({ ch }: { ch: ChoiceChallenge }) {
                 </div>
                 )}
                 <button className="btn primary small" disabled={!st.selected || st.checked} onClick={() => dispatch({ type: 'CHECK_ITEM', challenge: ch.id, itemId: it.id })}>
-                  Check the class’s answer
+                  Check my answer
                 </button>
                 {st.checked && sel && !st.solved && (
                   <div className="feedback bad">
@@ -558,25 +558,28 @@ function Prove() {
       >
         <input
           value={p.draft}
-          placeholder={`Type a student’s ${noun}…`}
+          placeholder={`Type your ${noun} here…`}
           onChange={(e) => dispatch({ type: 'SET_DRAFT', text: e.target.value })}
           onKeyDown={(e) => e.stopPropagation()}
-          aria-label={`Student ${noun}`}
+          aria-label={`Your ${noun}`}
+          maxLength={220}
+          autoFocus={!latest}
+          spellCheck
         />
         <button className="btn" type="submit" disabled={!p.draft.trim()}>
           {content.proveButton ?? (room === 'gallery' ? 'Give the frame its title' : 'Show in the mirror')}
         </button>
       </form>
-      {content.requireMastery && !latest && <p className="mastery-note">To finish this room, add the class’s own sentence, then check it together against every success criterion.</p>}
+      {content.requireMastery && !latest && <p className="mastery-note">To finish this room, write your own sentence, then check it against every success criterion.</p>}
       {latest && (
         <>
           <div className="response">
-            <small>From the class</small>“{latest}”
+            <small>Your sentence</small>“{latest}”
           </div>
           <div className="criteria-head">
-            <strong>Class self-check</strong> Read the sentence together and tick each criterion the class agrees it meets. This is the class’s own judgement, not a mark from the game.
+            <strong>My writing check</strong> Read your sentence again slowly and tick each criterion it really meets. This is your own judgement, not a mark from the game.
           </div>
-          <div className="criteria" role="group" aria-label="Class self-check">
+          <div className="criteria" role="group" aria-label="My writing check">
             {c.criteria.map((cr, i) => (
               <label key={cr}>
                 <input type="checkbox" checked={p.criteria[i]} onChange={() => dispatch({ type: 'TOGGLE_CRITERION', index: i })} />
@@ -584,7 +587,7 @@ function Prove() {
               </label>
             ))}
           </div>
-          {content.requireMastery && !p.criteria.every(Boolean) && <p className="mastery-note">To finish this room, tick every criterion the class agrees its sentence meets. If one is not met yet, improve the sentence and add it again.</p>}
+          {content.requireMastery && !p.criteria.every(Boolean) && <p className="mastery-note">To finish this room, tick every criterion your sentence meets. If one is not met yet, improve your sentence and add it again.</p>}
           {p.responses.slice(0, -1).reverse().slice(0, 3).map((r, i) => (
             <div className="earlier" key={i}>
               <span>“{r}”</span>
@@ -597,7 +600,7 @@ function Prove() {
       )}
       {!p.questionsShown ? (
         <button className="btn quiet" onClick={() => dispatch({ type: 'SHOW_PROVE_QUESTIONS' })}>
-          Show discussion questions
+          Show questions to think about
         </button>
       ) : (
         <>
@@ -611,9 +614,11 @@ function Prove() {
       )}
       {!p.modelRevealed ? (
         <div className="row-actions" style={{ marginTop: 16 }}>
-          <button className="btn" onClick={() => dispatch({ type: 'REVEAL_MODEL' })}>
-            Reveal a model answer
+          {/* On their own, students write first and compare afterwards: the model unlocks after their first sentence. */}
+          <button className="btn" disabled={!latest} onClick={() => dispatch({ type: 'REVEAL_MODEL' })}>
+            Compare with a model answer
           </button>
+          {!latest && <span className="mastery-note" style={{ margin: 0, alignSelf: 'center' }}>Write your own sentence first.</span>}
         </div>
       ) : (
         <>
@@ -714,7 +719,7 @@ export function LessonPanel() {
           <button
             className="btn primary"
             disabled={!!C.requireMastery && !masteryMet(lesson)}
-            title={C.requireMastery && !masteryMet(lesson) ? 'Add a class sentence and complete the class self-check first.' : undefined}
+            title={C.requireMastery && !masteryMet(lesson) ? 'Write your own sentence and finish your writing check first.' : undefined}
             onClick={() => dispatch({ type: 'COMPLETE' })}
           >
             Complete the challenge

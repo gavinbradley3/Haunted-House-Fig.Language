@@ -22,6 +22,28 @@ import { Interactive } from './Interactive';
 
 const TRAYS = ['phantom', 'cold', 'creaking', 'giant', 'whispering', 'silver'];
 
+/** The Albion's frame, seen from the front: two cheeks joined by an arched crown and a base, one casting. */
+const PRESS_FRAME = (() => {
+  const s = new THREE.Shape();
+  s.moveTo(-0.62, 0.0);
+  s.lineTo(0.62, 0.0);
+  s.lineTo(0.62, 2.05);
+  s.quadraticCurveTo(0.6, 2.4, 0.0, 2.46);
+  s.quadraticCurveTo(-0.6, 2.4, -0.62, 2.05);
+  s.closePath();
+  const hole = new THREE.Path();
+  hole.moveTo(-0.44, 0.24);
+  hole.lineTo(-0.44, 1.92);
+  hole.quadraticCurveTo(-0.42, 2.2, 0.0, 2.24);
+  hole.quadraticCurveTo(0.42, 2.2, 0.44, 1.92);
+  hole.lineTo(0.44, 0.24);
+  hole.closePath();
+  s.holes.push(hole);
+  const g = new THREE.ExtrudeGeometry(s, { depth: 0.22, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.02, bevelSegments: 2, curveSegments: 12 });
+  g.translate(0, 0, -0.11);
+  return g;
+})();
+
 function HandPress() {
   const m = mats();
   const platen = useRef<THREE.Group>(null!);
@@ -47,25 +69,60 @@ function HandPress() {
     <group position={[PRESS.press.x, 0, PRESS.press.z]} rotation={[0, Math.PI / 2, 0]}>
       {/* Turned to face the doorway, so the class sees the bed, the platen and the proof. */}
       <Interactive id="press-machine" maxDist={3.2} label={() => (game().lessonActive || done ? null : 'Use the press')} onUse={() => openLesson('press')}>
-        {/* Iron frame */}
-        {[-0.6, 0.6].map((x) => (
-          <mesh key={x} geometry={boxGeo(0.14, 2.2, 0.3)} material={m.iron} position={[x, 1.1, 0]} castShadow />
+        {/* An Albion iron hand press: the arched frame is one casting, crowned at the top */}
+        <mesh geometry={PRESS_FRAME} material={m.iron} castShadow receiveShadow />
+        <mesh material={m.brass} position={[0, 2.5, 0]}>
+          <sphereGeometry args={[0.07, 12, 8]} />
+        </mesh>
+        {/* Feet */}
+        {[-0.56, 0.56].map((x) => (
+          <mesh key={x} geometry={boxGeo(0.24, 0.08, 0.62)} material={m.iron} position={[x, 0.04, 0.05]} castShadow />
         ))}
-        <mesh geometry={boxGeo(1.4, 0.22, 0.34, 'x')} material={m.iron} position={[0, 2.25, 0]} castShadow />
-        <mesh material={m.iron} position={[0, 1.95, 0]}>
-          <cylinderGeometry args={[0.06, 0.06, 0.5, 12]} />
-        </mesh>
-        {/* Bed with the forme of type and the proof */}
-        <mesh geometry={boxGeo(1.3, 0.12, 1.0)} material={m.iron} position={[0, 0.9, 0.1]} castShadow receiveShadow />
-        <mesh geometry={boxGeo(1.1, 0.04, 0.8)} material={m.leadType} position={[0, 0.98, 0.1]} />
-        <group ref={platen} position={[0, 1.55, 0.1]}>
-          <mesh geometry={boxGeo(1.0, 0.1, 0.75)} material={m.iron} castShadow />
+        {/* The rails (ribs) the bed runs out on, with their front leg */}
+        {[-0.38, 0.38].map((x) => (
+          <mesh key={x} geometry={boxGeo(0.06, 0.07, 1.45)} material={m.iron} position={[x, 0.82, 0.32]} castShadow />
+        ))}
+        <mesh geometry={boxGeo(0.86, 0.06, 0.06, 'x')} material={m.iron} position={[0, 0.82, 1.02]} />
+        {[-0.38, 0.38].map((x) => (
+          <mesh key={x} material={m.iron} position={[x, 0.41, 1.0]}>
+            <cylinderGeometry args={[0.025, 0.035, 0.8, 8]} />
+          </mesh>
+        ))}
+        {/* Bed with the forme of type locked in its chase */}
+        <mesh geometry={boxGeo(0.96, 0.1, 0.9)} material={m.iron} position={[0, 0.9, 0.18]} castShadow receiveShadow />
+        <mesh geometry={boxGeo(0.8, 0.04, 0.66)} material={m.leadType} position={[0, 0.97, 0.18]} />
+        {/* The tympan, hinged at the front of the bed and raised, with a sheet in it */}
+        <group position={[0, 0.96, 0.66]} rotation={[-1.05, 0, 0]}>
+          {[-0.39, 0.39].map((x) => (
+            <mesh key={x} geometry={boxGeo(0.03, 0.02, 0.74)} material={m.iron} position={[x, 0, 0.37]} />
+          ))}
+          <mesh geometry={boxGeo(0.81, 0.02, 0.03, 'x')} material={m.iron} position={[0, 0, 0.74]} />
+          <mesh geometry={boxGeo(0.72, 0.006, 0.66)} material={m.paintCream} position={[0, 0.006, 0.37]} />
         </group>
-        {/* The lever */}
-        <mesh material={m.iron} position={[0.75, 1.9, 0.2]} rotation={[0, 0, 0.9]}>
-          <cylinderGeometry args={[0.025, 0.025, 1.0, 8]} />
+        <group ref={platen} position={[0, 1.55, 0.05]}>
+          <mesh geometry={boxGeo(0.86, 0.09, 0.7)} material={m.iron} castShadow />
+        </group>
+        {/* The spindle, and the bar that turns it: a long iron handle with a wooden grip */}
+        <mesh material={m.iron} position={[0, 1.8, 0.05]}>
+          <cylinderGeometry args={[0.055, 0.055, 0.42, 12]} />
         </mesh>
-        <mesh geometry={boxGeo(1.4, 0.7, 0.18, 'x')} material={m.walnut} position={[0, 0.35, 0.1]} castShadow />
+        <group position={[0.06, 1.85, 0.05]} rotation={[0, -0.5, 0]}>
+          <mesh material={m.iron} position={[0.55, 0, 0]} rotation={[0, 0, Math.PI / 2 + 0.06]}>
+            <cylinderGeometry args={[0.022, 0.03, 1.1, 8]} />
+          </mesh>
+          <mesh material={m.walnut} position={[1.12, 0.03, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.035, 0.035, 0.22, 10]} />
+          </mesh>
+        </group>
+        {/* The rounce: the wheel that winds the bed in and out */}
+        <group position={[-0.45, 0.82, 0.62]} rotation={[0, Math.PI / 2, 0]}>
+          <mesh material={m.iron}>
+            <torusGeometry args={[0.13, 0.014, 6, 18]} />
+          </mesh>
+          <mesh material={m.walnut} position={[0.13, 0, 0.06]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.018, 0.018, 0.12, 8]} />
+          </mesh>
+        </group>
       </Interactive>
       {/* The printed proof, pinned to the front of the frame above the platen */}
       <mesh ref={proof} material={proofMat} position={[0, 1.86, 0.2]} visible={false}>

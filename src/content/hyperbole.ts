@@ -230,7 +230,7 @@ export const HYPERBOLE = {
     kicker: 'Prove',
     title: 'The Giant’s Menu',
     baseSentence: 'The soup was hot.',
-    task: 'With a partner, rewrite this sentence as a hyperbole. Exaggerate so far that nobody could believe it, and choose your exaggeration for an effect: funny, amazing or frightening.',
+    task: 'Rewrite this sentence as a hyperbole. Exaggerate so far that nobody could believe it, and choose your exaggeration for an effect: funny, amazing or frightening.',
     starters: ['The soup was so hot that…', 'One spoonful of that soup…', 'The steam from the soup…'],
     criteria: ['Exaggerates far beyond the truth', 'Is clearly not meant to be taken literally', 'The exaggeration creates an effect (funny, amazing or frightening)'],
     questions: ['What is being exaggerated?', 'How do you know it is not meant literally?', 'What effect does the exaggeration create?'],

@@ -14,7 +14,9 @@ import { doorState } from './lesson/progression';
 import { skipCinematic } from './scene/Player';
 import { liveCamera, world } from './systems/time';
 import { getInteractable } from './systems/interaction';
-import { triggerStrangeEvent } from './scene/HouseEvents';
+import { forceHaunt, hauntState, holdHaunting, triggerStrangeEvent } from './scene/HouseEvents';
+import { doorNudge } from './scene/parts/Door';
+import { figureFx, showFigure } from './scene/HauntFigure';
 import { hungPaintings } from './scene/parts/Artwork';
 import { houseState } from './scene/parts/Lights';
 import { renderer } from './systems/renderer';
@@ -31,6 +33,22 @@ export function installTestHook() {
     liveCamera,
     getInteractable,
     triggerStrangeEvent,
+    forceHaunt,
+    holdHaunting,
+    showFigure,
+    figureFx,
+    hauntState,
+    doorNudge,
+    /** The final mix's loudness right now (dBFS, RMS over ~43 ms), for measuring how audible events are. */
+    level: () => {
+      const a = audio.tap();
+      if (!a) return null;
+      const d = new Float32Array(a.fftSize);
+      a.getFloatTimeDomainData(d);
+      let s = 0;
+      for (const v of d) s += v * v;
+      return 10 * Math.log10(s / d.length + 1e-12);
+    },
     hungPaintings,
     audio,
     houseState,

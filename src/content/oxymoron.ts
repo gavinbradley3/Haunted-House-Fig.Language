@@ -232,7 +232,7 @@ export const OXYMORON = {
     kicker: 'Prove',
     title: 'The Last Dance Card',
     baseSentence: 'The ballroom was empty.',
-    task: 'With a partner, describe the ballroom in one sentence that uses an oxymoron. Join two contradictory words into one idea that makes the ballroom feel strange.',
+    task: 'Describe the ballroom in one sentence that uses an oxymoron. Join two contradictory words into one idea that makes the ballroom feel strange.',
     starters: ['The ballroom was filled with…', 'The dancers moved in a…', 'A … … hung over the floor.'],
     criteria: ['Joins two contradictory words', 'The pair describes ONE thing (not two opposites listed)', 'Makes the ballroom feel strange or unsettling'],
     questions: ['Which two words contradict each other?', 'What single thing do they describe together?', 'How does it change the way we see the ballroom?'],

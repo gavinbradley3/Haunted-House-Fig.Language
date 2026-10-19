@@ -65,25 +65,95 @@ function FrozenFireStand({ x, z, seed }: { x: number; z: number; seed: number })
   );
 }
 
-/** A dress form: a padded torso on a stand with a long skirt. */
-function DressForm({ color }: { color: THREE.Material }) {
+/** Turn a radius profile [r, y] into a surface of revolution, with optional vertical folds. */
+function lathe(profile: [number, number][], segments: number, folds = 0, foldDepth = 0, squashZ = 1) {
+  const g = new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), segments);
+  const p = g.attributes.position as THREE.BufferAttribute;
+  const ys = profile.map(([, y]) => y);
+  const y0 = Math.min(...ys);
+  const y1 = Math.max(...ys);
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i);
+    const y = p.getY(i);
+    const z = p.getZ(i);
+    const a = Math.atan2(z, x);
+    // Folds are deepest at the hem and vanish at the waist, like real pleats falling from a waistband.
+    // (Positions are 32-bit floats, so clamp: a tiny negative base to a fractional power is NaN.)
+    const k = folds ? 1 + foldDepth * Math.sin(a * folds) * Math.max(0, (y1 - y) / (y1 - y0)) ** 1.3 : 1;
+    p.setXYZ(i, x * k, y, z * k * squashZ);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
+const GOWN = {
+  // A crinoline skirt: a wide bell from the floor to a narrow waist.
+  skirt: lathe(
+    [
+      [0.47, 0.0],
+      [0.5, 0.05],
+      [0.49, 0.2],
+      [0.45, 0.38],
+      [0.37, 0.58],
+      [0.26, 0.77],
+      [0.17, 0.92],
+      [0.135, 0.99],
+    ],
+    44,
+    14,
+    0.06,
+  ),
+  // A fitted bodice on the dress form: waist, bust, shoulders, the padded neck.
+  bodice: lathe(
+    [
+      [0.135, 0.98],
+      [0.122, 1.04],
+      [0.145, 1.14],
+      [0.172, 1.25],
+      [0.166, 1.32],
+      [0.185, 1.39],
+      [0.13, 1.45],
+      [0.05, 1.48],
+      [0.0, 1.485],
+    ],
+    28,
+    0,
+    0,
+    0.72,
+  ),
+};
+
+/** A dressmaker's form wearing a crinoline ball gown: bodice, pleated bell skirt, off-shoulder bertha, puffed sleeves. */
+function DressForm({ color, trim }: { color: THREE.Material; trim: THREE.Material }) {
   const m = mats();
   return (
     <group>
-      <mesh material={m.walnut} position={[0, 0.02, 0]}>
-        <cylinderGeometry args={[0.18, 0.2, 0.04, 16]} />
+      <mesh geometry={GOWN.skirt} material={color} castShadow receiveShadow />
+      <mesh geometry={GOWN.bodice} material={color} castShadow />
+      {/* Waist sash and bow */}
+      <mesh material={trim} position={[0, 1.03, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.74, 1]}>
+        <torusGeometry args={[0.128, 0.018, 6, 24]} />
       </mesh>
-      <mesh material={color} position={[0, 0.55, 0]} castShadow>
-        <coneGeometry args={[0.42, 1.0, 20, 1, true]} />
+      {[-1, 1].map((s) => (
+        <mesh key={s} material={trim} position={[s * 0.05, 1.03, -0.1]} rotation={[0, 0, s * 0.6]} scale={[1.4, 0.8, 0.5]}>
+          <sphereGeometry args={[0.035, 8, 6]} />
+        </mesh>
+      ))}
+      {/* Off-shoulder bertha and puffed sleeves */}
+      <mesh material={trim} position={[0, 1.38, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.74, 1]}>
+        <torusGeometry args={[0.18, 0.022, 6, 28]} />
       </mesh>
-      <mesh material={color} position={[0, 1.22, 0]} scale={[1, 1.35, 0.75]} castShadow>
-        <sphereGeometry args={[0.17, 16, 12]} />
+      {[-1, 1].map((s) => (
+        <mesh key={s} material={color} position={[s * 0.205, 1.36, 0]} scale={[0.9, 0.75, 0.85]} castShadow>
+          <sphereGeometry args={[0.07, 12, 8]} />
+        </mesh>
+      ))}
+      {/* The form's turned walnut neck post and finial (a dress form has no head) */}
+      <mesh material={m.walnut} position={[0, 1.53, 0]}>
+        <cylinderGeometry args={[0.022, 0.03, 0.1, 10]} />
       </mesh>
-      <mesh material={m.walnut} position={[0, 1.55, 0]}>
-        <cylinderGeometry args={[0.025, 0.025, 0.12, 8]} />
-      </mesh>
-      <mesh material={m.walnut} position={[0, 1.63, 0]}>
-        <sphereGeometry args={[0.04, 8, 6]} />
+      <mesh material={m.walnut} position={[0, 1.6, 0]}>
+        <sphereGeometry args={[0.035, 10, 8]} />
       </mesh>
     </group>
   );
@@ -103,11 +173,11 @@ function Dancers() {
     <group position={[BALLROOM.dancers.x, 0, BALLROOM.dancers.z]}>
       <Interactive id="ballroom-dancers" maxDist={3.5} label={() => (game().lessonActive || done ? null : 'Look at the dancers')} onUse={() => openLesson('ballroom')}>
         <group ref={ring}>
-          <group position={[0.32, 0, 0]}>
-            <DressForm color={m.dressFabric} />
+          <group position={[0.47, 0, 0]}>
+            <DressForm color={m.dressFabric} trim={m.velvetOx} />
           </group>
-          <group position={[-0.32, 0, 0]}>
-            <DressForm color={m.velvetOx} />
+          <group position={[-0.47, 0, 0]}>
+            <DressForm color={m.velvetOx} trim={m.brass} />
           </group>
         </group>
       </Interactive>
@@ -150,6 +220,38 @@ function SecretCase() {
 }
 
 /** Chairs under dust sheets along the walls. */
+/** A dust sheet thrown over a chair: the covered seat with folds falling to the floor, and the covered back. */
+const SHEET = {
+  seat: lathe(
+    [
+      [0.37, 0.0],
+      [0.36, 0.12],
+      [0.33, 0.34],
+      [0.29, 0.45],
+      [0.2, 0.5],
+      [0.0, 0.51],
+    ],
+    28,
+    9,
+    0.09,
+    0.92,
+  ),
+  back: lathe(
+    [
+      [0.25, 0.42],
+      [0.25, 0.66],
+      [0.23, 0.86],
+      [0.17, 0.97],
+      [0.07, 1.01],
+      [0.0, 1.02],
+    ],
+    24,
+    5,
+    0.05,
+    0.32,
+  ),
+};
+
 function DustSheets() {
   const m = mats();
   const spots: [number, number][] = [
@@ -163,13 +265,10 @@ function DustSheets() {
   return (
     <group>
       {spots.map(([x, z], i) => (
-        <group key={i} position={[x, 0, z]}>
-          <mesh material={m.linen} position={[0, 0.5, 0]} scale={[1, 1, 0.9]} castShadow>
-            <coneGeometry args={[0.38, 1.0, 8, 1]} />
-          </mesh>
-          <mesh material={m.linen} position={[0, 1.02, 0]}>
-            <sphereGeometry args={[0.16, 10, 6]} />
-          </mesh>
+        // Chairs along the walls face into the room; each sits a little askew.
+        <group key={i} position={[x, 0, z]} rotation={[0, (x < BALLROOM.x0 + 1 ? Math.PI / 2 : -Math.PI / 2) + (i % 3) * 0.12 - 0.12, 0]}>
+          <mesh geometry={SHEET.seat} material={m.linen} castShadow receiveShadow />
+          <mesh geometry={SHEET.back} material={m.linen} position={[0, 0, -0.2]} castShadow />
         </group>
       ))}
     </group>

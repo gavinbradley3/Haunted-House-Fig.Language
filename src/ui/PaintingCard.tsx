@@ -4,6 +4,7 @@ import { DECOR_PAINTINGS } from '../content/decorPaintings';
 import { openLesson } from '../lesson/director';
 import type { KeyId } from '../lesson/progression';
 import { useGame } from '../state/store';
+import { TEACHER_BUILD } from '../systems/testBuild';
 import { hungPaintings } from '../scene/parts/Artwork';
 import { ART_IMAGES, DECOR_IMAGES, inspectionUrl, paintingUrl, type DecorId } from '../systems/paintingImages';
 import { artAspect, artCanvas, type ArtId } from '../systems/paintingScenes';
@@ -108,7 +109,7 @@ export function PaintingCard() {
       <p className="pv-note">{lesson?.note ?? decor?.note}</p>
       {lesson?.ask && !hidden && <div className="pv-ask">{lesson.ask}</div>}
       {hidden && <div className="pv-ask">The brass nameplate has been rubbed blank. What would you call it?</div>}
-      {lesson?.teacherNote && <div className="pv-teacher">For the teacher: {lesson.teacherNote}</div>}
+      {TEACHER_BUILD && lesson?.teacherNote && <div className="pv-teacher">For the teacher: {lesson.teacherNote}</div>}
       {id === 'caretaker' && (
         <div className="pv-lesson">
           <button className="btn primary" onClick={() => openLesson('gallery')}>

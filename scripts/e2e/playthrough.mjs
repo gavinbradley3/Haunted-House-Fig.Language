@@ -196,7 +196,7 @@ async function doLesson(room) {
           await wait(250);
         }
         await page.locator('.item.open .option', { hasText: right.text }).first().click();
-        await page.locator('.item.open button', { hasText: 'Check the class' }).click();
+        await page.locator('.item.open button', { hasText: 'Check my answer' }).click();
         await wait(350);
       }
     } else {

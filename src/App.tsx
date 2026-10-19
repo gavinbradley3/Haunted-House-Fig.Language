@@ -4,7 +4,11 @@ import { skipCinematic } from './scene/Player';
 import { useGame } from './state/store';
 import { audio } from './systems/audio';
 import { LessonPanel } from './ui/LessonPanel';
-import { HelpOverlay, HUD, TitleScreen } from './ui/Overlays';
+import { HUD, TitleScreen } from './ui/Overlays';
+import { Menu } from './ui/Menu';
+import { NoteCard } from './ui/NoteCard';
+import { CrashGuard, RecoveryCards } from './ui/Recovery';
+import { TEACHER_BUILD } from './systems/testBuild';
 import { TeacherPanel } from './ui/TeacherPanel';
 import { KeyRing, PaintingCard } from './ui/PaintingCard';
 import { MothSwarm } from './ui/MothSwarm';
@@ -25,6 +29,8 @@ function useShortcuts() {
       const s = useGame.getState();
       switch (e.code) {
         case 'KeyT':
+          // The teacher panel exists only in the teacher edition (and development builds).
+          if (!TEACHER_BUILD) break;
           s.setTeacherOpen(!s.teacherOpen);
           if (document.pointerLockElement) document.exitPointerLock();
           break;
@@ -47,9 +53,12 @@ function useShortcuts() {
           break;
         case 'Escape':
           if (s.teacherOpen) s.setTeacherOpen(false);
+          else if (s.note) s.setNote(null);
           else if (s.inspecting) s.setInspecting(null);
           else if (s.helpOpen) s.setHelpOpen(false);
-          else if (s.phase === 'play' && !s.lessonActive && !document.pointerLockElement) s.setHelpOpen(true);
+          else if (s.endingOpen) break;
+          // Esc first frees the pointer (the browser does that); the next Esc opens the menu, in a lesson too.
+          else if (s.phase === 'play' && !document.pointerLockElement) s.setHelpOpen(true);
           break;
       }
     };
@@ -78,18 +87,20 @@ export default function App() {
   useShortcuts();
   const lessonActive = useGame((s) => s.lessonActive && !s.endingOpen);
   return (
-    <>
+    <CrashGuard>
       <GameCanvas />
       <MothSwarm />
       <TitleScreen />
       <HUD />
       {lessonActive && <LessonPanel />}
       <PaintingCard />
+      <NoteCard />
       <KeyRing />
       <SoundCaption />
       <Ending />
-      <TeacherPanel />
-      <HelpOverlay />
-    </>
+      {TEACHER_BUILD && <TeacherPanel />}
+      <Menu />
+      <RecoveryCards />
+    </CrashGuard>
   );
 }

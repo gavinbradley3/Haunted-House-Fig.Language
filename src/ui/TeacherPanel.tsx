@@ -6,7 +6,9 @@ import { jumpToGallery, jumpToHall, jumpToMirrors, walkToHall, walkToMirrors } f
 import { canCollect, GRANT_STEPS, KEY_FOR_ROOM, type GrantStep, type KeyId, type Progress } from '../lesson/progression';
 import { triggerStrangeEvent } from '../scene/HouseEvents';
 import { skipCinematic } from '../scene/Player';
-import { activeLesson, EVENT_LEVELS, useGame, type EventLevel } from '../state/store';
+import { activeLesson, CONTENT, EVENT_LEVELS, persistNow, saver, useGame, type EventLevel } from '../state/store';
+import { DEV_GRAPHICS } from '../systems/testBuild';
+import { saveLine } from './Menu';
 import { audio } from '../systems/audio';
 import { toggleFullscreen } from './fullscreen';
 
@@ -110,7 +112,27 @@ function GrantControl({ onGrant }: { onGrant: (s: GrantStep) => void }) {
   );
 }
 
-/** Discreet teacher drawer. Everything here is safe to press at any time. */
+/** The student's own sentences, as saved on this Chromebook. */
+function Writing() {
+  const writing = useGame((s) => s.writing);
+  const lessons = useGame((s) => s.lessons);
+  const rows = ROOMS.map((r) => ({ r, text: writing[r] ?? lessons[r].prove.responses[lessons[r].prove.responses.length - 1], passed: !!writing[r] })).filter((x) => x.text);
+  if (!rows.length) return <div className="sub">No sentences written yet.</div>;
+  return (
+    <div className="sub" style={{ lineHeight: 1.5 }}>
+      {rows.map(({ r, text, passed }) => (
+        <div key={r}>
+          <b>{CONTENT[r].device}</b>{passed ? '' : ' (draft)'}: “{text}”
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The teacher panel (teacher edition and development builds only; the student build does not
+ * contain it). Everything here is safe to press at any time.
+ */
 export function TeacherPanel() {
   const s = useGame();
   if (!s.teacherOpen) return null;
@@ -122,7 +144,7 @@ export function TeacherPanel() {
   return (
     <div className="teacher">
       <h2>Teacher Controls</h2>
-      <div className="sub">Press T to hide. The class sees this panel too, so keep it brief.</div>
+      <div className="sub">Teacher edition. Press T to hide. Changes here are saved to this browser’s copy of the game.</div>
 
       <h5>Flow</h5>
       <div className="grid">
@@ -218,7 +240,22 @@ export function TeacherPanel() {
             jumpToHall();
           }}
         />
+        <ConfirmButton
+          label="Undo the last reset"
+          confirmLabel="Press again: bring it back"
+          onConfirm={() => {
+            const old = saver.undoReset();
+            if (!old) return s.showNotice('There is no reset to undo.');
+            useGame.setState({ progress: old.progress, lessons: old.lessons, writing: old.writing, found: old.found });
+            persistNow(true);
+            s.showNotice('The game before the last reset is back.');
+          }}
+        />
       </div>
+      <div className="sub" style={{ marginTop: 8 }}>{saveLine(s.saveStatus, s.lastSaved)}</div>
+
+      <h5>Student’s writing</h5>
+      <Writing />
 
       <h5>Atmosphere</h5>
       <div className="grid">
@@ -261,7 +298,7 @@ export function TeacherPanel() {
         <span style={{ width: 44, textAlign: 'right' }}>{Math.round(s.volume * 100)}%</span>
       </div>
 
-      <h5>Graphics</h5>
+      {DEV_GRAPHICS && <><h5>Graphics (development build)</h5>
       <div className="stages">
         {(['high', 'balanced', 'low'] as const).map((q) => (
           <button key={q} className={`btn ${s.quality === q ? 'now' : ''}`} onClick={() => s.setQuality(q, q === 'high')}>
@@ -270,8 +307,8 @@ export function TeacherPanel() {
         ))}
       </div>
       <div className="sub" style={{ marginTop: 6 }}>
-        {s.autoQuality ? 'Automatic: chosen for this computer’s graphics, and lowers itself if the house runs slowly. Low is recommended for most school computers.' : 'Fixed by you. Choose High to let it adjust again. Low is recommended for most school computers.'}
-      </div>
+        {s.autoQuality ? 'Automatic: chosen for this computer’s graphics, and lowers itself if the house runs slowly. Students always play on Low.' : 'Fixed by you. Choose High to let it adjust again. Students always play on Low.'}
+      </div></>}
 
       <div className="keys">T teacher · Space skip · P pause · M mute · F fullscreen · Esc free mouse / close</div>
     </div>

@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { houseState } from './parts/Lights';
 import * as THREE from 'three';
 import { game, useGame } from '../state/store';
 import { audio } from '../systems/audio';
@@ -7,8 +9,8 @@ import { mats } from '../systems/materials';
 import { HALL, KITCHEN, STUDY, WALL_T } from '../world/layout';
 import { KeyedDoor } from './parts/KeyedDoor';
 import { Architrave, CeilingRose, Cornice, OnWall, PanelField, Run, Slab, Wainscot, Wall, wallLocal } from './parts/Architecture';
-import { Door, DoorLeaf } from './parts/Door';
-import { CandleLight, Chandelier, Sconce } from './parts/Lights';
+import { Door } from './parts/Door';
+import { Chandelier, Sconce } from './parts/Lights';
 import {
   Candelabrum,
   CentreTable,
@@ -19,10 +21,9 @@ import {
   SashWindow,
   Settle,
   SideChair,
-  Stanchions,
 } from './parts/Furnishings';
-import { Fireplace } from './parts/Fireplace';
-import { Interactive } from './Interactive';
+import { Fireplace, FireLight } from './parts/Fireplace';
+import { UpperLanding } from './UpperLanding';
 import { ArtPainting, Painting } from './parts/Artwork';
 
 const { x0, x1, zFront, zBack, height } = HALL;
@@ -116,6 +117,14 @@ function Landing() {
   const baluster = latheGeo('baluster', LATHES.baluster, 12);
   const edgeZ = L.zEdge;
   const railY = L.y + 0.92;
+  // The runner's texture is laid out in metres (like the stair runner), so its pattern repeats along the landing.
+  const runnerGeo = useMemo(() => {
+    const len = x1 - S.x1 - 0.6;
+    const g = new THREE.PlaneGeometry(0.9, len);
+    const uv = g.attributes.uv as THREE.BufferAttribute;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 0.9, uv.getY(i) * len);
+    return g;
+  }, []);
   const balX = useMemo(() => {
     const out: number[] = [];
     for (let x = S.x1 + 0.12; x < x1 - 0.1; x += 0.16) out.push(x);
@@ -125,9 +134,9 @@ function Landing() {
     <group>
       {/* Floor of the landing */}
       <mesh geometry={boxGeo(x1 - x0, L.thick, zBack - edgeZ < 0 ? edgeZ - zBack : 0)} material={m.walnut} position={[0, L.y - L.thick / 2, (edgeZ + zBack) / 2]} castShadow receiveShadow />
-      <mesh material={m.floorHall} position={[0, L.y + 0.002, (edgeZ + zBack) / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[x1 - x0, edgeZ - zBack]} />
-      </mesh>
+      {/* Floorboards (laid like the hall's, at the right scale), and a runner along the landing */}
+      <Slab x0={x0} x1={x1} z0={zBack} z1={edgeZ} y={L.y + 0.002} material={m.floorHall} thickness={0.01} />
+      <mesh geometry={runnerGeo} material={m.runner} position={[0.4, L.y + 0.006, (edgeZ + zBack) / 2 + 0.05]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} receiveShadow />
       {/* Plaster soffit under the landing */}
       <mesh material={m.ceiling} position={[0, L.y - L.thick - 0.001, (edgeZ + zBack) / 2]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[x1 - x0, edgeZ - zBack]} />
@@ -168,7 +177,6 @@ export function EntranceHall() {
   const m = mats();
   const frontDoorOpen = useGame((s) => s.doors.front);
   const setDoor = useGame((s) => s.setDoor);
-  const showNotice = useGame((s) => s.showNotice);
   const fd = HALL.frontDoor;
   const win = HALL.window;
   const uw = HALL.upperWindow;
@@ -256,13 +264,9 @@ export function EntranceHall() {
         {/* Upper floor: landing doors and wainscot */}
         <group position={[0, L.y, 0]}>
           <Wainscot x0={x0} x1={x1} gaps={[[-2.6, 1.3], [2.6, 1.3]]} />
+          {/* The two landing doors themselves are in UpperLanding (one locked, one left ajar). */}
           {[-2.6, 2.6].map((x) => (
-            <group key={x}>
-              <group position={[x - 0.48, 0, 0.03]}>
-                <DoorLeaf width={0.96} height={2.3} />
-              </group>
-              <Architrave c={x} w={0.96} h={2.3} />
-            </group>
+            <Architrave key={x} c={x} w={0.96} h={2.3} />
           ))}
           <Painting x={0} y={1.75} w={1.1} art="D01" />
         </group>
@@ -327,7 +331,8 @@ export function EntranceHall() {
       />
       <Staircase />
       <Landing />
-      <Stanchions a={[S.x0 + 0.25, 0, S.zStart + 0.3]} b={[S.x1 - 0.12, 0, S.zStart + 0.3]} />
+      {/* The stairs are open: the Lady's landing is an optional discovery. */}
+      <UpperLanding />
 
       {/* Furniture */}
       <Rug position={[0.6, 0, -4.6]} w={3.0} d={4.4} material={m.rugHall} />
@@ -337,15 +342,30 @@ export function EntranceHall() {
       <Candelabrum position={[-3.35, 0.84, zBack + 0.2]} room="hall" intensity={2.6} seed={7} />
       <Settle position={[x1, 0, -1.7]} rotationY={-Math.PI / 2} />
       <CoatStand position={[-1.75, 0, -0.45]} />
-      <SideChair position={[-2.2, 0, zBack + 0.75]} rotationY={0.3} />
+      <MovedChair />
       <SideChair position={[x1 - 0.6, 0, -7.1]} rotationY={-Math.PI / 2 - 0.2} />
 
       {/* Lighting */}
       <Chandelier position={[0.6, height, -4.6]} drop={1.8} intensity={48} seed={11} />
-      <CandleLight position={[x1 - 0.7, 0.7, ft.z]} intensity={9} distance={8} color="#ff7a32" seed={21} />
+      <FireLight position={[x1 - 0.7, 0.7, ft.z]} intensity={9} />
 
-      {/* Locked upstairs: a quiet message if you try the rope */}
-      <InteractRope onUse={() => showNotice('The upstairs is closed tonight.', 'Your business is on this floor.')} />
+
+    </group>
+  );
+}
+
+/** The side chair by the console: now and then the house moves it a little while nobody is looking. */
+function MovedChair() {
+  const g = useRef<THREE.Group>(null!);
+  const k = useRef(0);
+  useFrame(() => {
+    k.current += (houseState.chairMoved - k.current) * 0.08;
+    g.current.rotation.y = 0.3 + k.current * 0.75;
+    g.current.position.set(-2.2 + k.current * 0.35, 0, zBack + 0.75 + k.current * 0.45);
+  });
+  return (
+    <group ref={g}>
+      <SideChair position={[0, 0, 0]} rotationY={0} />
     </group>
   );
 }
@@ -387,12 +407,4 @@ function FrontRightLeaf({ open, width, height, hinge }: { open: boolean; width: 
   );
 }
 
-function InteractRope({ onUse }: { onUse: () => void }) {
-  return (
-    <Interactive id="stair-rope" label={() => 'Go upstairs'} onUse={onUse}>
-      <mesh position={[(S.x0 + S.x1) / 2, 0.8, S.zStart + 0.3]} visible={false}>
-        <boxGeometry args={[1.4, 0.4, 0.2]} />
-      </mesh>
-    </Interactive>
-  );
-}
+
