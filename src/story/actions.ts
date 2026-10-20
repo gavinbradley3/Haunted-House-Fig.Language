@@ -208,7 +208,7 @@ export function lookInMirror() {
   });
   // 3. Three sharp knocks on the door behind you.
   later(8900, () => {
-    audio.knockDoor(door, 3, soft ? 0.8 : 1.6);
+    audio.knockDoor(door, 3, soft ? 0.7 : 1.3);
     showCaption('Three knocks, on the door behind you.');
   });
   // 4. The door slams shut (Gentle: it swings shut).

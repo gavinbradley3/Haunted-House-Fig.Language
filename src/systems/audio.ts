@@ -46,7 +46,7 @@ const STEP_STRIKE = 0.02;
 // (-37 → -33 dBFS, now level with the drip, 14 dB over the ducked ambience); the stone stand-in 1.15 → 0.95
 // (it measured 2.6 dB over the wood step). Footsteps above land at about your own steps' level, 4 dB over the hall's ambience.
 // Phase 11, the Lady in Green: her whisper, laugh, sigh and hum, and knocks in the wall (measured in game; see docs/phase11).
-const CLIP_LEVEL = { step: 0.21, carpet: 0.17, door: 0.8, doorClose: 0.9, book: 0.52, unlock: 0.75, creak: 0.72, drip: 1.1, tick: 1.2, above: 0.3, hallClock: 0.62, fire: 0.9, stoneStandIn: 0.95, whisper: 0.4, laugh: 1.6, sigh: 1.0, hum: 0.9, knock: 0.85, slam: 1.7, knockDoor: 1.25 };
+const CLIP_LEVEL = { step: 0.21, carpet: 0.17, door: 0.8, doorClose: 0.9, book: 0.52, unlock: 0.75, creak: 0.72, drip: 1.1, tick: 1.2, above: 0.3, hallClock: 0.62, fire: 0.9, stoneStandIn: 0.95, whisper: 0.4, laugh: 1.6, sigh: 1.0, hum: 0.9, knock: 0.85, slam: 2.1, knockDoor: 1.0 };
 
 /** Small random variation in level (±1.5 dB) and pitch (±pct), so a repeated recording never sounds identical. */
 const vary = (pct = 0.04) => ({ gain: 10 ** ((Math.random() * 3 - 1.5) / 20), rate: 1 + (Math.random() * 2 - 1) * pct });
@@ -1159,7 +1159,7 @@ class AudioEngine {
    * kept under the master compressor, so it is startling without being painful.
    */
   sting() {
-    this.play('sting', { gain: 0.62, reverb: 0.55 });
+    this.play('sting', { gain: 0.85, reverb: 0.55 });
   }
   private droneNodes: { out: GainNode; stop: () => void } | null = null;
   /** A low, uneasy drone under the encounter (two close tones beating against each other, and a breath of noise). */

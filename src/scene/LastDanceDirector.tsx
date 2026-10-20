@@ -35,6 +35,7 @@ import { showFigure } from './HauntFigure';
 import { hungPaintings } from './parts/Artwork';
 import { houseState } from './parts/Lights';
 import { roomLightLevel } from './RoomLights';
+import { preloadModels } from '../systems/models';
 
 type V3 = [number, number, number];
 const fwd = new THREE.Vector3();
@@ -76,6 +77,7 @@ export function LastDanceDirector() {
     portraitCheck: 0,
     lastZone: '',
     apparitionNudged: false,
+    modelsAsked: false,
   });
 
   // Paintings looked at closely are remembered (the lock marks them "seen").
@@ -114,6 +116,12 @@ export function LastDanceDirector() {
     if (wantEmpty !== r.portraitHeld || (wantEmpty && (r.portraitCheck += world.dt) > 1)) {
       r.portraitCheck = 0;
       if (portraitEmpty(wantEmpty)) r.portraitHeld = wantEmpty;
+    }
+
+    // The upstairs rooms' Blender props are fetched once the chapter has begun (long before the doors open).
+    if (active && !r.modelsAsked) {
+      r.modelsAsked = true;
+      preloadModels(['ledger_stand', 'covered_portraits', 'vanity', 'music_box']);
     }
 
     // ---------------------------------------------------------------- the chapter card

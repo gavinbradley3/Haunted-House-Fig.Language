@@ -18,6 +18,7 @@ import { audio } from '../systems/audio';
 import { boxGeo, latheGeo, LATHES } from '../systems/geometry';
 import { mats } from '../systems/materials';
 import { showCaption } from '../systems/soundCues';
+import { useModel } from '../systems/models';
 import { world } from '../systems/time';
 import { BOUDOIR, RECORDS, UPSTAIRS } from '../world/layout';
 import { HAUNT_IMAGES, hauntTexture } from '../systems/paintingImages';
@@ -214,11 +215,27 @@ function LedgerStand() {
     const t = ledgerTexture();
     return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: new THREE.Color('#ffe2b0'), emissiveIntensity: 0.05, roughness: 0.92 });
   }, []);
+  // The Blender stand's pages use glTF texture coordinates (the image the other way up).
+  const glbPages = useMemo(() => {
+    const t = (pages.map as THREE.CanvasTexture).clone();
+    t.flipY = false;
+    t.needsUpdate = true;
+    return Object.assign(pages.clone(), { map: t, emissiveMap: t });
+  }, [pages]);
+  const model = useModel('ledger_stand', { walnut: m.walnut, leather: m.leather, pages: glbPages });
   useFrame(() => {
     // While the guest book is the next step, its pages glow a little in the candlelight.
-    pages.emissiveIntensity = stage() === 'records' ? 0.22 + 0.12 * Math.sin(world.t * 2.2) : 0.06;
+    pages.emissiveIntensity = glbPages.emissiveIntensity = stage() === 'records' ? 0.22 + 0.12 * Math.sin(world.t * 2.2) : 0.06;
   });
   const top = 1.08;
+  if (model)
+    return (
+      <group position={[RECORDS.ledger.x, Y, RECORDS.ledger.z]}>
+        <Interactive id="records-ledger" maxDist={2.6} label={() => (game().found[LD.ledger] ? 'Read the guest book again' : 'Read the guest book')} onUse={openLedger}>
+          <primitive object={model} />
+        </Interactive>
+      </group>
+    );
   return (
     <group position={[RECORDS.ledger.x, Y, RECORDS.ledger.z]}>
       {/* Cross feet, a turned column, and a sloping desk facing the door */}
@@ -363,8 +380,16 @@ function CoveredPortraits() {
     { x: 0.8, w: 0.55, h: 0.75 },
     { x: 1.1, w: 0.6, h: 0.86 },
   ];
+  // Old dust sheets: greyer and duller than the house's clean linen.
+  const dust = useMemo(() => {
+    const d = (m.linen as THREE.MeshStandardMaterial).clone();
+    d.color.multiplyScalar(0.62);
+    d.roughness = 1;
+    return d;
+  }, [m.linen]);
+  const model = useModel('covered_portraits', { gilt: m.gilt, linen: dust, canvas: m.darkInterior });
   return (
-    <group position={[RECORDS.covered.x, Y, RECORDS.zS + 0.2]}>
+    <group position={[RECORDS.covered.x, Y, RECORDS.zS + (model ? 0.3 : 0.2)]}>
       <Interactive
         id="records-covered"
         maxDist={2.6}
@@ -374,7 +399,8 @@ function CoveredPortraits() {
           showCaption('Under the sheet: a gilt frame, and a face painted by lamplight that you do not know. You let the sheet fall back.');
         }}
       >
-        {items.map((it, i) => (
+        {model && <primitive object={model} />}
+        {!model && items.map((it, i) => (
           <group key={i} position={[it.x, 0, -0.04 * (i % 2)]} rotation={[-0.14, 0, 0]}>
             <mesh geometry={boxGeo(it.w, it.h, 0.05)} material={m.gilt} position={[0, it.h / 2, 0]} castShadow />
             <mesh ref={(el) => void (sheets.current[i] = el!)} geometry={sheetGeo} material={m.linen} position={[0, it.h / 2 + 0.02, 0.05]} scale={[it.w + 0.12, it.h + 0.12, 1]} castShadow />
@@ -472,19 +498,37 @@ function MusicBoxSmall() {
   );
 }
 
+/** The Blender music box once it has loaded; the code-built one until then. */
+function MusicBoxModel() {
+  const m = mats();
+  const model = useModel('music_box', { walnut: m.walnut, brass: m.brass, velvet: m.velvetOx });
+  return model ? <primitive object={model} /> : <MusicBoxSmall />;
+}
+
 function Vanity() {
   const m = mats();
   const V = BOUDOIR.vanity;
   const mirror = BOUDOIR.mirror;
   const inBoudoir = () => game().zone === 'boudoir';
+  const model = useModel('vanity', { mahogany: m.mahogany, gilt: m.gilt, brass: m.brass });
   return (
     <group>
       <group position={[V.x, Y, V.z]}>
-        <Desk w={1.25} d={0.5} h={0.74} />
-        {/* Drawers either side */}
-        {[-1, 1].map((s) => (
-          <mesh key={s} geometry={boxGeo(0.3, 0.32, 0.46)} material={m.mahogany} position={[s * 0.44, 0.48, 0]} castShadow />
-        ))}
+        {model ? (
+          <primitive object={model} />
+        ) : (
+          <>
+            <Desk w={1.25} d={0.5} h={0.74} />
+            {/* Drawers either side */}
+            {[-1, 1].map((s) => (
+              <mesh key={s} geometry={boxGeo(0.3, 0.32, 0.46)} material={m.mahogany} position={[s * 0.44, 0.48, 0]} castShadow />
+            ))}
+            {/* The mirror's frame, standing on the back of the vanity */}
+            <mesh geometry={boxGeo(mirror.w + 0.14, mirror.h + 0.14, 0.05)} material={m.gilt} position={[0, mirror.y, -0.25 + 0.005]} castShadow />
+            <mesh geometry={boxGeo(0.06, mirror.y - 0.74 - mirror.h / 2 + 0.05, 0.04)} material={m.mahogany} position={[-(mirror.w / 2 + 0.03), 0.74 + (mirror.y - 0.74 - mirror.h / 2) / 2, -0.24]} />
+            <mesh geometry={boxGeo(0.06, mirror.y - 0.74 - mirror.h / 2 + 0.05, 0.04)} material={m.mahogany} position={[mirror.w / 2 + 0.03, 0.74 + (mirror.y - 0.74 - mirror.h / 2) / 2, -0.24]} />
+          </>
+        )}
         {/* Bottles, a brush, the music box and a candle on the top */}
         {[-0.42, -0.34].map((x, i) => (
           <mesh key={x} material={m.glass} position={[x, 0.8 + i * 0.01, 0.08]}>
@@ -494,14 +538,10 @@ function Vanity() {
         <mesh geometry={boxGeo(0.06, 0.03, 0.18)} material={m.silver} position={[-0.15, 0.755, 0.1]} rotation={[0, 0.3, 0]} />
         <group position={[0.36, 0.74, 0.04]} rotation={[0, -0.25, 0]}>
           <Interactive id="boudoir-musicbox" maxDist={2.4} label={() => 'Look at the music box'} onUse={() => showCaption('A little music box of walnut and brass. Its key has been wound tight, though nobody has touched it for years.')}>
-            <MusicBoxSmall />
+            <MusicBoxModel />
           </Interactive>
         </group>
         <Candle position={[-0.52, 0.74, -0.12]} seed={7} />
-        {/* The mirror's frame, standing on the back of the vanity */}
-        <mesh geometry={boxGeo(mirror.w + 0.14, mirror.h + 0.14, 0.05)} material={m.gilt} position={[0, mirror.y, -0.25 + 0.005]} castShadow />
-        <mesh geometry={boxGeo(0.06, mirror.y - 0.74 - mirror.h / 2 + 0.05, 0.04)} material={m.mahogany} position={[-(mirror.w / 2 + 0.03), 0.74 + (mirror.y - 0.74 - mirror.h / 2) / 2, -0.24]} />
-        <mesh geometry={boxGeo(0.06, mirror.y - 0.74 - mirror.h / 2 + 0.05, 0.04)} material={m.mahogany} position={[mirror.w / 2 + 0.03, 0.74 + (mirror.y - 0.74 - mirror.h / 2) / 2, -0.24]} />
       </group>
       {/* The glass reflects the room (the reflection is drawn only while you are in her room). */}
       <ReflectionPlane point={MIRROR_CENTRE} normal={[0, 0, 1]} active={inBoudoir} layers={MIRROR_LAYERS} boost={() => ldFx.scareRunning || world.t < ldFx.lady.start + ldFx.lady.dur}>

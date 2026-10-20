@@ -143,7 +143,7 @@ button { font: inherit; color: inherit; }
    (--len, set by the lesson panel), so PERSONIFICATION and ONOMATOPOEIA fit on a Chromebook as well as a projector.
    Each letter takes about 0.84em (the capital plus 0.22em of tracking); the last letter's tracking is taken back. */
 .panel-body { container-type: inline-size; }
-.term { font-family: var(--display); font-weight: 600; font-size: min(104px, calc(92cqi / (var(--len, 8) * 0.86))); letter-spacing: 0.22em; margin: 22px -0.22em 8px 0; text-align: center; color: #f6ecd6; text-shadow: 0 0 40px rgba(207,169,95,0.35);
+.term { font-family: var(--display); font-weight: 600; font-size: min(104px, calc(94cqi / (var(--len, 8) * 0.8))); letter-spacing: 0.22em; margin: 22px -0.22em 8px 0; text-align: center; color: #f6ecd6; text-shadow: 0 0 40px rgba(207,169,95,0.35);
   overflow-wrap: anywhere; line-height: 1.05; animation: termIn 1.6s cubic-bezier(.2,.7,.2,1); }
 /* The reveal no longer widens the tracking (that pushed long terms past the panel's edge as they appeared). */
 @keyframes termIn { from { opacity: 0; filter: blur(8px); transform: scale(1.06); } to { opacity: 1; filter: none; transform: none; } }
@@ -379,7 +379,7 @@ button { font: inherit; color: inherit; }
   .ptitle { font-size: 36px; }
   .lead { font-size: 21px; margin: 10px 0; }
   .quote { font-size: 29px; }
-  .term { font-size: min(78px, calc(92cqi / (var(--len, 8) * 0.86))); }
+  .term { font-size: min(78px, calc(94cqi / (var(--len, 8) * 0.8))); }
   .definition { font-size: 26px; }
   .annot { font-size: 31px; }
   .questions li { font-size: 20px; padding: 8px 0 8px 46px; }
