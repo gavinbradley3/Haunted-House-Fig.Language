@@ -16,8 +16,8 @@ These give the most atmosphere per file.
 | Slot (file name) | What you want | Search for | Length | Avoid |
 |---|---|---|---|---|
 | `music.mp3` | Slow, sparse background music that loops. A music box lullaby, a lone cello or a dark ambient drone. It plays quietly while students explore and drops further during lessons. | "dark ambient loop", "music box lullaby", "haunted house ambience music" | 1 to 3 min, loops cleanly | Drums, melodies that grab attention, horror-movie stingers |
-| `whisper-1.mp3`, `whisper-2.mp3`, `whisper-3.mp3` | Soft whispering with no words you can make out. It plays just behind the player's shoulder. | "whisper unintelligible", "ghostly whisper", "whispering voices" | 2 to 5 s each | Clear words, growls, anything aggressive |
-| `giggle-1.mp3`, `giggle-2.mp3` | One child's giggle, short and a little far off. The game adds distance and echo. | "child giggle", "little girl laugh short", "kid giggle" | 1 to 2 s | Long laughter, maniacal laughs, crowds |
+| `whisper-1.mp3` … | **Filled in Phase 11** (the Lady in Green). Soft whispering with no words you can make out, just behind the player or through a wall. | "whisper unintelligible", "indistinct whispering" | 2 to 5 s each | Clear words, growls, anything aggressive |
+| `giggle-1.mp3` … | **Filled in Phase 11.** The Lady in Green's laugh: one woman, soft, closed-mouthed, a little far off (the game adds distance and echo). Keep the same voice as the whisper. | "woman soft chuckle", "female giggle calm" | 1 to 3 s | Children, cackling, screams, crowds |
 | `music-box.mp3` | A music box playing a few notes, ideally slowing down as it winds down | "music box", "music box winding down" | 5 to 15 s | Full songs |
 | `footsteps-above.mp3` | Slow footsteps on wooden floorboards, as if someone is walking upstairs | "footsteps upstairs", "footsteps wooden floor slow", "footsteps attic" | 4 to 10 s | Running, high heels, stomping |
 
@@ -26,7 +26,9 @@ These give the most atmosphere per file.
 | Slot (file name) | What you want | Search for | Length |
 |---|---|---|---|
 | `wind.mp3` | Wind around an old house, looping. Replaces the built-in wind, which plays loud outside and muffled inside. | "wind howling house loop", "wind window rattle loop" | 30 s to 2 min, loops cleanly |
-| `sigh.mp3` | A tired sigh or slow breath. Plays near paintings, and when a mirror fogs over. | "woman sigh", "breath sigh soft" | 1 to 3 s |
+| `sigh-1.mp3` | **Filled in Phase 11.** The Lady's sigh, when a mirror fogs over. | "woman sigh", "breath sigh soft" | 1 to 3 s |
+| `hum-1.mp3` … | **Phase 11.** A few bars hummed, muffled, from behind a wall. | "woman humming lullaby" | 4 to 8 s |
+| `knock-1.mp3` … | **Phase 11.** A single knuckle knock on wood, one per file; the game spaces them. | "knock wood door" (cut into single knocks) | 0.2 to 0.4 s |
 | `door-creak.mp3` | An old wooden door creaking open. Replaces the built-in creak whenever any door opens. | "old door creak open" | 1 to 3 s |
 | `step-wood-1.mp3` … `step-wood-6.mp3` | **Only if the built-in footsteps bother you.** Single steps on old floorboards, one step per file, trimmed tight. | "footstep wood single", "footsteps wooden floor" (cut into single steps) | 0.2 to 0.4 s each |
 | `step-carpet-1.mp3` … `step-carpet-4.mp3` | Same, on a rug. Only needed if you replace the wood steps too, so the two match. | "footstep carpet" | 0.2 to 0.4 s each |

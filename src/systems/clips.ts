@@ -19,15 +19,19 @@ export const CLIP_SLOTS = {
   music: { use: 'loop', tier: 'idle' },
   /** Wind outside the house, looped. Replaces the synthesised wind. */
   wind: { use: 'loop', tier: 'idle' },
-  /** Soft, unintelligible whispering, heard close behind you. */
+  /** The Lady in Green: soft, unintelligible whispering, close behind you or in the next room. */
   whisper: { use: 'event', tier: 'demand' },
-  /** A single child's giggle, far away in the house. */
+  /** The Lady in Green's laugh: soft, a little echoing, far away in the house. Her signature; used sparingly. */
   giggle: { use: 'event', tier: 'demand' },
+  /** The Lady in Green humming a few bars, muffled, from another room. */
+  hum: { use: 'event', tier: 'demand' },
+  /** A single knuckle knock on wood, heard through a wall. The haunting director spaces them itself. */
+  knock: { use: 'replace', tier: 'idle' },
   /** A few notes of a music box from another room. */
   'music-box': { use: 'event', tier: 'demand' },
   /** Slow footsteps on the floor above. */
   'footsteps-above': { use: 'event', tier: 'demand' },
-  /** A tired sigh or breath near a painting or mirror. */
+  /** The Lady in Green's sigh, near a painting or mirror. */
   sigh: { use: 'event', tier: 'demand' },
   /** An old door creaking open, played after the synthesised latch. Kept for older sound packs; `door-open` is preferred. */
   'door-creak': { use: 'replace', tier: 'core' },

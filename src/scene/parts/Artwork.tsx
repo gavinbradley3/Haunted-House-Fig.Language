@@ -280,8 +280,19 @@ export interface HungPainting {
   art?: ArtId;
   /** Living effects on this canvas (so the viewer can show a faded or written-on painting as it is). */
   fx?: LivingFx;
+  /** The haunting: show another image on this canvas for a while (null: back to its own artwork). */
+  showTexture?: (t: THREE.Texture | null) => void;
 }
 export const hungPaintings = new Map<string, HungPainting>();
+
+/** Decorative paintings, by manifest id, for the haunting (an altered state shown for a while). */
+export interface DecorPainting {
+  art: DecorId;
+  group: THREE.Object3D;
+  /** Show another image on this canvas (null: back to the painting's own). */
+  showTexture: (t: THREE.Texture | null) => void;
+}
+export const decorPaintings = new Map<DecorId, DecorPainting>();
 
 /**
  * Open the painting viewer: the whole artwork in a museum-style panel, with the camera left exactly
@@ -335,6 +346,10 @@ export function ArtPainting({ id, art, x, y, width, frame = 'frame', nameplate, 
         mat.map = artTexture(a);
         mat.needsUpdate = true;
         entry.art = a;
+      },
+      showTexture: (t) => {
+        mat.map = t ?? artTexture(entry.art ?? artId);
+        mat.needsUpdate = true;
       },
     };
     tiltRef.current = entry;
@@ -406,6 +421,18 @@ export function Painting({ x, y, w, art }: { x: number; y: number; w: number; ar
     root.current.getWorldPosition(p);
     if (p.y > 3) setReach(12);
   }, []);
+  useEffect(() => {
+    const own = mat.map;
+    decorPaintings.set(art, {
+      art,
+      group: root.current,
+      showTexture: (t) => {
+        mat.map = t ?? own;
+        mat.needsUpdate = true;
+      },
+    });
+    return () => void decorPaintings.delete(art);
+  }, [art, mat]);
   const m = mats();
   return (
     <group ref={root} position={[x, y, 0.02]} rotation={[-0.04, 0, 0]} name={`decor-${art}`} userData={{ decorPainting: art }}>

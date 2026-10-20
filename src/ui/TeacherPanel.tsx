@@ -14,8 +14,8 @@ import { toggleFullscreen } from './fullscreen';
 
 const EVENT_HELP: Record<EventLevel, string> = {
   off: 'The house stays still.',
-  subtle: 'Now and then, something small: a creak, a stopped clock. Easy to miss.',
-  eerie: 'More often, and some you will notice: candles bow in a draught, lights sink, a mirror fogs.',
+  subtle: 'Now and then, something small: a creak, a knock, a stopped clock, a painting not quite as it was. Easy to miss. The Lady is never seen.',
+  eerie: 'More often, and some you will notice: her whisper and soft laugh, knocks in the wall, a portrait that changes when you look away, a mirror that fogs; very rarely, the Lady in Green herself, far off.',
 };
 
 const ROOM_NAMES: Record<RoomId, string> = {
