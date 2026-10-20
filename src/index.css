@@ -115,7 +115,7 @@ button { font: inherit; color: inherit; }
 .panel-body { flex: 1; overflow-y: auto; padding: 6px 44px 18px; scrollbar-width: thin; scrollbar-color: var(--brass-dim) transparent; }
 .panel-foot { padding: 14px 44px 26px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--edge-soft); }
 .kicker { font-family: var(--display); font-size: 16px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--brass); }
-.ptitle { font-family: var(--display); font-weight: 600; font-size: 46px; line-height: 1.08; margin: 6px 0 4px; letter-spacing: 0.01em; }
+.ptitle { font-family: var(--display); font-weight: 600; font-size: 46px; line-height: 1.08; margin: 6px 0 4px; letter-spacing: 0.01em; overflow-wrap: break-word; hyphens: auto; }
 .lead { font-size: 25px; line-height: 1.5; color: var(--ink); margin: 14px 0; }
 .dim { color: var(--ink-dim); }
 .progress { display: flex; gap: 6px; align-items: center; }
@@ -139,9 +139,14 @@ button { font: inherit; color: inherit; }
 .discuss::before { content: ''; width: 34px; height: 1px; background: var(--brass); }
 
 /* Term reveal */
-.term { font-family: var(--display); font-weight: 600; font-size: 104px; letter-spacing: 0.22em; text-align: center; margin: 22px 0 8px; color: #f6ecd6; text-shadow: 0 0 40px rgba(207,169,95,0.35);
-  animation: termIn 1.6s cubic-bezier(.2,.7,.2,1); }
-@keyframes termIn { from { letter-spacing: 0.6em; opacity: 0; filter: blur(8px); } to { letter-spacing: 0.22em; opacity: 1; filter: none; } }
+/* The term fills the panel's width at most: its size follows the panel (a container) and the longest word
+   (--len, set by the lesson panel), so PERSONIFICATION and ONOMATOPOEIA fit on a Chromebook as well as a projector.
+   Each letter takes about 0.84em (the capital plus 0.22em of tracking); the last letter's tracking is taken back. */
+.panel-body { container-type: inline-size; }
+.term { font-family: var(--display); font-weight: 600; font-size: min(104px, calc(92cqi / (var(--len, 8) * 0.86))); letter-spacing: 0.22em; margin: 22px -0.22em 8px 0; text-align: center; color: #f6ecd6; text-shadow: 0 0 40px rgba(207,169,95,0.35);
+  overflow-wrap: anywhere; line-height: 1.05; animation: termIn 1.6s cubic-bezier(.2,.7,.2,1); }
+/* The reveal no longer widens the tracking (that pushed long terms past the panel's edge as they appeared). */
+@keyframes termIn { from { opacity: 0; filter: blur(8px); transform: scale(1.06); } to { opacity: 1; filter: none; transform: none; } }
 .definition { font-size: 32px; line-height: 1.45; text-align: center; margin: 10px 10px 18px; }
 .hl-word { color: var(--word); font-weight: 600; border-bottom: 2px solid var(--word); }
 
@@ -374,7 +379,7 @@ button { font: inherit; color: inherit; }
   .ptitle { font-size: 36px; }
   .lead { font-size: 21px; margin: 10px 0; }
   .quote { font-size: 29px; }
-  .term { font-size: 78px; }
+  .term { font-size: min(78px, calc(92cqi / (var(--len, 8) * 0.86))); }
   .definition { font-size: 26px; }
   .annot { font-size: 31px; }
   .questions li { font-size: 20px; padding: 8px 0 8px 46px; }
@@ -416,3 +421,69 @@ button { font: inherit; color: inherit; }
 .note-paper p { font-family: var(--display); font-style: italic; font-size: 22px; line-height: 1.5; margin: 0 0 12px; }
 .note-ask { margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(90, 70, 40, 0.35); font-size: 16px; line-height: 1.45; color: #4a3a26; }
 .note-paper .btn.primary { color: #2b2117; border-color: #7a5a2a; background: rgba(255,255,255,0.3); box-shadow: none; }
+
+/* ---------------------------------------------------------------- The Last Dance (bonus chapter) */
+.ld-chapter { position: fixed; inset: 0; display: grid; place-items: center; z-index: 16; padding: 16px;
+  background: radial-gradient(ellipse at 50% 45%, rgba(10, 18, 14, 0.82), rgba(0, 0, 0, 0.94) 70%); animation: fadeIn 1.4s; }
+.ld-chapter-inner { width: min(760px, 94vw); max-height: 92vh; overflow-y: auto; text-align: center; padding: 8px 12px; }
+.ld-chapter h1 { font-family: var(--display); font-weight: 600; font-size: clamp(46px, 7vw, 92px); letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.02; margin: 10px 0 6px;
+  color: #e7f0e2; text-shadow: 0 0 40px rgba(110, 170, 130, 0.35), 0 2px 18px #000; animation: rise 2.2s 0.2s both; overflow-wrap: break-word; }
+.ld-lead { font-family: var(--display); font-style: italic; font-size: clamp(22px, 2.2vw, 30px); color: var(--ink); margin: 0 0 8px; animation: rise 1.8s 0.9s both; }
+.ld-rule { width: 260px; height: 1px; margin: 18px auto; background: linear-gradient(90deg, transparent, #7fae8c, transparent); }
+.ld-story { font-size: clamp(18px, 1.6vw, 22px); line-height: 1.55; color: var(--ink); margin: 0 auto 12px; max-width: 640px; animation: rise 1.6s 1.4s both; }
+.ld-small { font-size: 16px; color: var(--ink-dim); margin: 14px 0 0; }
+.ld-small.dark { color: #6a5638; text-align: center; margin-top: 10px; font-size: 14px; }
+.ld-actions { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+.ld-paper-actions { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+.note-paper .btn { color: #f1e6cc; }
+.note-paper.ld-journal, .note-paper.ld-ledger, .note-paper.ld-letter { width: min(760px, 94vw); }
+.note-paper p { overflow-wrap: break-word; }
+.ld-under { font-style: italic; color: #5a4630; margin: 14px 0 6px; }
+.ld-clues { list-style: none; padding: 0; margin: 4px 0 8px; }
+.ld-clues li { display: flex; gap: 14px; align-items: baseline; padding: 8px 0; border-top: 1px solid rgba(90, 70, 40, 0.25); font-family: var(--display); font-size: 25px; font-style: italic; font-weight: 600; color: #24301f; }
+.ld-clues small, .ld-wheel-clue small { display: block; font-family: var(--body); font-style: normal; font-weight: 400; font-size: 15px; color: #6a5638; margin-top: 3px; }
+.ld-num { font-family: var(--display); font-style: normal; font-weight: 700; color: #7a5a2a; min-width: 30px; }
+.ld-footer { font-weight: 600; margin-top: 10px; }
+.ld-seen { font-size: 15px; color: #4c5f40; margin: 6px 0 0; }
+
+/* The picture lock */
+.ld-lock { width: min(1040px, 96vw); max-height: 94vh; overflow-y: auto; padding: 22px 28px 18px; background: linear-gradient(180deg, rgba(26, 21, 15, 0.98), rgba(12, 10, 8, 0.98)); border: 1px solid var(--edge); }
+.help .ld-lock h2 { font-size: 32px; margin: 2px 0 4px; }
+.ld-lock-intro { font-size: 18px; color: var(--ink-dim); margin: 0 0 14px; line-height: 1.45; }
+.ld-wheels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.ld-wheel { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 8px 12px; border: 1px solid var(--edge-soft); background: rgba(0, 0, 0, 0.3); transition: border-color 0.4s, box-shadow 0.4s; min-width: 0; }
+.ld-wheel.right { border-color: var(--brass); box-shadow: 0 0 22px rgba(207, 169, 95, 0.28) inset; }
+.ld-wheel-clue { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 19px; line-height: 1.25; text-align: center; min-height: 3.4em; color: var(--ink); }
+.ld-wheel-clue small { color: var(--ink-faint); }
+.ld-wheel-clue .ld-num { display: block; color: var(--brass); }
+.ld-pic { position: relative; width: 100%; height: clamp(120px, 26vh, 220px); display: grid; place-items: center; overflow: hidden; background: #0b0907; border: 6px solid #3a2a16; box-shadow: 0 0 0 1px #6b5128 inset; }
+.ld-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; user-select: none; }
+.ld-blank { color: var(--ink-faint); font-size: 15px; font-style: italic; }
+.ld-eye { position: absolute; right: 4px; top: 4px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 1px 6px; background: rgba(0, 0, 0, 0.7); color: var(--good); border: 1px solid rgba(181, 211, 161, 0.4); }
+.ld-pic-title { font-size: 14px; color: var(--ink-dim); text-align: center; min-height: 2.6em; line-height: 1.3; }
+.ld-turn { display: flex; gap: 10px; }
+.ld-turn .btn { min-width: 52px; }
+.ld-lock-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.ld-lock-foot .ld-actions { margin-top: 0; }
+.ld-feedback { flex: 1; min-width: 240px; font-size: 18px; color: var(--warn); line-height: 1.4; }
+@media (max-width: 760px) { .ld-wheels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* The guest book */
+.help .ld-ledger table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 4px; }
+.help .ld-ledger th { text-align: left; font-family: var(--display); font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: #6a5638; padding: 4px 6px; border-bottom: 1px solid rgba(90, 70, 40, 0.5); }
+.help .ld-ledger td { padding: 5px 6px; border-top: 1px solid rgba(90, 70, 40, 0.18); width: auto; vertical-align: top; }
+.help .ld-ledger td:first-child { width: auto; }
+.ld-hand { font-family: var(--display); font-style: italic; font-size: 19px; font-weight: 600; color: #1f2a3a; }
+.ld-empty { min-width: 70px; background: repeating-linear-gradient(0deg, transparent 0 22px, rgba(90, 70, 40, 0.18) 22px 23px); }
+.ld-dim { color: #7a6a52; font-style: italic; }
+.help .ld-ledger td small { color: #6a5638; }
+.ld-realise { margin: 14px 0 6px; font-weight: 700; font-size: 19px; color: #7a1f14; }
+.ld-lady { margin: 10px 0 0; padding: 10px 16px; border-left: 3px solid #3f6b4a; font-family: var(--display); font-style: italic; font-size: 24px; line-height: 1.35; color: #24402c; }
+.ld-lady small { display: block; font-family: var(--body); font-style: normal; font-size: 13px; color: #6a5638; margin-top: 4px; }
+@media (max-height: 820px) {
+  .ld-clues li { font-size: 22px; padding: 6px 0; }
+  .help .ld-ledger td { padding: 3px 6px; }
+  .ld-hand { font-size: 17px; }
+  .ld-lady { font-size: 21px; }
+  .note-paper.ld-ledger, .note-paper.ld-journal, .note-paper.ld-letter { padding: 22px 28px 18px; }
+}

@@ -15,6 +15,7 @@ import { MothSwarm } from './ui/MothSwarm';
 import { Ending } from './ui/Ending';
 import { SoundCaption } from './ui/SoundCaption';
 import { toggleFullscreen } from './ui/fullscreen';
+import { openJournal } from './story/actions';
 
 function isTyping() {
   const el = document.activeElement;
@@ -36,6 +37,13 @@ function useShortcuts() {
           break;
         case 'KeyF':
           toggleFullscreen();
+          break;
+        case 'KeyJ':
+          // The Last Dance: reread the clue page from anywhere in the house.
+          if (s.phase === 'play' && s.found.ldJournal && !s.lessonActive && !s.inspecting && !s.helpOpen) {
+            if (s.note?.card === 'journal') s.setNote(null);
+            else openJournal();
+          }
           break;
         case 'KeyM':
           audio.unlock();

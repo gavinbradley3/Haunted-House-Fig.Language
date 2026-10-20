@@ -55,7 +55,7 @@ export type { RoomId };
 
 export type Phase = 'loading' | 'title' | 'intro' | 'play';
 /** `jib` is the hidden door to the Nursery; `desk` is the lid of the Lady's writing box. */
-export type DoorId = 'front' | 'mirror' | 'jib' | 'gallery' | 'dining' | 'desk' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study' | 'landing';
+export type DoorId = 'front' | 'mirror' | 'jib' | 'gallery' | 'dining' | 'desk' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study' | 'landing' | 'records' | 'boudoir';
 export type Quality = 'high' | 'balanced' | 'low';
 /** Captions for the house's own noises (creaks, knocks, steps): when the sound is off, always, or never. */
 export type HouseCaptions = 'auto' | 'on' | 'off';
@@ -84,6 +84,10 @@ export interface Note {
   body: string[];
   /** A small optional question underneath. */
   ask?: string;
+  /** A Last Dance card with its own layout (the chapter card, the clue page, the lock, the guest book...). */
+  card?: 'chapter' | 'journal' | 'lock' | 'ledger' | 'letter' | 'end';
+  /** Called once when this page is closed (or replaced by another). */
+  onClose?: () => void;
 }
 
 interface Notice {
@@ -202,6 +206,8 @@ export interface GameState {
   setRoom: (r: RoomId) => void;
   progressDispatch: (a: ProgressAction) => void;
   markFound: (id: string) => void;
+  /** Set or clear a discovery flag (the Last Dance's lock wheels; saved a moment later). */
+  setFound: (id: string, v: boolean) => void;
   setInspecting: (id: string | null, pose?: GameState['shotPose']) => void;
   setNote: (n: Note | null) => void;
   setEventLevel: (v: EventLevel) => void;
@@ -273,7 +279,7 @@ export const useGame = create<GameState>()((set, get) => ({
   savedPlace: loaded.save.place,
   lastSaved: loaded.savedAt,
   hover: null,
-  doors: { front: false, mirror: false, jib: false, gallery: false, dining: false, desk: false, echoes: false, press: false, kitchen: false, ballroom: false, study: false, landing: false },
+  doors: { front: false, mirror: false, jib: false, gallery: false, dining: false, desk: false, echoes: false, press: false, kitchen: false, ballroom: false, study: false, landing: false, records: false, boudoir: false },
   cinematic: null,
   teleport: null,
   shot: null,
@@ -390,7 +396,7 @@ export const useGame = create<GameState>()((set, get) => ({
       patch.writing = {};
       patch.found = {};
       patch.savedPlace = null;
-      patch.doors = { ...get().doors, gallery: false, jib: false, dining: false, desk: false, echoes: false, press: false, kitchen: false, ballroom: false, study: false, landing: false };
+      patch.doors = { ...get().doors, gallery: false, jib: false, dining: false, desk: false, echoes: false, press: false, kitchen: false, ballroom: false, study: false, landing: false, records: false, boudoir: false };
       patch.completionShot = null;
       patch.endingOpen = false;
     }
@@ -403,10 +409,20 @@ export const useGame = create<GameState>()((set, get) => ({
     set({ found: { ...get().found, [id]: true } });
     persistNow(true);
   },
+  setFound: (id, v) => {
+    if (!!get().found[id] === v) return;
+    const found = { ...get().found };
+    if (v) found[id] = true;
+    else delete found[id];
+    set({ found });
+    persistSoon();
+  },
   setInspecting: (inspecting, pose = null) => set({ inspecting, shotPose: pose }),
   setNote: (note) => {
     if (note && document.pointerLockElement) document.exitPointerLock();
+    const prev = get().note;
     set({ note });
+    if (prev && prev !== note) prev.onClose?.();
   },
   setEventLevel: (eventLevel) => {
     save('hosl.eventLevel', String(EVENT_LEVELS.indexOf(eventLevel)));

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ROLE_LABELS, type AnnotatedPart, type ChoiceChallenge, type Role } from '../content/types';
 import { canAdvance, evaluateBuild, itemState, masteryMet, STAGES, type Stage } from '../lesson/lessonMachine';
 import { playCue } from '../systems/soundCues';
@@ -146,7 +146,9 @@ function Learn() {
     case 'term':
       return (
         <>
-          <div className="term">{st.term}</div>
+          <div className="term" style={{ '--len': Math.max(...(st.term ?? '').split(/\s+/).map((w) => w.length), 4) } as CSSProperties}>
+            {st.term}
+          </div>
           <p className="definition">
             <Marked text={st.body ?? ''} />
           </p>

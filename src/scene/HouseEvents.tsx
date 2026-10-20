@@ -46,6 +46,7 @@ import { LADY_DOOR_AT, landingFx } from './UpperLanding';
 import { mats } from '../systems/materials';
 import { HAUNT_IMAGES, hauntImagePresent, hauntTexture, type HauntImage } from '../systems/paintingImages';
 import type { DecorId } from '../systems/paintingImages';
+import { storyHold } from '../story/hold';
 
 type V3 = [number, number, number];
 type Kind = 'sound' | 'sight' | 'light';
@@ -809,6 +810,8 @@ function eligible(c: EventCtx, tier?: Tier) {
     if (recentKinds[0] === e.kind && recentKinds[1] === e.kind) return false;
     // One altered painting at a time.
     if (tierOf(e) === 'painting' && altered.size) return false;
+    // The Last Dance is using her portrait (it is empty while she is out of her frame).
+    if (storyHold.portrait && (e.id === 'ladyWatches' || e.id === 'ladyGone')) return false;
     return true;
   });
 }

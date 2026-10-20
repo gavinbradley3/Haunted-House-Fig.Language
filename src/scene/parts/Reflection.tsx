@@ -45,7 +45,23 @@ const q = new THREE.Vector4();
  * A reflective plane. `point` and `normal` are world space.
  * `active` gates the (expensive) render so it only runs when the room is visible.
  */
-export function ReflectionPlane({ point, normal, active, children }: { point: [number, number, number]; normal: [number, number, number]; active: () => boolean; children: ReactNode }) {
+export function ReflectionPlane({
+  point,
+  normal,
+  active,
+  children,
+  layers = [],
+  boost,
+}: {
+  point: [number, number, number];
+  normal: [number, number, number];
+  active: () => boolean;
+  children: ReactNode;
+  /** Extra layers only the reflection draws (something seen in the glass and nowhere else). */
+  layers?: number[];
+  /** While true, draw the reflection sharper and every frame (a short, important moment). */
+  boost?: () => boolean;
+}) {
   const { gl, scene, camera, size } = useThree();
   const quality = useGame((s) => s.quality);
   const resolution = QUALITY_REFLECT[quality];
@@ -58,6 +74,9 @@ export function ReflectionPlane({ point, normal, active, children }: { point: [n
     return t;
   }, []);
   const virtualCam = useMemo(() => new THREE.PerspectiveCamera(), []);
+  useEffect(() => {
+    for (const l of layers) virtualCam.layers.enable(l);
+  }, [virtualCam, layers]);
   const ctx = useMemo<PlaneCtx>(() => ({ texture: rt.texture, textureMatrix: new THREE.Matrix4(), members: new Set() }), [rt]);
 
   useEffect(() => {
@@ -68,7 +87,13 @@ export function ReflectionPlane({ point, normal, active, children }: { point: [n
 
   useFrame(() => {
     if (!active()) return;
-    if (QUALITY_ALTERNATE[quality] && ++frame.current % 2 !== slot) return;
+    // A moment that matters (the Lady in her mirror): the reflection is drawn sharper, and every frame.
+    const boosted = !!boost?.();
+    const want = boosted ? Math.max(resolution, 0.6) : resolution;
+    const dpr = gl.getPixelRatio();
+    const w = Math.max(256, Math.floor(size.width * dpr * want));
+    if (rt.width !== w) rt.setSize(w, Math.max(256, Math.floor(size.height * dpr * want)));
+    if (!boosted && QUALITY_ALTERNATE[quality] && ++frame.current % 2 !== slot) return;
     const cam = camera as THREE.PerspectiveCamera;
     // Skip the whole reflected render when none of this wall's mirrors is on screen.
     projView.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);

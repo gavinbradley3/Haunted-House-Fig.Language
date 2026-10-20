@@ -46,7 +46,7 @@ const STEP_STRIKE = 0.02;
 // (-37 → -33 dBFS, now level with the drip, 14 dB over the ducked ambience); the stone stand-in 1.15 → 0.95
 // (it measured 2.6 dB over the wood step). Footsteps above land at about your own steps' level, 4 dB over the hall's ambience.
 // Phase 11, the Lady in Green: her whisper, laugh, sigh and hum, and knocks in the wall (measured in game; see docs/phase11).
-const CLIP_LEVEL = { step: 0.21, carpet: 0.17, door: 0.8, doorClose: 0.9, book: 0.52, unlock: 0.75, creak: 0.72, drip: 1.1, tick: 1.2, above: 0.3, hallClock: 0.62, fire: 0.9, stoneStandIn: 0.95, whisper: 0.4, laugh: 1.6, sigh: 1.0, hum: 0.9, knock: 0.85 };
+const CLIP_LEVEL = { step: 0.21, carpet: 0.17, door: 0.8, doorClose: 0.9, book: 0.52, unlock: 0.75, creak: 0.72, drip: 1.1, tick: 1.2, above: 0.3, hallClock: 0.62, fire: 0.9, stoneStandIn: 0.95, whisper: 0.4, laugh: 1.6, sigh: 1.0, hum: 0.9, knock: 0.85, slam: 1.7, knockDoor: 1.25 };
 
 /** Small random variation in level (±1.5 dB) and pitch (±pct), so a repeated recording never sounds identical. */
 const vary = (pct = 0.04) => ({ gain: 10 ** ((Math.random() * 3 - 1.5) / 20), rate: 1 + (Math.random() * 2 - 1) * pct });
@@ -452,6 +452,7 @@ class AudioEngine {
       return (a + b * 0.8) * 0.9 + Math.sin(2 * Math.PI * 1700 * t) * Math.exp(-t * 60) * 0.2;
     });
     this.buffers.thud = this.buf(0.5, (t) => Math.sin(2 * Math.PI * 55 * t) * Math.exp(-t * 14) + (r() * 2 - 1) * Math.exp(-t * 40) * 0.2);
+    this.buildStoryBuffers();
     this.buffers.rattle = this.buf(0.5, (t) => {
       const hits = [0, 0.11, 0.2];
       let v = 0;
@@ -1049,6 +1050,165 @@ class AudioEngine {
   ladyHum(at: V3, gain = 1) {
     return this.playClip('hum', { at, gain: CLIP_LEVEL.hum * gain, rate: vary(0.02).rate });
   }
+  // ------------------------------------------------------------ the Last Dance (bonus chapter)
+
+  /** Synthesised parts of the Last Dance's sounds (each normalised to a peak of 1; levels are set where they play). */
+  private buildStoryBuffers() {
+    const r = rand(41);
+    const norm = (b: AudioBuffer) => {
+      const d = b.getChannelData(0);
+      let peak = 0;
+      for (let i = 0; i < d.length; i++) peak = Math.max(peak, Math.abs(d[i]));
+      for (let i = 0; i < d.length; i++) d[i] /= peak || 1;
+      return b;
+    };
+    // The body of a heavy door hitting its frame: a low boom, a hard knock of wood, a burst of air.
+    this.buffers.slamBoom = norm(
+      this.buf(1.1, (t) => {
+        const f = 38 + 30 * Math.exp(-t * 12);
+        return Math.sin(2 * Math.PI * f * t) * Math.exp(-t * 6) * 1.0 + Math.sin(2 * Math.PI * 142 * t) * Math.exp(-t * 26) * 0.55 + (r() * 2 - 1) * Math.exp(-t * 34) * 0.45;
+      }),
+    );
+    // A knuckle on a solid door, close by (not through a wall): a click, then the wood's ring.
+    this.buffers.doorKnock = norm(
+      this.buf(0.3, (t) => {
+        const click = t < 0.002 ? (r() * 2 - 1) * (1 - t / 0.002) : 0;
+        return click * 0.9 + Math.sin(2 * Math.PI * 196 * t) * Math.exp(-t * 42) * 0.9 + Math.sin(2 * Math.PI * 431 * t) * Math.exp(-t * 64) * 0.45 + Math.sin(2 * Math.PI * 1180 * t) * Math.exp(-t * 130) * 0.25;
+      }),
+    );
+    // A music box's comb jammed: a dry mechanical clunk.
+    this.buffers.clunk = norm(this.buf(0.25, (t) => (t < 0.003 ? (r() * 2 - 1) * 0.8 : 0) + Math.sin(2 * Math.PI * 880 * t) * Math.exp(-t * 85) * 0.5 + Math.sin(2 * Math.PI * 165 * t) * Math.exp(-t * 30) * 0.7));
+    // A small key dropping onto boards: two bright bounces.
+    this.buffers.keyDrop = norm(
+      this.buf(0.6, (t) => {
+        let v = 0;
+        for (const [h, a] of [
+          [0, 1],
+          [0.16, 0.55],
+          [0.27, 0.3],
+        ] as const)
+          if (t >= h) {
+            const tt = t - h;
+            v += a * (Math.sin(2 * Math.PI * 3150 * tt) * Math.exp(-tt * 38) * 0.5 + Math.sin(2 * Math.PI * 4720 * tt) * Math.exp(-tt * 60) * 0.3 + (tt < 0.0015 ? r() * 2 - 1 : 0));
+          }
+        return v;
+      }),
+    );
+    // The sting: the one loud moment in the game. A falling sub-boom under a dissonant, trembling string cluster
+    // and a rush of air, all starting together, so it lands as one hit and dies away within two seconds.
+    const cluster = [233.08, 246.94, 349.23, 466.16, 493.88, 698.46];
+    this.buffers.sting = norm(
+      this.buf(2.6, (t) => {
+        const atk = Math.min(1, t / 0.006);
+        const f = 34 + 70 * Math.exp(-t * 7);
+        const boom = Math.sin(2 * Math.PI * f * t) * Math.exp(-t * 2.6);
+        let strings = 0;
+        for (let k = 0; k < cluster.length; k++) {
+          const fk = cluster[k] * (1 + 0.004 * Math.sin(t * 5 + k));
+          // A bright, bowed-string tone: the first three harmonics of each note.
+          strings += (Math.sin(2 * Math.PI * fk * t) + 0.5 * Math.sin(4 * Math.PI * fk * t) + 0.28 * Math.sin(6 * Math.PI * fk * t)) / cluster.length;
+        }
+        strings *= Math.exp(-t * 1.5) * (0.75 + 0.25 * Math.sin(2 * Math.PI * 13 * t));
+        const air = (r() * 2 - 1) * Math.exp(-t * 7) * 0.5;
+        return atk * (boom * 0.9 + strings * 0.75 + air);
+      }),
+    );
+  }
+
+  /** A door slammed hard. The recording when there is one, else the door-close recording driven hard; a low boom under either. */
+  slam(at: V3) {
+    if (!this.playClip('door-slam', { at, gain: CLIP_LEVEL.slam }) && !this.playClip('door-close', { at, gain: CLIP_LEVEL.doorClose * 1.8, rate: 1.22 })) this.play('thud', { at, gain: 0.9 });
+    this.play('slamBoom', { at, gain: 0.85, reverb: 0.7 });
+    this.play('rattle', { at, gain: 0.22, rate: 0.7, delay: 0.06 });
+  }
+  /** Sharp knocks on a door close by (`n` of them, evenly spaced, the last a little heavier). */
+  knockDoor(at: V3, n = 3, gain = 1) {
+    const recorded = this.hasClip('knock-door');
+    for (let i = 0; i < n; i++) {
+      const delay = i * 0.42;
+      const k = gain * (i === n - 1 ? 1.15 : 1);
+      if (recorded) this.playClip('knock-door', { at, gain: CLIP_LEVEL.knockDoor * k, rate: 0.97 + Math.random() * 0.05, delay });
+      else this.play('doorKnock', { at, gain: 0.55 * k, rate: 0.97 + Math.random() * 0.05, delay, reverb: 0.5 });
+    }
+  }
+  /** The music box stops dead, mid-note, with a clunk. */
+  musicBoxCut(at: V3) {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    if (this.musicBoxOut) {
+      const g = this.musicBoxOut.gain;
+      g.cancelScheduledValues(ctx.currentTime);
+      g.setValueAtTime(g.value, ctx.currentTime);
+      g.linearRampToValueAtTime(0, ctx.currentTime + 0.012);
+      const old = this.musicBoxOut;
+      window.setTimeout(() => old.disconnect(), 400);
+      this.musicBoxOut = null;
+    }
+    this.play('clunk', { at, gain: 0.32 });
+  }
+  /** A small key falling onto the floor. */
+  keyDrop(at: V3) {
+    this.play('keyDrop', { at, gain: 0.32 });
+  }
+  /** A small brass click (the lock's picture wheels). */
+  click() {
+    this.play('latch', { gain: 0.16, rate: 2.4 });
+  }
+  /**
+   * The one loud moment: the Lady in the mirror. Not placed in the room (it is the student's own fright), and
+   * kept under the master compressor, so it is startling without being painful.
+   */
+  sting() {
+    this.play('sting', { gain: 0.62, reverb: 0.55 });
+  }
+  private droneNodes: { out: GainNode; stop: () => void } | null = null;
+  /** A low, uneasy drone under the encounter (two close tones beating against each other, and a breath of noise). */
+  drone(on: boolean, level = 1) {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    if (on) {
+      if (this.droneNodes) return;
+      const out = ctx.createGain();
+      out.gain.value = 0;
+      out.connect(this.sfx);
+      const oscs = [55, 58.3, 110.4].map((f, i) => {
+        const o = ctx.createOscillator();
+        o.type = i === 2 ? 'triangle' : 'sine';
+        o.frequency.value = f;
+        const g = ctx.createGain();
+        g.gain.value = i === 2 ? 0.25 : 0.6;
+        o.connect(g).connect(out);
+        o.start();
+        return o;
+      });
+      const n = ctx.createBufferSource();
+      n.buffer = this.buffers.brown;
+      n.loop = true;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 420;
+      const ng = ctx.createGain();
+      ng.gain.value = 0.35;
+      n.connect(lp).connect(ng).connect(out);
+      n.start();
+      out.gain.setTargetAtTime(0.16 * level, t, 0.35);
+      this.droneNodes = {
+        out,
+        stop: () => {
+          for (const o of oscs) o.stop();
+          n.stop();
+          out.disconnect();
+        },
+      };
+    } else if (this.droneNodes) {
+      const d = this.droneNodes;
+      this.droneNodes = null;
+      d.out.gain.setTargetAtTime(0, t, 0.8);
+      window.setTimeout(d.stop, 4000);
+    }
+  }
+
   /** Decode the Lady's recordings ahead of need, one at a time, so her first event is never silent. */
   async warmHaunting() {
     for (const s of ['knock', 'whisper', 'giggle', 'sigh', 'hum'] as const) {

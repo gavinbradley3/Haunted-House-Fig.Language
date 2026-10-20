@@ -35,6 +35,8 @@ import { CrookedKitchen } from './CrookedKitchen';
 import { BallroomOfContradictions } from './BallroomOfContradictions';
 import { ScholarsStudy } from './ScholarsStudy';
 import { LaterDirectors } from '../lesson/laterDirector';
+import { LadyRoom, MirrorLady, RecordsRoom } from './LastDanceRooms';
+import { LastDanceDirector } from './LastDanceDirector';
 import { preloadArt } from './parts/Artwork';
 import { renderer } from '../systems/renderer';
 
@@ -103,7 +105,7 @@ const HIDDEN_LAYER = 5;
  * intensity: three.js compiles the number of lights into every material's shader,
  * so removing a room's lights would recompile the whole house (a visible stutter).
  */
-type Area = 'exterior' | 'mirrors' | 'gallery' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study';
+type Area = 'exterior' | 'mirrors' | 'gallery' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study' | 'records' | 'boudoir';
 
 function Culling({ children, area }: { children: React.ReactNode; area: Area }) {
   const zone = useGame((s) => s.zone);
@@ -117,6 +119,9 @@ function Culling({ children, area }: { children: React.ReactNode; area: Area }) 
   const kitchenOpen = useGame((s) => s.doors.kitchen);
   const ballroomOpen = useGame((s) => s.doors.ballroom);
   const studyOpen = useGame((s) => s.doors.study);
+  const upstairs = useGame((s) => s.upstairs);
+  const recordsOpen = useGame((s) => s.doors.records);
+  const boudoirOpen = useGame((s) => s.doors.boudoir);
   let visible = true;
   if (area === 'gallery') visible = zone === 'gallery' || (zone === 'corridor' && galleryOpen);
   if (area === 'exterior') visible = zone === 'exterior' || zone === 'hall' || (zone === 'corridor' && frontOpen);
@@ -128,6 +133,9 @@ function Culling({ children, area }: { children: React.ReactNode; area: Area }) 
   if (area === 'kitchen') visible = zone === 'kitchen' || (zone === 'hall' && kitchenOpen);
   if (area === 'study') visible = zone === 'study' || (zone === 'hall' && studyOpen);
   if (area === 'ballroom') visible = zone === 'ballroom' || (zone === 'dining' && ballroomOpen);
+  // The Last Dance's rooms are above the gallery and the dining room: drawn only from upstairs, never with those.
+  if (area === 'records') visible = zone === 'records' || (zone === 'hall' && upstairs && recordsOpen);
+  if (area === 'boudoir') visible = zone === 'boudoir' || (zone === 'hall' && upstairs && boudoirOpen);
   const group = useRef<THREE.Group>(null!);
   const st = useMemo(() => ({ shown: true, lights: [] as THREE.Light[], frames: 0, dirty: true }), []);
   if (st.shown !== visible) {
@@ -351,6 +359,14 @@ export function GameCanvas() {
         <Culling area="study">
           <ScholarsStudy />
         </Culling>
+        <Culling area="records">
+          <RecordsRoom />
+        </Culling>
+        <Culling area="boudoir">
+          <LadyRoom />
+        </Culling>
+        {/* Outside the culling: she is on a layer only the Lady's mirror draws. */}
+        <MirrorLady />
         <RoomLights />
         <DustMotes />
         <Player />
@@ -363,6 +379,7 @@ export function GameCanvas() {
         <LessonCamera />
         <HouseEvents />
         <HauntFigure />
+        <LastDanceDirector />
         <FpsGuard />
         <ContextWatch />
         <Precompile />

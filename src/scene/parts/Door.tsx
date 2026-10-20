@@ -105,10 +105,18 @@ interface DoorProps {
   material?: THREE.Material;
   /** True while the door is locked (it is then never nudged by the house). */
   locked?: () => boolean;
+  /** Which floor's collision the closed leaf belongs to (the doors on the upper landing are upstairs). */
+  floor?: 'ground' | 'upper';
 }
 
+/**
+ * Doors being slammed (by the Last Dance's story events): door id → world time the slam lasts until.
+ * A slammed door swings about three times as fast and stops dead against its frame.
+ */
+export const doorSlam = new Map<string, number>();
+
 /** Animated, collidable, interactive door. */
-export function Door({ id, hinge, rotationY, width, height, open, swing = 1, maxAngle = 1.65, label, onUse, handleSide = 1, plaqueText, material, locked }: DoorProps) {
+export function Door({ id, hinge, rotationY, width, height, open, swing = 1, maxAngle = 1.65, label, onUse, handleSide = 1, plaqueText, material, locked, floor = 'ground' }: DoorProps) {
   const openRef = useRef(open);
   openRef.current = open;
   const lockedRef = useRef(locked);
@@ -135,9 +143,9 @@ export function Door({ id, hinge, rotationY, width, height, open, swing = 1, max
   }, [hinge, rotationY, width]);
 
   useEffect(() => {
-    setDynamicCollider(`door:${id}`, collider, true);
+    setDynamicCollider(`door:${id}`, collider, true, floor);
     return () => removeDynamicCollider(`door:${id}`);
-  }, [id, collider]);
+  }, [id, collider, floor]);
 
   useFrame(() => {
     const dt = world.dt;
@@ -145,14 +153,21 @@ export function Door({ id, hinge, rotationY, width, height, open, swing = 1, max
     const nudge = doorNudge.get(id) ?? 0;
     const target = (open ? maxAngle : 0) + (open ? -nudge : nudge);
     // Damped spring: heavy door with a little settle. A nudge from the house drifts slowly instead.
-    const k = nudge ? 1.6 : 9;
-    const c = nudge ? 2.4 : 5.2;
+    const slamming = (doorSlam.get(id) ?? -1) > world.t;
+    const s = slamming ? 3.2 : 1;
+    const k = nudge ? 1.6 : 9 * s * s;
+    const c = nudge ? 2.4 : 5.2 * s;
     const acc = (target - angle.current) * k - angVel.current * c;
     angVel.current += acc * dt;
     angle.current += angVel.current * dt;
+    // A slammed door stops dead against its frame instead of swinging through it.
+    if (slamming && angle.current < 0) {
+      angle.current = 0;
+      angVel.current = 0;
+    }
     leaf.current.rotation.y = swing * angle.current;
     if (Math.abs(angVel.current) > 0.005) shadowClock.doorsMoving = 3;
-    setDynamicCollider(`door:${id}`, collider, angle.current < 0.5);
+    setDynamicCollider(`door:${id}`, collider, angle.current < 0.5, floor);
   });
 
   return (

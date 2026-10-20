@@ -8,8 +8,12 @@
  *  - On a console under the landing's painting: a candle, and her diary, open at a page written the
  *    night she began the letter in the writing box downstairs.
  *
- * Nothing here is needed to finish the game; finding the diary is remembered and mentioned at the end.
+ * Nothing here is needed to finish the lessons; finding the diary is remembered and mentioned at the end.
  * No new lights: the candle is an emissive flame, and the landing is lit by the hall's chandelier.
+ *
+ * The Last Dance (the bonus chapter after the lessons) starts here: the diary holds a loose page of clues,
+ * the right-hand door has a picture lock (and opens on the Guest Records room), and the left-hand door is
+ * the Lady's own (her key is in the guest book).
  */
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
@@ -20,11 +24,13 @@ import { boxGeo, latheGeo, LATHES } from '../systems/geometry';
 import { mats } from '../systems/materials';
 import { showHouseCaption } from '../systems/soundCues';
 import { world } from '../systems/time';
-import { UPPER_BOXES, boxAt } from '../world/collision';
-import { HALL } from '../world/layout';
-import { DoorLeaf } from './parts/Door';
+import { UPPER_BOXES, boxAt, setDynamicCollider, removeDynamicCollider, upstairsDoorway } from '../world/collision';
+import { HALL, WALL_T } from '../world/layout';
+import { Door, DoorLeaf } from './parts/Door';
 import { ConsoleTable } from './parts/Furnishings';
 import { Interactive } from './Interactive';
+import { openJournal, openLock, unlockLadyDoor, stage } from '../story/actions';
+import { LD } from '../story/lastDance';
 
 const L = HALL.landing;
 const BACK = HALL.zBack;
@@ -49,6 +55,17 @@ export const DIARY: Note = {
 
 // The console under the painting stands in the way.
 UPPER_BOXES.push(boxAt(0, BACK + 0.24, 1.3, 0.5));
+
+/** Has the Last Dance begun (the chapter card has been shown)? */
+const chapterOn = () => stage() !== 'locked' && stage() !== 'intro';
+
+/** While a landing door is still its old, locked self, its doorway is closed to walking. */
+function useDoorway(id: string, x: number, closed: boolean) {
+  useEffect(() => {
+    setDynamicCollider(id, upstairsDoorway(x), closed, 'upper');
+    return () => removeDynamicCollider(id);
+  }, [id, x, closed]);
+}
 
 /** A thin strip of warm light in the gap under a door; a shadow can cross it. */
 function underDoorMaterial() {
@@ -84,7 +101,38 @@ function ajarGlowTexture() {
   return t;
 }
 
+/** One of the two landing doors once it has been opened for the Last Dance: an ordinary door on the upper floor. */
+function OpenedDoor({ id, x, door, name }: { id: string; x: number; door: 'records' | 'boudoir'; name: string }) {
+  const open = useGame((s) => s.doors[door]);
+  return (
+    <Door
+      id={id}
+      floor="upper"
+      hinge={[x - 0.48, L.y, BACK - WALL_T / 2]}
+      rotationY={0}
+      width={0.96}
+      height={2.3}
+      open={open}
+      swing={1}
+      maxAngle={1.5}
+      label={() => (open ? `Close ${name}` : `Open ${name}`)}
+      onUse={() => {
+        useGame.getState().setDoor(door, !open);
+        if (open) audio.doorClose([x, L.y + 1, BACK]);
+        else audio.doorOpen([x, L.y + 1, BACK]);
+      }}
+    />
+  );
+}
+
 function LadyDoor() {
+  const opened = useGame((s) => !!s.found[LD.door2]);
+  useDoorway('upstairs:boudoir', LADY_X, !opened);
+  if (opened) return <OpenedDoor id="boudoir-door" x={LADY_X} door="boudoir" name="the Lady’s door" />;
+  return <LockedLadyDoor />;
+}
+
+function LockedLadyDoor() {
   const strip = useMemo(underDoorMaterial, []);
   useFrame(() => {
     strip.uniforms.uTime.value = world.t;
@@ -96,11 +144,13 @@ function LadyDoor() {
       <group position={[LADY_X - 0.48, L.y + 0.016, BACK + 0.03]}>
         <Interactive
           id="landing-lady-door"
-          label={() => 'Try the Lady’s door'}
+          label={() => (game().found[LD.key] ? 'Unlock the Lady’s door with her key' : 'Try the Lady’s door')}
           maxDist={2.6}
           onUse={() => {
+            if (game().found[LD.key]) return unlockLadyDoor();
             audio.locked([LADY_X, L.y + 1, BACK]);
-            useGame.getState().showNotice('Locked.', 'The keyhole is cold, and it smells faintly of lavender.');
+            if (chapterOn()) useGame.getState().showNotice('Locked.', 'Her own door. It will need her own key.');
+            else useGame.getState().showNotice('Locked.', 'The keyhole is cold, and it smells faintly of lavender.');
           }}
         >
           <DoorLeaf width={0.96} height={2.3} />
@@ -111,6 +161,13 @@ function LadyDoor() {
       </mesh>
     </group>
   );
+}
+
+function RecordsDoor() {
+  const opened = useGame((s) => !!s.found[LD.door1]);
+  useDoorway('upstairs:records', AJAR_X, !opened);
+  if (opened) return <OpenedDoor id="records-door" x={AJAR_X} door="records" name="the door" />;
+  return <AjarDoor />;
 }
 
 function AjarDoor() {
@@ -142,17 +199,42 @@ function AjarDoor() {
       <group ref={leaf} position={[AJAR_X - 0.48, L.y + 0.016, BACK + 0.03]}>
         <Interactive
           id="landing-ajar-door"
-          label={() => (game().found.landingDoorShut ? 'Try the door' : null)}
+          label={() => (!game().found.landingDoorShut ? null : chapterOn() ? 'Look at the picture lock' : 'Try the door')}
           maxDist={2.6}
           onUse={() => {
+            if (chapterOn()) return openLock();
             audio.locked([AJAR_X, L.y + 1, BACK]);
             useGame.getState().showNotice('It will not open now.', 'Somewhere beyond it, a music box plays two notes and stops.');
             window.setTimeout(() => audio.musicBox('two', [AJAR_X + 1.5, L.y + 1, BACK - 3], 0.45), 900);
           }}
         >
           <DoorLeaf width={0.96} height={2.3} />
+          <PictureLock />
         </Interactive>
       </group>
+    </group>
+  );
+}
+
+/** Once the Last Dance begins, four little picture wheels can be seen set into the lock plate. */
+function PictureLock() {
+  const m = mats();
+  const show = useGame((s) => !!s.found[LD.started]);
+  const glow = useMemo(() => new THREE.MeshStandardMaterial({ color: '#2a2216', emissive: new THREE.Color('#d9a54a'), emissiveIntensity: 0.0, roughness: 0.5, metalness: 0.6 }), []);
+  useFrame(() => {
+    // A slow pulse while the lock is the next step, so it is found.
+    const due = stage() === 'paintings';
+    glow.emissiveIntensity = due ? 0.35 + 0.25 * Math.sin(world.t * 2.2) : 0.08;
+  });
+  if (!show) return null;
+  return (
+    <group position={[0.96 - 0.16, 1.18, 0.034]}>
+      <mesh geometry={boxGeo(0.13, 0.36, 0.012)} material={m.brass} />
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={i} material={glow} position={[0, 0.12 - i * 0.08, 0.009]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.028, 0.028, 0.012, 14]} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -160,11 +242,13 @@ function AjarDoor() {
 function DiaryAndCandle() {
   const m = mats();
   const stick = latheGeo('candlestick', LATHES.candlestick);
-  const page = useMemo(() => new THREE.MeshStandardMaterial({ color: '#d8ccb0', roughness: 0.9 }), []);
+  const page = useMemo(() => new THREE.MeshStandardMaterial({ color: '#d8ccb0', roughness: 0.9, emissive: new THREE.Color('#ffd9a0'), emissiveIntensity: 0 }), []);
   const flame = useRef<THREE.Mesh>(null!);
   useFrame(() => {
     const t = world.t;
     flame.current.scale.set(1, 0.85 + Math.sin(t * 9.1) * 0.08 + Math.sin(t * 15.7) * 0.05, 1);
+    // While the diary is the next step of the Last Dance, its pages glow softly so it is found from the stairs.
+    page.emissiveIntensity = stage() === 'diary' ? 0.25 + 0.2 * Math.sin(t * 2.4) : 0;
   });
   const top = L.y + 0.84;
   return (
@@ -183,12 +267,13 @@ function DiaryAndCandle() {
       {/* The diary, lying open */}
       <Interactive
         id="landing-diary"
-        label={() => 'Read the open diary'}
+        label={() => (chapterOn() ? 'Read the Lady’s diary (a loose page is tucked inside)' : 'Read the open diary')}
         maxDist={2.4}
         onUse={() => {
           audio.page([0.1, top, BACK + 0.25]);
-          useGame.getState().setNote(DIARY);
           useGame.getState().markFound('diary');
+          if (chapterOn()) openJournal();
+          else useGame.getState().setNote(DIARY);
         }}
       >
         <group position={[0.12, top + 0.012, BACK + 0.24]} rotation={[0, 0.18, 0]}>
@@ -215,7 +300,7 @@ export function UpperLanding() {
   return (
     <group>
       <LadyDoor />
-      <AjarDoor />
+      <RecordsDoor />
       <DiaryAndCandle />
       <FirstVisit />
     </group>
