@@ -7,12 +7,16 @@
  */
 import * as THREE from 'three';
 import type { ArtId } from './paintingScenes';
+import { renderer } from './renderer';
 
 const urls = import.meta.glob('../assets/paintings/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 
+// The haunting's images (src/assets/haunting): the Lady's apparition and the altered states of paintings.
+const hauntUrls = import.meta.glob('../assets/haunting/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+
 /** URL of a painting file by its exact filename (undefined if the file is not in the build). */
 export function paintingUrl(file: string): string | undefined {
-  return urls[`../assets/paintings/${file}`];
+  return urls[`../assets/paintings/${file}`] ?? hauntUrls[`../assets/haunting/${file}`];
 }
 
 // Close-inspection copies at the artwork's native resolution (src/assets/paintings/inspect, same filenames).
@@ -66,6 +70,31 @@ export const DECOR_IMAGES = {
 export type DecorId = keyof typeof DECOR_IMAGES;
 
 export const decorAspect = (id: DecorId) => DECOR_IMAGES[id].w / DECOR_IMAGES[id].h;
+
+/**
+ * The haunting's images (src/assets/haunting). Each altered painting is the same size as the painting it
+ * replaces for a while. An entry whose file is not in the build simply never happens (see docs/phase11).
+ */
+export const HAUNT_IMAGES = {
+  /** The Lady in Green, full length (Astra, from her portrait): the apparition. */
+  apparition: { file: 'lady-apparition.webp', w: 400, h: 1024 },
+  /** The Builder's portrait (D02) with the Lady's face in the darkness behind him. */
+  D02: { file: 'decor-D02-haunted.webp', w: 404, h: 512 },
+  /** The Young Man in Mourning (D09) with the Lady's face in the darkness behind him. */
+  D09: { file: 'decor-D09-haunted.webp', w: 402, h: 512 },
+  /** The Host (D12, dining room), with her face in the dark panelling behind him. */
+  D12: { file: 'decor-D12-haunted.webp', w: 410, h: 512 },
+  /** The Girl with a China Doll (D14, nursery), with her face in the darkness behind them. */
+  D14: { file: 'decor-D14-haunted.webp', w: 402, h: 512 },
+  /** The Lady's portrait with her gone, only the chair and curtain left (Astra). */
+  ladyGone: { file: 'painting-ladyOfHouse-empty.webp', w: 768, h: 1024 },
+} as const satisfies Record<string, ImageSpec>;
+export type HauntImage = keyof typeof HAUNT_IMAGES;
+
+/** Is this haunting image in the build? */
+export const hauntImagePresent = (k: HauntImage) => !!paintingUrl(HAUNT_IMAGES[k].file);
+/** The texture for a haunting image (starts loading on first use), or null if the file is not in the build. */
+export const hauntTexture = (k: HauntImage) => paintingTexture(HAUNT_IMAGES[k], (t) => renderer.gl?.initTexture(t));
 
 // ------------------------------------------------------------------ loading
 

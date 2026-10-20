@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lady in Green — new sounds</title>
+<style>
+  :root { --bg: #14110d; --card: #1d1914; --edge: #4a3d29; --ink: #ece3d0; --dim: #b3a78f; --brass: #cfa95f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Georgia, 'Times New Roman', serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { font-weight: normal; font-size: 30px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 21px; color: var(--brass); margin: 34px 0 6px; letter-spacing: 0.04em; }
+  p.lead, .note { color: var(--dim); }
+  .clip { display: grid; grid-template-columns: 150px 1fr; gap: 6px 16px; align-items: center; padding: 12px 14px; margin: 8px 0; background: var(--card); border: 1px solid var(--edge); }
+  .clip b { font-weight: normal; font-family: ui-monospace, Consolas, monospace; font-size: 14px; color: var(--brass); }
+  .clip audio { width: 100%; height: 36px; }
+  .clip .desc { grid-column: 1 / -1; font-size: 14px; color: var(--dim); }
+  .src { font-size: 13px; color: var(--dim); }
+  a { color: var(--brass); }
+  button { font: inherit; background: #2a241a; color: var(--ink); border: 1px solid var(--edge); padding: 6px 12px; cursor: pointer; }
+  button:hover { border-color: var(--brass); }
+  @media (max-width: 560px) { .clip { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Lady in Green — new sounds</h1>
+  <p class="lead">Every sound new in Phase 11, exactly as it is in the game files (<code>src/assets/audio/</code>). In the game each one is also
+  placed in 3D (it comes from a direction and distance) and passes through the room's echo, so it sounds further away and softer than here.
+  Use headphones or the classroom speakers you will use. Reply "approved", or name any clip to drop or replace.</p>
+  <p><button id="all">Play the Lady's three signature sounds in turn</button></p>
+
+  <h2>Her laugh (the signature sound)</h2>
+  <p class="note">Soft and closed-mouthed, with a faint echo, heard far off in the house. Rare: at most once every five minutes, and sometimes just after a painting changes or after she is seen.</p>
+  <div class="clip"><b>giggle-1.mp3</b><audio controls preload="none" src="../../src/assets/audio/giggle-1.mp3"></audio><div class="desc">The main laugh: a calm, slightly creepy chuckle.</div></div>
+  <div class="clip"><b>giggle-2.mp3</b><audio controls preload="none" src="../../src/assets/audio/giggle-2.mp3"></audio><div class="desc">The same woman, a shorter laugh.</div></div>
+  <div class="clip"><b>giggle-3.mp3</b><audio controls preload="none" src="../../src/assets/audio/giggle-3.mp3"></audio><div class="desc">The same woman, the shortest and quietest.</div></div>
+
+  <h2>Her whisper</h2>
+  <p class="note">The same performer whispering in several layers, so no words can be made out. Heard close behind one shoulder, or through a wall. <code>whisper-4</code> is reversed, for variety.</p>
+  <div class="clip"><b>whisper-1.mp3</b><audio controls preload="none" src="../../src/assets/audio/whisper-1.mp3"></audio></div>
+  <div class="clip"><b>whisper-2.mp3</b><audio controls preload="none" src="../../src/assets/audio/whisper-2.mp3"></audio></div>
+  <div class="clip"><b>whisper-3.mp3</b><audio controls preload="none" src="../../src/assets/audio/whisper-3.mp3"></audio></div>
+  <div class="clip"><b>whisper-4.mp3</b><audio controls preload="none" src="../../src/assets/audio/whisper-4.mp3"></audio><div class="desc">Reversed.</div></div>
+
+  <h2>Her sigh</h2>
+  <p class="note">The same performer. Played as a mirror in the Hall of Mirrors fogs over, as if someone breathed on the glass.</p>
+  <div class="clip"><b>sigh-1.mp3</b><audio controls preload="none" src="../../src/assets/audio/sigh-1.mp3"></audio></div>
+
+  <h2>Her humming</h2>
+  <p class="note">A few bars of a dark lullaby, muffled, from behind a wall, while a student lingers in a room. A different performer from the laugh and whisper; muffled and distant enough that this should not show. Drop it if you disagree.</p>
+  <div class="clip"><b>hum-1.mp3</b><audio controls preload="none" src="../../src/assets/audio/hum-1.mp3"></audio></div>
+  <div class="clip"><b>hum-2.mp3</b><audio controls preload="none" src="../../src/assets/audio/hum-2.mp3"></audio></div>
+
+  <h2>Knocks in the wall</h2>
+  <p class="note">Single knuckle knocks on a wooden door, muffled as if through a wall. The game spaces them itself (three slow knocks; sometimes one more, later). They replace the synthesised knocks.</p>
+  <div class="clip"><b>knock-1.mp3</b><audio controls preload="none" src="../../src/assets/audio/knock-1.mp3"></audio></div>
+  <div class="clip"><b>knock-2.mp3</b><audio controls preload="none" src="../../src/assets/audio/knock-2.mp3"></audio></div>
+  <div class="clip"><b>knock-3.mp3</b><audio controls preload="none" src="../../src/assets/audio/knock-3.mp3"></audio></div>
+  <div class="clip"><b>knock-4.mp3</b><audio controls preload="none" src="../../src/assets/audio/knock-4.mp3"></audio></div>
+  <p><button id="knocks">Hear three knocks as the game spaces them</button></p>
+
+  <h2>Sources (all CC0 1.0, public domain)</h2>
+  <p class="src">Laugh, whisper and sigh: BlueSiren on Freesound — <a href="https://freesound.org/people/BlueSiren/sounds/377742/">377742</a> (calm chuckle), <a href="https://freesound.org/people/BlueSiren/sounds/382998/">382998</a> (giggling), <a href="https://freesound.org/people/BlueSiren/sounds/377743/">377743</a> (indistinct whispering), <a href="https://freesound.org/people/BlueSiren/sounds/377736/">377736</a> (sigh).<br>
+  Humming: AlucardsBride, <a href="https://freesound.org/people/AlucardsBride/sounds/193938/">193938</a> ("a dark lullaby that is hummed").<br>
+  Knocks: TRP, <a href="https://freesound.org/people/TRP/sounds/573835/">573835</a> (door knocks, close, wood).<br>
+  Full record with the edits made: <code>ASSETS.md</code> and <code>docs/phase11/README.md</code>.</p>
+</main>
+<script>
+  const A = (f) => new Audio('../../src/assets/audio/' + f);
+  document.getElementById('all').onclick = () => {
+    const seq = ['giggle-1.mp3', 'whisper-1.mp3', 'sigh-1.mp3'];
+    let i = 0;
+    const next = () => { if (i >= seq.length) return; const a = A(seq[i++]); a.onended = () => setTimeout(next, 900); a.play(); };
+    next();
+  };
+  document.getElementById('knocks').onclick = () => {
+    [0, 640, 1270].forEach((ms, i) => setTimeout(() => { const a = A('knock-' + (i + 1) + '.mp3'); a.volume = 1 - 0.06 * i; a.play(); }, ms));
+  };
+</script>
+</body>
+</html>

@@ -45,7 +45,8 @@ const STEP_STRIKE = 0.02;
 // (-24 dBFS at 2 m) no longer outranks the lesson sounds (-23 to -38); the lesson tick-tock raised 0.75 → 1.2
 // (-37 → -33 dBFS, now level with the drip, 14 dB over the ducked ambience); the stone stand-in 1.15 → 0.95
 // (it measured 2.6 dB over the wood step). Footsteps above land at about your own steps' level, 4 dB over the hall's ambience.
-const CLIP_LEVEL = { step: 0.21, carpet: 0.17, door: 0.8, doorClose: 0.9, book: 0.52, unlock: 0.75, creak: 0.72, drip: 1.1, tick: 1.2, above: 0.3, hallClock: 0.62, fire: 0.9, stoneStandIn: 0.95 };
+// Phase 11, the Lady in Green: her whisper, laugh, sigh and hum, and knocks in the wall (measured in game; see docs/phase11).
+const CLIP_LEVEL = { step: 0.21, carpet: 0.17, door: 0.8, doorClose: 0.9, book: 0.52, unlock: 0.75, creak: 0.72, drip: 1.1, tick: 1.2, above: 0.3, hallClock: 0.62, fire: 0.9, stoneStandIn: 0.95, whisper: 0.4, laugh: 1.6, sigh: 1.0, hum: 0.9, knock: 0.85 };
 
 /** Small random variation in level (±1.5 dB) and pitch (±pct), so a repeated recording never sounds identical. */
 const vary = (pct = 0.04) => ({ gain: 10 ** ((Math.random() * 3 - 1.5) / 20), rate: 1 + (Math.random() * 2 - 1) * pct });
@@ -1014,19 +1015,47 @@ class AudioEngine {
     }
     this.play(`step${Math.floor(Math.random() * 4)}`, { at, gain: 0.32 * gain, rate, reverb: 0.75 });
   }
-  /** Knocks from inside a wall: n of them, a little uneven. */
+  /** Knocks from inside a wall: n of them, a little uneven. Recorded knuckles on wood when present. */
   knocks(at: V3, n = 3, gap = 0.42, gain = 1) {
-    for (let i = 0; i < n; i++) this.play('knock', { at, gain: 0.4 * gain * (1 - 0.06 * i), rate: 0.93 + Math.random() * 0.08, delay: i * gap * (0.9 + Math.random() * 0.2) });
+    const recorded = this.hasClip('knock');
+    for (let i = 0; i < n; i++) {
+      const delay = i * gap * (0.9 + Math.random() * 0.2);
+      const k = gain * (1 - 0.06 * i);
+      if (recorded) this.playClip('knock', { at, gain: CLIP_LEVEL.knock * k * vary().gain, rate: 0.9 + Math.random() * 0.08, delay });
+      else this.play('knock', { at, gain: 0.4 * k, rate: 0.93 + Math.random() * 0.08, delay });
+    }
   }
   /** Something heavy dragged a short way across the floor above. */
   dragAbove(at: V3) {
     this.play('creakDoor', { at, gain: 0.3, rate: 0.42 + Math.random() * 0.06, reverb: 0.8 });
     this.play('thud', { at, gain: 0.28, rate: 0.7, delay: 1.0 });
   }
-  /** A whisper so faint it might be the wind. */
+  /** The Lady's whisper: unintelligible, close or through a wall. Without the recording, a breathy synthesised "sss". */
   whisperAt(at: V3, gain = 1) {
+    if (this.playClip('whisper', { at, gain: CLIP_LEVEL.whisper * gain * vary().gain, rate: vary(0.05).rate })) return;
     this.play('whisperS', { at, gain: 0.32 * gain, rate: 0.75 + Math.random() * 0.15, reverb: 0.9 });
     this.play('whisperS', { at, gain: 0.22 * gain, rate: 0.68 + Math.random() * 0.1, delay: 0.55, reverb: 0.9 });
+  }
+
+  /** The Lady's laugh, far off in the house: soft and echoing. Returns false if there is no recording. */
+  ladyLaugh(at: V3, gain = 1) {
+    return this.playClip('giggle', { at, gain: CLIP_LEVEL.laugh * gain, rate: vary(0.025).rate });
+  }
+  /** The Lady's sigh, close to a painting or a mirror. */
+  ladySigh(at: V3, gain = 1) {
+    return this.playClip('sigh', { at, gain: CLIP_LEVEL.sigh * gain, rate: vary(0.03).rate });
+  }
+  /** A few bars of the Lady humming, muffled, in another room. */
+  ladyHum(at: V3, gain = 1) {
+    return this.playClip('hum', { at, gain: CLIP_LEVEL.hum * gain, rate: vary(0.02).rate });
+  }
+  /** Decode the Lady's recordings ahead of need, one at a time, so her first event is never silent. */
+  async warmHaunting() {
+    for (const s of ['knock', 'whisper', 'giggle', 'sigh', 'hum'] as const) {
+      if (!this.ctx) return;
+      await this.loadSlot(s);
+      await new Promise((r) => setTimeout(r, 400));
+    }
   }
 
   private meter: AnalyserNode | null = null;

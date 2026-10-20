@@ -14,10 +14,10 @@ import { doorState } from './lesson/progression';
 import { skipCinematic } from './scene/Player';
 import { liveCamera, world } from './systems/time';
 import { getInteractable } from './systems/interaction';
-import { forceHaunt, hauntState, holdHaunting, triggerStrangeEvent } from './scene/HouseEvents';
+import { apparitionAt, forceHaunt, hauntDueNow, hauntEvents, hauntLog, hauntState, holdHaunting, setHauntSpeed, settleHouse, triggerStrangeEvent } from './scene/HouseEvents';
 import { doorNudge } from './scene/parts/Door';
 import { figureFx, showFigure } from './scene/HauntFigure';
-import { hungPaintings } from './scene/parts/Artwork';
+import { decorPaintings, hungPaintings } from './scene/parts/Artwork';
 import { houseState } from './scene/parts/Lights';
 import { renderer } from './systems/renderer';
 import { audio } from './systems/audio';
@@ -38,6 +38,13 @@ export function installTestHook() {
     showFigure,
     figureFx,
     hauntState,
+    hauntEvents,
+    hauntLog,
+    apparitionAt,
+    hauntDueNow,
+    setHauntSpeed,
+    settleHouse,
+    decorPaintings,
     doorNudge,
     /** The final mix's loudness right now (dBFS, RMS over ~43 ms), for measuring how audible events are. */
     level: () => {
@@ -86,4 +93,50 @@ export function installTestHook() {
       return out;
     },
   };
+  if (new URLSearchParams(location.search).has('haunt')) installHauntPanel();
+}
+
+/**
+ * Developer panel for the haunting (dev and the test build only, opened with ?haunt in the address):
+ * one button per event, forced now (ignoring its cooldown and its wait to be unseen or in view),
+ * plus the director's clocks and its recent log. Never in the student or teacher builds.
+ */
+function installHauntPanel() {
+  const box = document.createElement('div');
+  box.style.cssText =
+    'position:fixed;left:8px;bottom:8px;z-index:60;width:330px;max-height:70vh;overflow:auto;padding:8px 10px;background:rgba(8,8,8,0.88);border:1px solid #6b5a3a;color:#ddd;font:12px/1.35 system-ui,sans-serif';
+  const buttons = document.createElement('div');
+  const status = document.createElement('pre');
+  status.style.cssText = 'margin:6px 0 0;white-space:pre-wrap;font:11px/1.3 ui-monospace,monospace;color:#bba';
+  box.innerHTML = '<b style="color:#cfa95f">Haunting (developer)</b> — click a button, then click the game to look again.<br>';
+  box.append(buttons, status);
+  document.body.append(box);
+  const btn = (label: string, title: string, fn: () => unknown) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.title = title;
+    b.style.cssText = 'margin:2px;padding:2px 6px;font:12px system-ui;background:#2a241a;color:#eee;border:1px solid #6b5a3a;cursor:pointer';
+    b.onclick = (e) => {
+      e.stopPropagation();
+      const r = fn();
+      b.style.borderColor = r === false ? '#a33' : '#5a5';
+      window.setTimeout(() => (b.style.borderColor = '#6b5a3a'), 900);
+    };
+    buttons.append(b);
+  };
+  for (const e of hauntEvents()) btn(e.id, `${e.tier}; zones: ${e.zones}`, () => forceHaunt(e.id, true));
+  btn('settle', 'Put altered paintings back, drop follow-ups', () => settleHouse());
+  btn('quiet 10 min', 'Hold all events for 600 s', () => holdHaunting(600));
+  window.setInterval(() => {
+    const s = hauntState();
+    const z = useGame.getState().zone;
+    status.textContent =
+      `zone ${z}  t ${s.t.toFixed(0)}  still ${s.still.toFixed(0)}  room ${s.roomTime.toFixed(0)}\n` +
+      `next: minor ${(s.clocks.minor - s.t).toFixed(0)}s  painting ${(s.clocks.painting - s.t).toFixed(0)}s  apparition ${(s.clocks.apparition - s.t).toFixed(0)}s\n` +
+      `altered: ${s.altered.map((a) => `${a.key}${a.noticedAt !== null ? ' (seen)' : ''}`).join(', ') || '-'}\n` +
+      s.log
+        .slice(-8)
+        .map((l) => `${l.t.toFixed(0).padStart(5)} ${l.tier.padEnd(10)} ${l.id}`)
+        .join('\n');
+  }, 1000);
 }
