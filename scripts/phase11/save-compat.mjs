@@ -91,15 +91,26 @@ await page.keyboard.up('KeyW');
 await page.waitForTimeout(6000);
 const oldSave = await page.evaluate(() => localStorage.getItem('hosl.save'));
 check('current build: continues and saves', !!oldSave && JSON.parse(oldSave).v === 2, oldRoom);
+const oldKeys = await page.evaluate(() => Object.fromEntries(Object.keys(localStorage).filter((k) => k.startsWith('hosl.')).map((k) => [k, localStorage.getItem(k)])));
 await ctx.close();
 await stop(server);
 
 // ---------------------------------------------------------------- 2. the new build, same address, same profile
-server = await serve(newDir);
+// With a published site instead of a folder: copy the old build's saved data into that site's storage
+// (a different address, so the profile cannot carry it over by itself), then run the same checks there.
+const live = /^https?:/.test(newDir);
+server = live ? null : await serve(newDir);
 ctx = await chromium.launchPersistentContext(profile, { channel: 'chrome', viewport: { width: 1280, height: 720 }, args: ['--ignore-gpu-blocklist'] });
 page = ctx.pages()[0] ?? (await ctx.newPage());
 watch(page);
-await page.goto(site);
+await page.goto(live ? newDir : site);
+if (live) {
+  console.log(`published site ${newDir}`);
+  await page.evaluate((s) => {
+    for (const [k, v] of Object.entries(s)) localStorage.setItem(k, v);
+  }, oldKeys);
+  await page.reload();
+}
 await page.waitForSelector('.title-enter', { timeout: 180000 });
 await page.waitForTimeout(3500);
 const newTitle = await page.locator('.title-progress').innerText().catch(() => '');
@@ -115,6 +126,6 @@ check('new build: nothing reported damaged', after.damaged === null);
 check('new build: progress unchanged', JSON.stringify(after.save?.progress) === JSON.stringify(JSON.parse(oldSave).progress));
 check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await ctx.close();
-await stop(server);
+if (server) await stop(server);
 fs.rmSync(profile, { recursive: true, force: true });
 console.log(`\n${results.filter((r) => r.ok).length}/${results.length} passed`);
