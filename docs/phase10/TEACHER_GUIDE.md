@@ -7,18 +7,16 @@
 | **Student** | `npm run build` | `dist/` | Every student, on their own Chromebook | Not included. The code is left out of this build entirely. |
 | **Teacher** | `npm run build:teacher` | `dist-teacher/` | You: projecting, and fixing a student's game | Included |
 
-Both editions use the same saved game. A browser keeps saved data per **web address origin** (for example `https://our-house.netlify.app`), not per folder. If the teacher edition is published in a sub-folder of the same site as the student edition, it can open and repair any student's save on that student's Chromebook.
+**Final arrangement:** only the student build is published (one Netlify site). The teacher edition is **not** published; it runs on the teacher's own computer from the local launcher in the `Real Game` folder (see `Real Game/READ ME.txt`).
 
-## Publishing (Netlify Drop or any static host)
+A browser keeps saved data per **web address origin** (for example `https://our-house.netlify.app`). The local teacher edition (`http://localhost:8765`) therefore has its own saves and **cannot read or change a student's Chromebook save**. Use it for projecting, demonstrating and practising.
 
-1. Run `npm run build` and `npm run build:teacher`.
-2. Make one folder to upload, for example `site/`:
-   - copy everything inside `dist/` into `site/`;
-   - copy everything inside `dist-teacher/` into a sub-folder with a name students will not guess, for example `site/staff-7q4m/`.
-3. Upload `site/` (drag it onto app.netlify.com/drop, or your school's host).
-4. Give students the site address. Keep the teacher address (`…/staff-7q4m/`) to yourself.
+## Publishing the student build
 
-**Be honest with yourself about what this protects.** The student build contains no teacher controls at all, so there is nothing hidden inside it to unlock. The teacher edition's sub-folder is only *unlisted*, not locked: anyone who learns the address can open it. With no server or accounts there is no real password protection, and a hidden shortcut or a password typed into the page would not be real protection either. If a student does find the teacher address, all they can do is change **their own** saved game on **their own** Chromebook. If that is not acceptable, do not publish the teacher edition at all; keep it on your own computer for projecting, and reset a student's game by clearing site data instead (see below).
+1. Run `npm run build` (the student build goes to `dist/`).
+2. First time: deploy `dist/` to a new Netlify site and give students that address.
+3. Updates: deploy to the **same** Netlify site (Netlify → the site → Deploys → drag the folder in, or `netlify deploy --prod` to that site). A new site would mean a new address, and students would start over.
+4. Never upload `dist-teacher/`.
 
 ## Where progress is saved, and its limits
 
@@ -34,14 +32,14 @@ Both editions use the same saved game. A browser keeps saved data per **web addr
 |---|---|
 | "I don't know where to go" | The bottom-left corner always shows the next step. The **Menu** (Esc, or the ≡ button) repeats it. |
 | Stuck in a corner, or lost | **Menu → "I'm stuck: take me to the entrance hall"** (press twice). |
-| Stuck on a challenge | Every wrong answer explains why it is wrong. If needed, open the teacher edition on their Chromebook: **T → Reveal the answer**. |
-| Cannot finish a room's writing check | Read their sentence with them against the criteria. Teacher edition: **T → Lesson stage → Complete** moves them on. |
+| Stuck on a challenge | Every wrong answer explains why it is wrong; read the explanation with the student. |
+| Cannot finish a room's writing check | Read their sentence with them against the criteria; when every criterion is honestly met, they can tick them and complete the room. |
 | The game froze or went black | The game shows "The house needs a moment": press **Reload the house**. Progress is kept. Close other tabs first. |
 | "The house is open in another tab" | They opened the game twice. Close one tab; press the button in the tab they keep. |
-| Wants to start again | Teacher edition: **T → Reset all progress** (press twice). A mistaken reset can be undone with **T → Undo the last reset**. |
+| Wants to start again | Delete the site's data on their Chromebook (last row). This cannot be undone. |
 | A save was damaged | The game notices, sets the damaged copy aside, and carries on from its backup (made at every completed room, key and door). The title screen says so. |
-| You want to see a student's writing | Teacher edition: **T → Student's writing** lists the sentence that passed each room's writing check. |
-| Reset without the teacher edition | In Chrome on that profile: Settings → Privacy and security → Third-party cookies → See all site data → search the site → delete. This erases the save completely (no undo). |
+| You want to see a student's writing | It is shown on their end card ("You wrote …") after the final lesson. |
+| Start a student over | In Chrome on that profile: Settings → Privacy and security → Third-party cookies → See all site data → search the site → delete. This erases the save completely (no undo). |
 
 ## What students can change themselves (Menu)
 
