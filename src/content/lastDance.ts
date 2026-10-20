@@ -68,7 +68,7 @@ export const LOCK = {
   intro: 'Four picture wheels are set into the lock. Turn each wheel to the painting its clue describes.',
   wrong: (n: number) => (n === 1 ? 'The lock does not turn. One of the four pictures is right.' : n === 0 ? 'The lock does not turn. None of the pictures is right yet.' : `The lock does not turn. ${n} of the four pictures are right.`),
   showRight: 'The wheels that are right now glow gold.',
-  open: 'The lock turns. Somewhere behind the door, a music box plays three notes.',
+  open: 'The lock turns. Somewhere behind the door, a music box plays two notes.',
   noJournal: 'Four little picture wheels are set into the lock. The diary on the console might explain them.',
 };
 

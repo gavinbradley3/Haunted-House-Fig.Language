@@ -66,7 +66,7 @@ export const DECOR_PAINTINGS: Record<DecorId, DecorPaintingInfo> = {
   D09: decor(
     'D09',
     'Portrait of a Young Man in Mourning',
-    'Oil on canvas, c. 1866. The sitter’s name was not recorded.',
+    'Oil on canvas, 1874. The sitter’s name was not recorded on the frame.',
     'He wears full mourning: the black coat, the black band on his sleeve. His hand is closed over a gold locket, holding it the way one holds a breath.',
   ),
   D10: decor(
@@ -96,7 +96,7 @@ export const DECOR_PAINTINGS: Record<DecorId, DecorPaintingInfo> = {
   D14: decor(
     'D14',
     'Girl with a China Doll',
-    'Oil on canvas, c. 1871.',
+    'Oil on canvas, 1874.',
     'A little girl in her blue dress and lace pinafore, holding a china doll in a bonnet. The girl has looked away. The doll has not.',
   ),
   D15: decor(

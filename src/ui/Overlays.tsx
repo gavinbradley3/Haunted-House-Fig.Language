@@ -125,6 +125,8 @@ export function HUD() {
 
   const inspecting = useGame((s) => s.inspecting);
   const reading = useGame((s) => !!s.note || !!s.shotPose);
+  // The camera held on something (the Lady's mirror): nothing in the corners.
+  const held = useGame((s) => !!s.shotPose && !s.inspecting);
   const exploring = phase === 'play' && !cinematic && !lessonActive && !inspecting;
   return (
     <>
@@ -165,7 +167,7 @@ export function HUD() {
           Skip <span className="key" style={{ marginLeft: 8 }}>Space</span>
         </button>
       )}
-      {phase === 'play' && !lessonActive && !inspecting && (
+      {phase === 'play' && !lessonActive && !inspecting && !held && (
         <div className="location">
           {upstairs && zone === 'hall' ? 'The Upper Landing' : ZONE_NAMES[zone]}
           {!cinematic && !notice && <div className="objective">{step}</div>}

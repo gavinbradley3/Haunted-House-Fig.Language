@@ -233,7 +233,7 @@ export const BOUDOIR = {
   mirrorSpot: { x: -3.05, z: -14.35 },
   mirror: { y: 1.62, w: 0.72, h: 0.92 },
   /** The dress form in the green gown, in the south-west corner. */
-  gown: { x: -5.25, z: -14.95 },
+  gown: { x: -5.4, z: -15.4 },
   /** A chaise under the curtained west window. */
   chaise: { x: -5.55, z: -12.6 },
   window: { z: -12.6 },
