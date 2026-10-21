@@ -51,7 +51,8 @@ export function useModel(name: ModelName, materials: Record<string, THREE.Materi
         const mesh = o as THREE.Mesh;
         if (!mesh.isMesh) return;
         const m = mesh.material as THREE.Material;
-        const swap = materials[m.name];
+        // Blender numbers a material it has seen before ("gilt.001"): match on the name without that suffix.
+        const swap = materials[m.name] ?? materials[m.name.replace(/\.\d+$/, '')];
         if (swap) mesh.material = swap;
         mesh.castShadow = true;
         mesh.receiveShadow = true;

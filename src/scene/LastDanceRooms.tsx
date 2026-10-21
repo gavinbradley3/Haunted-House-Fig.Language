@@ -380,14 +380,16 @@ function CoveredPortraits() {
     { x: 0.8, w: 0.55, h: 0.75 },
     { x: 1.1, w: 0.6, h: 0.86 },
   ];
-  // Old dust sheets: greyer and duller than the house's clean linen.
+  // Old dust sheets: the house's linen, greyed and yellowed with years of dust, and dull.
   const dust = useMemo(() => {
     const d = (m.linen as THREE.MeshStandardMaterial).clone();
-    d.color.multiplyScalar(0.62);
+    d.color.multiply(new THREE.Color(0.46, 0.43, 0.37));
     d.roughness = 1;
     return d;
   }, [m.linen]);
-  const model = useModel('covered_portraits', { gilt: m.gilt, linen: dust, canvas: m.darkInterior });
+  // The canvas the slipped sheet uncovers: an old, darkened, varnished painting (not a black hole).
+  const canvas = useMemo(() => new THREE.MeshStandardMaterial({ color: '#2a1f16', roughness: 0.38, metalness: 0 }), []);
+  const model = useModel('covered_portraits', { gilt: m.gilt, linen: dust, canvas });
   return (
     <group position={[RECORDS.covered.x, Y, RECORDS.zS + (model ? 0.3 : 0.2)]}>
       <Interactive
@@ -536,7 +538,7 @@ function Vanity() {
           </mesh>
         ))}
         <mesh geometry={boxGeo(0.06, 0.03, 0.18)} material={m.silver} position={[-0.15, 0.755, 0.1]} rotation={[0, 0.3, 0]} />
-        <group position={[0.36, 0.74, 0.04]} rotation={[0, -0.25, 0]}>
+        <group position={[0.27, 0.74, 0.09]} rotation={[0, -0.25, 0]}>
           <Interactive id="boudoir-musicbox" maxDist={2.4} label={() => 'Look at the music box'} onUse={() => showCaption('A little music box of walnut and brass. Its key has been wound tight, though nobody has touched it for years.')}>
             <MusicBoxModel />
           </Interactive>
