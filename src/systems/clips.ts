@@ -61,6 +61,10 @@ export const CLIP_SLOTS = {
   fire: { use: 'loop', tier: 'idle' },
   /** A single drip into the bucket (Chamber of Echoes lesson item and ambience). */
   drip: { use: 'replace', tier: 'idle' },
+  /** The Last Dance: a heavy door slammed hard (a low boom is added under it). Without it, the door-close recording is driven hard. */
+  'door-slam': { use: 'replace', tier: 'idle' },
+  /** The Last Dance: sharp knuckle knocks on a door close by (not through a wall). Without it, a synthesised knock. */
+  'knock-door': { use: 'replace', tier: 'idle' },
 } as const satisfies Record<string, { use: 'loop' | 'event' | 'replace'; tier: ClipTier }>;
 
 export type ClipSlot = keyof typeof CLIP_SLOTS;

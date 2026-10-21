@@ -307,7 +307,7 @@ export function Player() {
   });
 
   function afterCamera(prevZone: string) {
-    const z = zoneAt(camera.position.z, camera.position.x);
+    const z = zoneAt(camera.position.z, camera.position.x, camera.position.y);
     if (z !== prevZone) {
       useGame.getState().setZone(z);
       audio.setZone(z);

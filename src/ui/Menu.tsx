@@ -137,7 +137,7 @@ export function Menu() {
                 </button>
               ))}
             </div>
-            <p className="menu-note">Creaks, knocks and footsteps while you explore. Never during a lesson. Gentle means fewer of them.</p>
+            <p className="menu-note">Creaks, knocks and footsteps while you explore. Never during a lesson. Gentle means fewer of them, and no sudden scares (the Last Dance is told more softly).</p>
           </section>
         </div>
 

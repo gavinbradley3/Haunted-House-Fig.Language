@@ -14,10 +14,10 @@ import * as THREE from 'three';
 import { fx } from '../lesson/fx';
 import { game } from '../state/store';
 import { world } from '../systems/time';
-import { BALLROOM, DINING, ECHOES, GALLERY, KITCHEN, MIRRORS, NURSERY, PRESS, STUDY } from '../world/layout';
+import { BALLROOM, BOUDOIR, DINING, ECHOES, GALLERY, KITCHEN, MIRRORS, NURSERY, PRESS, RECORDS, STUDY, UPSTAIRS } from '../world/layout';
 import { flicker, lampLevel, stutterAt } from './parts/Lights';
 
-type Lit = 'gallery' | 'mirrors' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study';
+type Lit = 'gallery' | 'mirrors' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study' | 'records' | 'boudoir';
 type Rig = {
   pos: [number, number, number];
   color: string;
@@ -74,10 +74,20 @@ const RIGS: Record<Lit, Rig> = {
     { pos: [STUDY.desk.x + 0.7, 1.35, STUDY.desk.z + 0.3], color: '#ffb86e', intensity: 6, distance: 9, candle: true },
     { pos: [STUDY.x0 + 1.2, 2.5, -9.0], color: '#9db2d8', intensity: 8, distance: 10, candle: false },
   ],
+  // The Last Dance, upstairs. The Guest Records room: candlelight over the guest book, and the desk candle.
+  records: [
+    { pos: [RECORDS.ledger.x - 0.3, UPSTAIRS.y + 2.1, RECORDS.ledger.z + 0.7], color: '#ffb066', intensity: 6.5, distance: 8, candle: true },
+    { pos: [RECORDS.desk.x + 0.55, UPSTAIRS.y + 1.25, RECORDS.desk.z - 0.2], color: '#ffa65a', intensity: 3.2, distance: 6, candle: true },
+  ],
+  // The Lady's room: the vanity candle (on the glass and on you as you look into it), and moonlight at the window.
+  boudoir: [
+    { pos: [BOUDOIR.vanity.x - 0.35, UPSTAIRS.y + 1.45, BOUDOIR.vanity.z + 0.85], color: '#ffb470', intensity: 5, distance: 7, candle: true },
+    { pos: [BOUDOIR.x0 + 0.9, UPSTAIRS.y + 2.2, BOUDOIR.window.z], color: '#9db2d8', intensity: 6, distance: 7.5, candle: false },
+  ],
 };
 
 /** Per-room brightness multiplier set by the room directors (1 = normal). */
-export const roomLightLevel: Record<Lit, number> = { gallery: 1, mirrors: 1, dining: 1, nursery: 1, echoes: 1, press: 1, kitchen: 1, ballroom: 1, study: 1 };
+export const roomLightLevel: Record<Lit, number> = { gallery: 1, mirrors: 1, dining: 1, nursery: 1, echoes: 1, press: 1, kitchen: 1, ballroom: 1, study: 1, records: 1, boudoir: 1 };
 
 const forward = new THREE.Vector3();
 
@@ -89,7 +99,7 @@ const forward = new THREE.Vector3();
 function litRoom(camera: THREE.Camera, current: Lit | null): Lit | null {
   const s = game();
   const z = s.zone;
-  if (z === 'gallery' || z === 'dining' || z === 'nursery' || z === 'echoes' || z === 'press' || z === 'kitchen' || z === 'ballroom' || z === 'study') return z;
+  if (z === 'gallery' || z === 'dining' || z === 'nursery' || z === 'echoes' || z === 'press' || z === 'kitchen' || z === 'ballroom' || z === 'study' || z === 'records' || z === 'boudoir') return z;
   camera.getWorldDirection(forward);
   const pick = (west: Lit, east: Lit, westOpen: boolean, eastOpen: boolean): Lit | null => {
     if (westOpen && eastOpen) {
@@ -100,6 +110,8 @@ function litRoom(camera: THREE.Camera, current: Lit | null): Lit | null {
     return westOpen ? west : eastOpen ? east : null;
   };
   if (z === 'corridor') return pick('gallery', 'dining', s.doors.gallery, s.doors.dining);
+  // On the upper landing, the open doors are the Last Dance's two rooms.
+  if (z === 'hall' && s.upstairs) return pick('boudoir', 'records', s.doors.boudoir, s.doors.records);
   if (z === 'hall') return pick('study', 'kitchen', s.doors.study, s.doors.kitchen);
   if (z === 'mirrors') {
     // The mirror lesson's glows win over the view into the nursery.

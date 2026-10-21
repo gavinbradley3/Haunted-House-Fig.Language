@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { startIntro } from '../lesson/navigation';
 import { resumeGame } from '../lesson/resume';
 import { nextStep } from '../lesson/guide';
+import { ldObjective } from '../story/lastDance';
 import { DEVICE_ROOMS } from '../content/types';
 import type { Zone } from '../world/layout';
 import { useGame } from '../state/store';
@@ -91,6 +92,8 @@ const ZONE_NAMES: Record<Zone, string> = {
   kitchen: 'The Crooked Kitchen',
   ballroom: 'The Ballroom of Contradictions',
   study: 'The Forgotten Scholar’s Study',
+  records: 'The Guest Records',
+  boudoir: 'The Lady’s Room',
 };
 
 export function HUD() {
@@ -109,7 +112,8 @@ export function HUD() {
   const setTeacherOpen = useGame((s) => s.setTeacherOpen);
   const setHelpOpen = useGame((s) => s.setHelpOpen);
   const upstairs = useGame((s) => s.upstairs);
-  const step = useGame((s) => nextStep(s.progress, s.lessons).text);
+  // After the nine lessons, the Last Dance's next step (if it has begun) takes the corner of the screen.
+  const step = useGame((s) => ldObjective(s.found, s.progress) ?? nextStep(s.progress, s.lessons).text);
   // During a lesson the corner buttons sit on the side away from the panel, so they never cover it.
   const buttonsLeft = useGame((s) => s.lessonActive && panelSide(s.shot) === 'right');
 
@@ -120,6 +124,9 @@ export function HUD() {
   }, [notice, clearNotice]);
 
   const inspecting = useGame((s) => s.inspecting);
+  const reading = useGame((s) => !!s.note || !!s.shotPose);
+  // The camera held on something (the Lady's mirror): nothing in the corners.
+  const held = useGame((s) => !!s.shotPose && !s.inspecting);
   const exploring = phase === 'play' && !cinematic && !lessonActive && !inspecting;
   return (
     <>
@@ -130,7 +137,7 @@ export function HUD() {
           {hover.label}
         </div>
       )}
-      {exploring && !locked && !hover && !teacherOpen && !helpOpen && !notice && (
+      {exploring && !locked && !hover && !teacherOpen && !helpOpen && !notice && !reading && (
         <div className="free-hint">
           <h4>Click to look around</h4>
           <div className="row">
@@ -160,7 +167,7 @@ export function HUD() {
           Skip <span className="key" style={{ marginLeft: 8 }}>Space</span>
         </button>
       )}
-      {phase === 'play' && !lessonActive && !inspecting && (
+      {phase === 'play' && !lessonActive && !inspecting && !held && (
         <div className="location">
           {upstairs && zone === 'hall' ? 'The Upper Landing' : ZONE_NAMES[zone]}
           {!cinematic && !notice && <div className="objective">{step}</div>}

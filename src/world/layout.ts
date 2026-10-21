@@ -194,9 +194,73 @@ export const FINALE = {
   portrait: { x: HALL.x1 - 0.35, y: 2.6, z: HALL.fireplace.z },
 };
 
-export type Zone = 'exterior' | 'hall' | 'corridor' | 'mirrors' | 'gallery' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study';
+/**
+ * The Last Dance (bonus chapter): the two rooms behind the doors on the upper landing, floored at the
+ * landing's height. They sit above the corridor's side rooms (the gallery and the dining room are taller
+ * than the landing), so the culling never draws a room upstairs and the room beneath it at the same time.
+ * Their inner walls stand just outside the corridor's side walls, which rise to the gallery's height.
+ *  - The Guest Records room, behind the right-hand door (the one that swings shut as you come close).
+ *  - The Lady's own room, behind the left-hand door.
+ */
+export const UPSTAIRS = {
+  y: HALL.landing.y,
+  height: 3.0,
+  doorWidth: 0.96,
+  doorHeight: 2.3,
+  records: { x0: 1.75, x1: 5.75, zN: HALL.zBack - WALL_T, zS: -14.6, doorX: 2.6 },
+  boudoir: { x0: -6.05, x1: -1.75, zN: HALL.zBack - WALL_T, zS: -15.9, doorX: -2.6 },
+};
+/** Where things stand in the two rooms (world x/z; the floor is at UPSTAIRS.y). */
+export const RECORDS = {
+  ...UPSTAIRS.records,
+  /** The guest ledger on its reading stand, facing the door. */
+  ledger: { x: 3.55, z: -12.85 },
+  /** The row of coat hooks on the east wall. */
+  hooks: { z: -12.4 },
+  /** The writing desk against the west wall. */
+  desk: { x: 2.06, z: -13.3 },
+  /** The covered portraits leaning on the south wall. */
+  covered: { x: 4.2, z: -14.25 },
+};
+export const BOUDOIR = {
+  ...UPSTAIRS.boudoir,
+  /**
+   * The vanity and its mirror, against the far (south) wall, facing the door: looking into the glass,
+   * you see the doorway behind you over your own shoulder. The music box stands on the vanity.
+   */
+  vanity: { x: -3.05, z: -15.62 },
+  /** Where you stand to look into the mirror (world x/z), and the mirror's centre height above the floor. */
+  mirrorSpot: { x: -3.05, z: -14.35 },
+  mirror: { y: 1.62, w: 0.72, h: 0.92 },
+  /** The dress form in the green gown, in the south-west corner. */
+  gown: { x: -5.4, z: -15.4 },
+  /** A chaise under the curtained west window. */
+  chaise: { x: -5.55, z: -12.6 },
+  window: { z: -12.6 },
+  /** Her writing desk, against the east wall. */
+  desk: { x: -2.07, z: -13.1 },
+  /** The empty frame, on the inside of the front wall beside the door (you face it as you leave). */
+  frame: { x: -4.5, y: 1.62 },
+};
 
-export function zoneAt(z: number, x = 0): Zone {
+export type Zone = 'exterior' | 'hall' | 'corridor' | 'mirrors' | 'gallery' | 'dining' | 'nursery' | 'echoes' | 'press' | 'kitchen' | 'ballroom' | 'study' | 'records' | 'boudoir';
+
+/** Which upstairs room (if any) a point on the upper floor is in. */
+export function upstairsZoneAt(z: number, x: number): 'records' | 'boudoir' | null {
+  if (z > HALL.zBack - WALL_T / 2) return null;
+  const r = UPSTAIRS.records;
+  if (x > r.x0 - WALL_T / 2 && x < r.x1 + WALL_T / 2 && z > r.zS - 0.2) return 'records';
+  const b = UPSTAIRS.boudoir;
+  if (x > b.x0 - WALL_T / 2 && x < b.x1 + WALL_T / 2 && z > b.zS - 0.2) return 'boudoir';
+  return null;
+}
+
+/** The zone at a point. `y` (a height in the world, such as the camera's) tells the upper floor from the rooms below it. */
+export function zoneAt(z: number, x = 0, y = 0): Zone {
+  if (y > HALL.landing.y + 0.3) {
+    const up = upstairsZoneAt(z, x);
+    if (up) return up;
+  }
   if (x < CORRIDOR.x0 - WALL_T / 2 && z < GALLERY.zN + 0.2 && z > GALLERY.zS - 0.2 && x > GALLERY.x0 - 0.3) return 'gallery';
   if (x > CORRIDOR.x1 + WALL_T / 2 && z < DINING.zN + 0.2 && z > DINING.zS - 0.2) return 'dining';
   if (x < MIRRORS.x0 - WALL_T / 2 && z < NURSERY.zN + 0.2 && z > NURSERY.zS - 0.2) return 'nursery';

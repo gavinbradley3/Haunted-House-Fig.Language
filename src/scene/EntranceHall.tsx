@@ -39,7 +39,9 @@ function Staircase() {
   const cx = (S.x0 + S.x1) / 2;
   const baluster = latheGeo('baluster', LATHES.baluster, 12);
   const newelCap = latheGeo('newelCap', LATHES.newelCap);
-  const steps = Array.from({ length: risers - 1 }, (_, i) => i);
+  // Every tread, including the last one (its top is level with the landing): without it there was a
+  // 31 cm hole in the floor at the top of the stairs.
+  const steps = Array.from({ length: risers }, (_, i) => i);
   // Sloped handrail and string
   const rail = useMemo(() => {
     const a = new THREE.Vector3(S.x1 - 0.02, rise + 0.9, S.zStart - going * 0.5);
@@ -204,7 +206,20 @@ export function EntranceHall() {
 
       {/* Walls */}
       <Wall axis="x" from={x0 - WALL_T} to={x1 + WALL_T} at={zFront + WALL_T / 2} height={height + 0.4} openings={frontOpenings} matPos={m.brick} matNeg={m.wallHall} />
-      <Wall axis="x" from={x0 - WALL_T} to={x1 + WALL_T} at={zBack - WALL_T / 2} height={height} openings={[{ c: 0, w: HALL.corridorOpening.width, b: 0, t: HALL.corridorOpening.height }]} matPos={m.wallHall} matNeg={m.wallCorridor} />
+      <Wall
+        axis="x"
+        from={x0 - WALL_T}
+        to={x1 + WALL_T}
+        at={zBack - WALL_T / 2}
+        height={height}
+        openings={[
+          { c: 0, w: HALL.corridorOpening.width, b: 0, t: HALL.corridorOpening.height },
+          // The two doorways on the upper landing (the Last Dance's rooms are behind them).
+          ...[-2.6, 2.6].map((c) => ({ c, w: 0.96, b: L.y, t: L.y + 2.3 })),
+        ]}
+        matPos={m.wallHall}
+        matNeg={m.wallCorridor}
+      />
       <Wall axis="z" from={zFront} to={zBack} at={x0 - WALL_T / 2} height={height} openings={[{ c: STUDY.doorZ, w: 0.96, b: 0, t: 2.3 }]} matPos={m.wallHall} matNeg={m.wallStudy} />
       <Wall axis="z" from={zFront} to={zBack} at={x1 + WALL_T / 2} height={height} openings={[{ c: KITCHEN.doorZ, w: 0.96, b: 0, t: 2.3 }]} matPos={m.wallKitchen} matNeg={m.wallHall} />
 
@@ -271,10 +286,9 @@ export function EntranceHall() {
           <Painting x={0} y={1.75} w={1.1} art="D01" />
         </group>
       </OnWall>
-      {/* Door voids behind the landing doors */}
-      {[-2.6, 2.6].map((x) => (
-        <mesh key={x} geometry={boxGeo(0.96, 2.3, 0.02)} material={m.darkInterior} position={[x, L.y + 1.15, zBack + 0.01]} />
-      ))}
+      {/* Door voids behind the landing doors, seen from the hall floor (the rooms beyond are only drawn from upstairs). */}
+      <DoorVoids />
+
 
       {/* --- Left wall --- */}
       <OnWall axis="z" face={x0} normal={1}>
@@ -351,6 +365,20 @@ export function EntranceHall() {
 
 
     </group>
+  );
+}
+
+/** Darkness filling the landing doorways when the rooms behind them are not drawn (from the hall floor). */
+function DoorVoids() {
+  const m = mats();
+  const upstairs = useGame((s) => s.upstairs);
+  if (upstairs) return null;
+  return (
+    <>
+      {[-2.6, 2.6].map((x) => (
+        <mesh key={x} geometry={boxGeo(0.96, 2.3, 0.02)} material={m.darkInterior} position={[x, L.y + 1.15, zBack - 0.24]} />
+      ))}
+    </>
   );
 }
 

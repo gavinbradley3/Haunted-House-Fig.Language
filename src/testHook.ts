@@ -15,7 +15,7 @@ import { skipCinematic } from './scene/Player';
 import { liveCamera, world } from './systems/time';
 import { getInteractable } from './systems/interaction';
 import { apparitionAt, forceHaunt, hauntDueNow, hauntEvents, hauntLog, hauntState, holdHaunting, setHauntSpeed, settleHouse, triggerStrangeEvent } from './scene/HouseEvents';
-import { doorNudge } from './scene/parts/Door';
+import { doorNudge, doorSlam } from './scene/parts/Door';
 import { figureFx, showFigure } from './scene/HauntFigure';
 import { decorPaintings, hungPaintings } from './scene/parts/Artwork';
 import { houseState } from './scene/parts/Lights';
@@ -23,6 +23,9 @@ import { renderer } from './systems/renderer';
 import { audio } from './systems/audio';
 import { mats } from './systems/materials';
 import { textureTimes } from './systems/textures';
+import * as ldActions from './story/actions';
+import * as ldStory from './story/lastDance';
+import { ldFx } from './story/fx';
 
 export function installTestHook() {
   (window as unknown as Record<string, unknown>).__hosl = {
@@ -46,6 +49,7 @@ export function installTestHook() {
     settleHouse,
     decorPaintings,
     doorNudge,
+    doorSlam,
     /** The final mix's loudness right now (dBFS, RMS over ~43 ms), for measuring how audible events are. */
     level: () => {
       const a = audio.tap();
@@ -57,6 +61,8 @@ export function installTestHook() {
       return 10 * Math.log10(s / d.length + 1e-12);
     },
     hungPaintings,
+    /** The Last Dance: its actions, its pure logic and its shared effects. */
+    ld: { actions: ldActions, story: ldStory, fx: ldFx },
     audio,
     houseState,
     world,

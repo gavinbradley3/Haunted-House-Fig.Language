@@ -2,7 +2,7 @@
  * Lightweight 2D (x/z) collision: the player is a circle, the world is a set of
  * axis-aligned boxes. Doors register dynamic boxes that switch off when open.
  */
-import { BALLROOM, CORRIDOR, DINING, ECHOES, EXTERIOR, GALLERY, HALL, KITCHEN, MIRRORS, NURSERY, PLAYER_RADIUS, PRESS, STUDY, WALL_T } from './layout';
+import { BALLROOM, BOUDOIR, CORRIDOR, DINING, ECHOES, EXTERIOR, GALLERY, HALL, KITCHEN, MIRRORS, NURSERY, PLAYER_RADIUS, PRESS, RECORDS, STUDY, UPSTAIRS, WALL_T } from './layout';
 
 export interface Box {
   minX: number;
@@ -186,27 +186,59 @@ export type Floor = 'ground' | 'stair' | 'upper';
 const { stair: ST, landing: LD } = HALL;
 /** On the stairs: the hall wall on one side, the balustrade on the other. */
 const STAIR_BOXES: Box[] = [box(HALL.x0 - WALL_T, HALL.x0, LD.zEdge - 0.5, HALL.zFront), box(ST.x1, ST.x1 + 0.06, ST.zEnd - 0.1, ST.zStart - 0.25)];
+const UR = UPSTAIRS.records;
+const UB = UPSTAIRS.boudoir;
+/** The two upstairs rooms (the Last Dance): walls, and the furniture that stands in the way. */
+const UPPER_ROOMS: Box[] = [
+  // The Guest Records room
+  ...wallZ(UR.zN, UR.zS - WALL_T, UR.x0 - h),
+  ...wallZ(UR.zN, UR.zS - WALL_T, UR.x1 + h),
+  ...wallX(UR.x0 - WALL_T, UR.x1 + WALL_T, UR.zS - h),
+  boxAt(RECORDS.ledger.x, RECORDS.ledger.z, 0.62, 0.62),
+  boxAt(RECORDS.desk.x + 0.05, RECORDS.desk.z, 0.75, 1.35),
+  box(RECORDS.covered.x - 1.05, RECORDS.covered.x + 1.05, UR.zS, UR.zS + 0.55),
+  box(UR.x1 - 0.38, UR.x1, RECORDS.hooks.z - 1.25, RECORDS.hooks.z + 1.25),
+  // The Lady's room
+  ...wallZ(UB.zN, UB.zS - WALL_T, UB.x0 - h),
+  ...wallZ(UB.zN, UB.zS - WALL_T, UB.x1 + h),
+  ...wallX(UB.x0 - WALL_T, UB.x1 + WALL_T, UB.zS - h),
+  boxAt(BOUDOIR.vanity.x, BOUDOIR.vanity.z, 1.3, 0.62),
+  boxAt(BOUDOIR.gown.x, BOUDOIR.gown.z, 0.85, 0.85),
+  boxAt(BOUDOIR.chaise.x + 0.05, BOUDOIR.chaise.z, 0.85, 1.9),
+  boxAt(BOUDOIR.desk.x, BOUDOIR.desk.z, 0.72, 1.3),
+];
+
 /** The upper landing: walls on three sides, the balustrade along its open edge (except where the stairs arrive). */
 export const UPPER_BOXES: Box[] = [
   box(HALL.x0 - WALL_T, HALL.x0, HALL.zBack, LD.zEdge + 0.3),
   box(HALL.x1, HALL.x1 + WALL_T, HALL.zBack, LD.zEdge + 0.3),
-  box(HALL.x0, HALL.x1, HALL.zBack - WALL_T, HALL.zBack),
+  // The back wall, with the two doorways (each closed by its door's collider until it opens).
+  ...wallX(HALL.x0, HALL.x1, HALL.zBack - h, [
+    [UR.doorX, UPSTAIRS.doorWidth],
+    [UB.doorX, UPSTAIRS.doorWidth],
+  ]),
   box(ST.x1, HALL.x1, LD.zEdge, LD.zEdge + 0.12),
+  ...UPPER_ROOMS,
 ];
 
-/** Dynamic colliders keyed by id (doors). */
+/** Dynamic colliders keyed by id (doors), on the ground floor or the upper floor. */
 const dynamic = new Map<string, { box: Box; active: boolean }>();
+const upperDynamic = new Map<string, { box: Box; active: boolean }>();
 
-export function setDynamicCollider(id: string, b: Box, active: boolean) {
-  dynamic.set(id, { box: b, active });
+export function setDynamicCollider(id: string, b: Box, active: boolean, floor: 'ground' | 'upper' = 'ground') {
+  (floor === 'upper' ? upperDynamic : dynamic).set(id, { box: b, active });
 }
 export function setDynamicActive(id: string, active: boolean) {
-  const d = dynamic.get(id);
+  const d = dynamic.get(id) ?? upperDynamic.get(id);
   if (d) d.active = active;
 }
 export function removeDynamicCollider(id: string) {
   dynamic.delete(id);
+  upperDynamic.delete(id);
 }
+
+/** The doorway of each upstairs room, closed while its door is shut. */
+export const upstairsDoorway = (x: number) => box(x - UPSTAIRS.doorWidth / 2 - 0.02, x + UPSTAIRS.doorWidth / 2 + 0.02, HALL.zBack - WALL_T, HALL.zBack + 0.04);
 
 function activeBoxes(): Box[] {
   const out = STATIC_BOXES.slice();
@@ -217,7 +249,11 @@ function activeBoxes(): Box[] {
 /** The boxes that apply on each level (the ground floor's doors do not reach the landing). */
 export function boxesFor(floor: Floor): Box[] {
   if (floor === 'stair') return STAIR_BOXES;
-  if (floor === 'upper') return UPPER_BOXES;
+  if (floor === 'upper') {
+    const out = UPPER_BOXES.slice();
+    for (const d of upperDynamic.values()) if (d.active) out.push(d.box);
+    return out;
+  }
   return activeBoxes();
 }
 

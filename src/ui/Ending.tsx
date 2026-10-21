@@ -66,6 +66,13 @@ export function Ending() {
           </p>
         )}
         {found.diary && <p className="ending-lead" style={{ marginTop: 18, fontSize: 21 }}>You also found the page from the Lady’s diary on the upper landing. Not every visitor climbs the stairs.</p>}
+        {found.ldEnd ? (
+          <p className="ending-lead" style={{ marginTop: 12, fontSize: 21 }}>And you found out what happened at the Last Dance. The nine guests never left.</p>
+        ) : (
+          <p className="ending-lead" style={{ marginTop: 12, fontSize: 21 }}>
+            The lessons are complete. But the house has one more secret: <strong>the Last Dance</strong>, a bonus mystery, begins when you close this page.
+          </p>
+        )}
         <div className="ending-actions">
           <button className="btn" onClick={close}>
             Keep exploring

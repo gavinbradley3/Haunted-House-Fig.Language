@@ -124,7 +124,7 @@ const GOWN = {
 };
 
 /** A dressmaker's form wearing a crinoline ball gown: bodice, pleated bell skirt, off-shoulder bertha, puffed sleeves. */
-function DressForm({ color, trim }: { color: THREE.Material; trim: THREE.Material }) {
+export function DressForm({ color, trim }: { color: THREE.Material; trim: THREE.Material }) {
   const m = mats();
   return (
     <group>

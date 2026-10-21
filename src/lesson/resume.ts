@@ -13,7 +13,7 @@ import { audio } from '../systems/audio';
 export function resumeGame() {
   const s = useGame.getState();
   audio.unlock();
-  const where = safePlace(s.savedPlace, s.progress);
+  const where = safePlace(s.savedPlace, s.progress, s.found);
   s.setDoor('front', true);
   if (where.door) s.setDoor(where.door, true);
   s.teleportTo(where.pose);
